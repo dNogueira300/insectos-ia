@@ -2,6 +2,7 @@ import pytest
 
 from pipeline.inat import (
     Observacion,
+    buscar_lugar,
     contar_observaciones,
     iterar_observaciones,
 )
@@ -135,3 +136,46 @@ def test_iterar_tolera_ubicacion_ausente():
     sesion = SesionFalsa([{"results": [cruda]}, {"results": []}])
     o = next(iter(iterar_observaciones(47208, limite=1, sesion=sesion, pausa=0)))
     assert o.latitud is None and o.longitud is None
+
+
+def test_iterar_descarta_observacion_sin_id():
+    sin_id = obs_cruda(1)
+    del sin_id["id"]
+    sesion = SesionFalsa([{"results": [sin_id, obs_cruda(2)]}, {"results": []}])
+    obs = list(iterar_observaciones(47208, limite=100, sesion=sesion, pausa=0))
+    assert [o.id for o in obs] == [2]
+
+
+def test_iterar_avanza_cursor_pese_a_observacion_sin_id():
+    sin_id = obs_cruda(3)
+    del sin_id["id"]
+    p1 = {"results": [obs_cruda(1), sin_id, obs_cruda(5)]}
+    sesion = SesionFalsa([p1, {"results": []}])
+    list(iterar_observaciones(47208, limite=100, sesion=sesion, pausa=0))
+    assert sesion.llamadas[0]["id_above"] == 0
+    assert sesion.llamadas[1]["id_above"] == 5
+
+
+def test_iterar_conserva_url_sin_square_tal_cual():
+    cruda = obs_cruda(1)
+    cruda["photos"][0]["url"] = (
+        "https://inaturalist-open-data.s3.amazonaws.com/photos/1/original.jpg"
+    )
+    sesion = SesionFalsa([{"results": [cruda]}, {"results": []}])
+    o = next(iter(iterar_observaciones(47208, limite=1, sesion=sesion, pausa=0)))
+    assert o.foto_url == (
+        "https://inaturalist-open-data.s3.amazonaws.com/photos/1/original.jpg"
+    )
+
+
+def test_iterar_reemplaza_solo_la_ultima_aparicion_de_square():
+    cruda = obs_cruda(1)
+    cruda["photos"][0]["url"] = "https://squarehost.example.com/photos/1/square.jpg"
+    sesion = SesionFalsa([{"results": [cruda]}, {"results": []}])
+    o = next(iter(iterar_observaciones(47208, limite=1, sesion=sesion, pausa=0)))
+    assert o.foto_url == "https://squarehost.example.com/photos/1/medium.jpg"
+
+
+def test_buscar_lugar_sin_id_en_el_resultado_devuelve_none():
+    sesion = SesionFalsa([{"results": [{"name": "Iquitos"}]}])
+    assert buscar_lugar("Iquitos", sesion=sesion) is None
