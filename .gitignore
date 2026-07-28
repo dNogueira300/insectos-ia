@@ -1,0 +1,15 @@
+# entorno
+.venv/
+__pycache__/
+*.pyc
+
+# datos: nunca se versionan (pesan GB y las licencias son por imagen)
+datos/
+
+# artefactos de modelo
+modelo/*.onnx
+modelo/*.pth
+
+# sistema
+.DS_Store
+Thumbs.db

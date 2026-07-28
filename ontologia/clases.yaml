@@ -1,0 +1,37 @@
+version: 1
+minimos:
+  familia_train: 150
+  familia_test: 30
+ordenes:
+  - nombre: Coleoptera
+    inat_taxon_id: 47208
+    gbif_key: 1470
+    nombre_comun: escarabajos
+    familias:
+      - nombre: Curculionidae
+        inat_taxon_id: 62956
+        nombre_comun: gorgojos
+        importancia: plaga
+  - nombre: Lepidoptera
+    inat_taxon_id: 47157
+    gbif_key: 797
+    nombre_comun: mariposas y polillas
+    familias:
+      - nombre: Noctuidae
+        inat_taxon_id: 49556
+        nombre_comun: nóctuidos
+        importancia: plaga
+  - nombre: Hymenoptera
+    inat_taxon_id: 47201
+    gbif_key: 1457
+    nombre_comun: abejas, avispas y hormigas
+    familias:
+      - nombre: Formicidae
+        inat_taxon_id: 47336
+        nombre_comun: hormigas
+        importancia: mixta
+  - nombre: Odonata
+    inat_taxon_id: 47792
+    gbif_key: 789
+    nombre_comun: libélulas
+    familias: []
