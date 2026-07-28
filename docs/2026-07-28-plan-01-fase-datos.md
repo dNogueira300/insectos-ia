@@ -810,12 +810,24 @@ def contar_observaciones(
 
 
 def _a_observacion(cruda: dict) -> Observacion | None:
+    oid = cruda.get("id")
+    if oid is None:
+        return None
+
     fotos = cruda.get("photos") or []
     if not fotos:
         return None
-    url = (fotos[0].get("url") or "").replace("square", "medium")
+    url = fotos[0].get("url") or ""
     if not url:
         return None
+    prefijo, separador, sufijo = url.rpartition("square")
+    if separador:
+        # Solo se reemplaza la última aparición de "square" (el nombre de
+        # archivo del tamaño de la foto); una aparición previa en la ruta
+        # (por ejemplo en el dominio) queda intacta.
+        url = f"{prefijo}medium{sufijo}"
+    # Si "square" no aparece en la URL, se entrega tal cual: la descarga
+    # posterior filtra por tamaño mínimo, así que no hace falta descartarla.
 
     taxon = cruda.get("taxon") or {}
     latitud = longitud = None
@@ -869,7 +881,9 @@ def iterar_observaciones(
             return
 
         for cruda in resultados:
-            id_above = max(id_above, int(cruda["id"]))
+            oid = cruda.get("id")
+            if oid is not None:
+                id_above = max(id_above, int(oid))
             observacion = _a_observacion(cruda)
             if observacion is None:
                 continue
@@ -893,7 +907,10 @@ def buscar_lugar(nombre: str, sesion=None) -> int | None:
     )
     respuesta.raise_for_status()
     resultados = respuesta.json().get("results", [])
-    return int(resultados[0]["id"]) if resultados else None
+    if not resultados:
+        return None
+    oid = resultados[0].get("id")
+    return int(oid) if oid is not None else None
 ```
 
 - [ ] **Step 4: Correr las pruebas para verificar que pasan**
@@ -902,7 +919,7 @@ def buscar_lugar(nombre: str, sesion=None) -> int | None:
 .venv\Scripts\python -m pytest tests/test_inat.py -v
 ```
 
-Esperado: PASS, 11 pruebas.
+Esperado: PASS, 16 pruebas.
 
 - [ ] **Step 5: Verificar contra la API real (una sola llamada)**
 
