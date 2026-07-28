@@ -14,11 +14,11 @@
 
 Este es el primero de tres planes. Cada uno produce software funcional y testeable por sí mismo:
 
-| Plan | Semanas | Alcance | Estado |
-| --- | --- | --- | --- |
-| **01 — Fase de datos** | 1–7 | Ontología, censo, descarga, curación, splits, BD | **este documento** |
-| 02 — Modelo | 8–11 | Entrenamiento multi-tarea, evaluación, export ONNX | por escribir |
-| 03 — Prototipo | 12–14 | Backend FastAPI + frontend React | por escribir |
+| Plan                   | Semanas | Alcance                                            | Estado             |
+| ---------------------- | ------- | -------------------------------------------------- | ------------------ |
+| **01 — Fase de datos** | 1–7     | Ontología, censo, descarga, curación, splits, BD   | **este documento** |
+| 02 — Modelo            | 8–11    | Entrenamiento multi-tarea, evaluación, export ONNX | por escribir       |
+| 03 — Prototipo         | 12–14   | Backend FastAPI + frontend React                   | por escribir       |
 
 ## Global Constraints
 
@@ -81,19 +81,24 @@ insectos-ia/
 ## Task 1: Andamiaje del repositorio y ontología
 
 **Files:**
+
 - Create: `.gitignore`, `pyproject.toml`, `README.md`
 - Create: `pipeline/__init__.py`, `pipeline/ontologia.py`
 - Create: `ontologia/clases.yaml`
 - Test: `tests/conftest.py`, `tests/test_ontologia.py`
 
 **Interfaces:**
+
 - Consumes: nada (primera tarea)
+
 - Produces:
+  
   - `class ErrorOntologia(Exception)`
   - `@dataclass(frozen=True) Familia(nombre: str, inat_taxon_id: int, nombre_comun: str = "", importancia: str = "")`
   - `@dataclass(frozen=True) Orden(nombre: str, inat_taxon_id: int, nombre_comun: str = "", gbif_key: int | None = None, familias: tuple[Familia, ...] = ())`
   - `@dataclass(frozen=True) Ontologia(version: int, minimo_familia_train: int, minimo_familia_test: int, ordenes: tuple[Orden, ...])` con métodos `nombres_ordenes() -> list[str]`, `nombres_familias() -> list[str]`, `orden_de_familia(familia: str) -> str`, `matriz_pertenencia() -> list[list[bool]]`
   - `cargar_ontologia(ruta: Path) -> Ontologia`
+  - `PREFIJO_OTROS: str = "Otros_"`
 
 - [ ] **Step 1: Crear el entorno virtual e instalar dependencias**
 
@@ -369,6 +374,12 @@ class ErrorOntologia(Exception):
     """La ontología es inválida, está incompleta o es inconsistente."""
 
 
+# Prefijo de las clases que agrupan familias por debajo del umbral de admisión.
+# Vive aquí, y no en splits.py, porque es una convención de nombres de clase:
+# el backend necesita interpretarla sin importar el pipeline de datos.
+PREFIJO_OTROS = "Otros_"
+
+
 @dataclass(frozen=True)
 class Familia:
     nombre: str
@@ -516,11 +527,18 @@ py -3.12 -m venv .venv
 ## Estructura
 
 - `ontologia/clases.yaml` — única fuente de verdad de las clases del sistema.
+
 - `pipeline/` — censo, descarga, curación y particionado de datos.
+
 - `bd/` — base de datos biológica (Excel → SQLite).
+
 - `datos/` — imágenes y manifiestos. **No se versiona.**
+
 - `docs/` — diseño, planes y reportes generados.
-```
+  
+  ```
+  
+  ```
 
 - [ ] **Step 11: Commit**
 
@@ -534,10 +552,12 @@ git commit -m "feat: andamiaje del repositorio y carga validada de la ontologia"
 ## Task 2: Cliente de la API de iNaturalist
 
 **Files:**
+
 - Create: `pipeline/inat.py`
 - Test: `tests/test_inat.py`
 
 **Interfaces:**
+
 - Consumes: nada de tareas anteriores
 - Produces:
   - `@dataclass(frozen=True) Observacion(id: int, taxon_id: int, taxon_nombre: str, rango: str, observador: str, foto_url: str, licencia: str, atribucion: str, latitud: float | None, longitud: float | None, fecha: str)`
@@ -891,10 +911,12 @@ git commit -m "feat: cliente de iNaturalist con paginacion por cursor"
 ## Task 3: Censo de disponibilidad por clase
 
 **Files:**
+
 - Create: `pipeline/gbif.py`, `pipeline/censo.py`, `ontologia/candidatas.yaml`
 - Test: `tests/test_censo.py`
 
 **Interfaces:**
+
 - Consumes: `pipeline.ontologia.cargar_ontologia`, `pipeline.ontologia.Ontologia`, `pipeline.inat.contar_observaciones`, `pipeline.inat.buscar_lugar`
 - Produces:
   - `pipeline.gbif.contar_ocurrencias(taxon_key: int, *, pais: str | None = None, sesion=None) -> int`
@@ -1235,10 +1257,12 @@ git commit -m "feat: censo de disponibilidad de imagenes por clase"
 ## Task 4: Utilidades de imagen y hash perceptual
 
 **Files:**
+
 - Create: `pipeline/imagenes.py`
 - Test: `tests/test_imagenes.py`
 
 **Interfaces:**
+
 - Consumes: nada de tareas anteriores
 - Produces:
   - `descargar_imagen(url: str, *, sesion, min_lado: int = 224, timeout: int = 30) -> Image.Image | None`
@@ -1462,10 +1486,12 @@ git commit -m "feat: utilidades de imagen y huella perceptual por bandas"
 ## Task 5: Descarga masiva con manifiesto de trazabilidad
 
 **Files:**
+
 - Create: `pipeline/descarga.py`
 - Test: `tests/test_descarga.py`
 
 **Interfaces:**
+
 - Consumes: `pipeline.ontologia.cargar_ontologia`, `pipeline.inat.iterar_observaciones`, `pipeline.inat.Observacion`, `pipeline.imagenes.descargar_imagen`, `normalizar`, `guardar_jpeg`
 - Produces:
   - `COLUMNAS_MANIFIESTO: tuple[str, ...]` = `("archivo", "obs_id", "observador", "orden", "familia", "taxon_nombre", "rango", "licencia", "atribucion", "latitud", "longitud", "fecha", "url", "fuente")`
@@ -1878,10 +1904,12 @@ git commit -m "feat: descarga masiva con manifiesto de trazabilidad y licencias"
 ## Task 6: Curación — deduplicado y filtros de calidad
 
 **Files:**
+
 - Create: `pipeline/curacion.py`
 - Test: `tests/test_curacion.py`
 
 **Interfaces:**
+
 - Consumes: `pipeline.descarga.leer_manifiesto`, `escribir_manifiesto`, `COLUMNAS_MANIFIESTO`; `pipeline.imagenes.hash_perceptual`, `distancia`, `bandas`
 - Produces:
   - `COLUMNAS_CURADO: tuple[str, ...]` = `COLUMNAS_MANIFIESTO + ("hash",)`
@@ -2231,11 +2259,13 @@ git commit -m "feat: curacion con deduplicado perceptual indexado por bandas"
 ## Task 7: Particionado agrupado y regla de admisión
 
 **Files:**
+
 - Create: `pipeline/splits.py`
 - Test: `tests/test_splits.py`
 
 **Interfaces:**
-- Consumes: `pipeline.ontologia.cargar_ontologia`, `Ontologia`; `pipeline.curacion.COLUMNAS_CURADO`
+
+- Consumes: `pipeline.ontologia.cargar_ontologia`, `Ontologia`, `PREFIJO_OTROS`; `pipeline.curacion.COLUMNAS_CURADO`
 - Produces:
   - `PROPORCIONES: dict[str, float]` = `{"train": 0.70, "val": 0.15, "test": 0.15}`
   - `asignar_grupos(filas: list[dict], *, proporciones: dict[str, float] = PROPORCIONES) -> dict[str, str]` (observador → split)
@@ -2387,10 +2417,9 @@ from collections import defaultdict
 from pathlib import Path
 
 from pipeline.curacion import COLUMNAS_CURADO
-from pipeline.ontologia import Ontologia, cargar_ontologia
+from pipeline.ontologia import PREFIJO_OTROS, Ontologia, cargar_ontologia
 
 PROPORCIONES = {"train": 0.70, "val": 0.15, "test": 0.15}
-PREFIJO_OTROS = "Otros_"
 
 
 def asignar_grupos(
@@ -2578,15 +2607,19 @@ git commit -m "feat: particionado agrupado por observador y regla de admision"
 ## Task 8: Base de datos biológica — Excel a SQLite
 
 **Files:**
+
 - Create: `bd/esquema.sql`, `pipeline/bd.py`
 - Test: `tests/test_bd.py`
 
 **Interfaces:**
+
 - Consumes: `pipeline.ontologia.cargar_ontologia`, `Ontologia`
 - Produces:
   - `COLUMNAS_BD: tuple[str, ...]` — las 19 columnas del documento IF
-  - `validar(df: pandas.DataFrame, onto) -> list[str]` (lista de errores legibles; vacía si todo bien)
+  - `validar(df, onto) -> list[str]` (recibe un `pandas.DataFrame`; devuelve errores legibles, vacío si todo bien)
   - `importar(ruta_excel: Path, ruta_sqlite: Path, onto) -> tuple[int, list[str]]`
+
+> **pandas se importa dentro de `importar()`, no a nivel de módulo.** El backend del Plan 03 importa `COLUMNAS_BD` de aquí y no debe arrastrar pandas a sus dependencias de despliegue.
 
 Las 19 columnas, en orden, según `agro/reunion/5_Base_de_Datos_Estructura.md`: `ID`, `Archivo_imagen`, `Vistas_fotograficas`, `Orden`, `Familia`, `Nombre_cientifico`, `Nombre_comun`, `Cultivo_asociado`, `Tipo_de_dano`, `Hospedero`, `Localidad`, `Coordenadas`, `Fecha`, `Colector`, `Importancia_economica`, `Estado_biologico`, `Fuente`, `Verificado_por`, `Observaciones`.
 
@@ -2759,13 +2792,15 @@ nada: es preferible una BD ausente a una BD silenciosamente inconsistente.
 from __future__ import annotations
 
 import argparse
+import math
 import re
 import sqlite3
 from pathlib import Path
 
-import pandas as pd
-
 from pipeline.ontologia import Ontologia, cargar_ontologia
+
+# pandas se importa dentro de `importar()`, no aquí: el backend del Plan 03
+# necesita COLUMNAS_BD y no debe arrastrar pandas al despliegue.
 
 COLUMNAS_BD = (
     "ID",
@@ -2795,12 +2830,12 @@ PATRON_COORDENADAS = re.compile(r"^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$")
 
 
 def _texto(valor) -> str:
-    if valor is None or (isinstance(valor, float) and pd.isna(valor)):
+    if valor is None or (isinstance(valor, float) and math.isnan(valor)):
         return ""
     return str(valor).strip()
 
 
-def validar(df: pd.DataFrame, onto: Ontologia) -> list[str]:
+def validar(df, onto: Ontologia) -> list[str]:
     """Devuelve la lista de errores legibles. Vacía si el marco es válido."""
     errores: list[str] = []
 
@@ -2853,6 +2888,8 @@ def validar(df: pd.DataFrame, onto: Ontologia) -> list[str]:
 
 def importar(ruta_excel: Path, ruta_sqlite: Path, onto: Ontologia) -> tuple[int, list[str]]:
     """Valida el Excel y, si está limpio, lo vuelca a SQLite."""
+    import pandas as pd  # local: mantiene el módulo importable sin pandas
+
     df = pd.read_excel(ruta_excel, sheet_name=HOJA, dtype=str).fillna("")
     errores = validar(df, onto)
     if errores:
@@ -2928,10 +2965,12 @@ git commit -m "feat: importacion validada de la base de datos biologica a sqlite
 ## Task 9: Conjunto de prueba de campo
 
 **Files:**
+
 - Create: `pipeline/campo.py`
 - Test: `tests/test_campo.py`
 
 **Interfaces:**
+
 - Consumes: `pipeline.ontologia.cargar_ontologia`, `Ontologia`; `pipeline.imagenes.hash_perceptual`, `distancia`, `bandas`; `pipeline.curacion.COLUMNAS_CURADO`
 - Produces:
   - `ingerir(raiz_campo: Path, onto) -> tuple[list[dict], list[str]]`

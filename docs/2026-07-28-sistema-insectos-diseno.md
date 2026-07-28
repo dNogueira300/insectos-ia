@@ -42,10 +42,10 @@ Se implementa un **modelo multi-tarea con enmascaramiento jerárquico**:
 
 **Por qué esta opción y no las alternativas evaluadas:**
 
-| Alternativa | Por qué se descartó |
-| --- | --- |
+| Alternativa                                                | Por qué se descartó                                                                                                                                                |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Cascada: 1 modelo de orden + 1 modelo de familia por orden | ~8–10 artefactos que mantener y desplegar, cada uno entrenado con una fracción de los datos; el error del primer nivel se propaga sin posibilidad de recuperación. |
-| Modelo plano de 25 familias, orden derivado por tabla | El peor caso para la cola larga: sin señal de orden las familias raras colapsan, y no permite degradar a "conozco el orden, no la familia". |
+| Modelo plano de 25 familias, orden derivado por tabla      | El peor caso para la cola larga: sin señal de orden las familias raras colapsan, y no permite degradar a "conozco el orden, no la familia".                        |
 
 La ventaja decisiva del modelo elegido es que las clases de orden tienen mucho más volumen de datos que las de familia, y la cabeza de orden actúa como regularizador de la representación compartida. Además produce **un solo artefacto ONNX**, lo que simplifica el despliegue.
 
@@ -128,14 +128,14 @@ Es la parte del diseño que más determina si el sistema funciona. Cuatro reglas
 
 La exactitud global (*accuracy*) es engañosa con clases desbalanceadas: un modelo que ignore las familias raras puede exhibir buena exactitud y ser inservible. Se reporta:
 
-| Métrica | Qué mide |
-| --- | --- |
-| macro-F1 de orden | Desempeño promedio por clase, sin premiar a las clases mayoritarias |
-| macro-F1 de familia | Ídem, sobre las familias admitidas |
-| Exactitud jerárquica | Fracción de casos con orden **y** familia correctos |
-| Top-3 de familia | Utilidad práctica para un usuario que revisa opciones |
+| Métrica                   | Qué mide                                                               |
+| ------------------------- | ---------------------------------------------------------------------- |
+| macro-F1 de orden         | Desempeño promedio por clase, sin premiar a las clases mayoritarias    |
+| macro-F1 de familia       | Ídem, sobre las familias admitidas                                     |
+| Exactitud jerárquica      | Fracción de casos con orden **y** familia correctos                    |
+| Top-3 de familia          | Utilidad práctica para un usuario que revisa opciones                  |
 | Cobertura @ confianza ≥ τ | Qué porcentaje de casos el sistema responde sin declarar incertidumbre |
-| F1 por clase | Tabla completa; ninguna clase se esconde en el promedio |
+| F1 por clase              | Tabla completa; ninguna clase se esconde en el promedio                |
 
 **Criterio de aceptación:** las metas de ≥90% (orden) y ≥85% (familia) se evalúan como **macro-F1 sobre el conjunto de prueba de campo**, no sobre validación de iNaturalist. Se reportan ambas cifras siempre, y la diferencia entre ellas es en sí misma un resultado que el informe debe explicar.
 
@@ -149,12 +149,12 @@ El backend usa esa BD **después** de predecir: el modelo devuelve orden y famil
 
 **Backend (FastAPI):**
 
-| Endpoint | Función |
-| --- | --- |
-| `POST /predecir` | Imagen → orden, familia, confianzas, top-3, ficha de BD |
-| `GET /clases` | Ontología vigente servida desde `clases.yaml` |
-| `GET /taxon/{id}` | Ficha biológica completa desde SQLite |
-| `GET /salud` | Versión del modelo, versión de ontología, estado |
+| Endpoint          | Función                                                 |
+| ----------------- | ------------------------------------------------------- |
+| `POST /predecir`  | Imagen → orden, familia, confianzas, top-3, ficha de BD |
+| `GET /clases`     | Ontología vigente servida desde `clases.yaml`           |
+| `GET /taxon/{id}` | Ficha biológica completa desde SQLite                   |
+| `GET /salud`      | Versión del modelo, versión de ontología, estado        |
 
 Inferencia con **ONNX Runtime** en CPU: sin dependencia de GPU en despliegue, y coherente con lo ya probado en la demo.
 
@@ -162,32 +162,32 @@ Inferencia con **ONNX Runtime** en CPU: sin dependencia de GPU en despliegue, y 
 
 ## 11. Cronograma (16 semanas)
 
-| Semanas | Entregable |
-| --- | --- |
-| 1–3 | Repo estructurado, `censo.py`, `docs/censo_disponibilidad.md`, **ontología congelada con la Facultad** |
-| 4–7 | Descarga masiva, curación, banco de imágenes v1, BD Excel → SQLite operativa |
-| 8–11 | Entrenamiento multi-tarea, iteración de hiperparámetros, export ONNX, informe de métricas |
-| 12–14 | Backend FastAPI + frontend React, evaluación contra el conjunto de campo |
-| 15–16 | Ajustes finales, informe de resultados, presentación |
+| Semanas | Entregable                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------ |
+| 1–3     | Repo estructurado, `censo.py`, `docs/censo_disponibilidad.md`, **ontología congelada con la Facultad** |
+| 4–7     | Descarga masiva, curación, banco de imágenes v1, BD Excel → SQLite operativa                           |
+| 8–11    | Entrenamiento multi-tarea, iteración de hiperparámetros, export ONNX, informe de métricas              |
+| 12–14   | Backend FastAPI + frontend React, evaluación contra el conjunto de campo                               |
+| 15–16   | Ajustes finales, informe de resultados, presentación                                                   |
 
 ## 12. Mapeo a los productos exigidos
 
-| Producto (documento IF) | Cómo se cumple |
-| --- | --- |
-| 1. Colección entomológica digital | Campo `Vistas_fotograficas` en la BD + estructura de carpetas por vista para el material de la Facultad |
-| 2. Base de datos de insectos amazónicos | `bd/bd_insectos.xlsx` → SQLite, 19 columnas, consultable desde el prototipo |
-| 3. Banco de imágenes (+5000 fotos) | `datos/curado/` (repositorios) + `datos/campo/` (colecta propia) |
-| Prototipo web de consulta | `backend/` + `frontend/` |
+| Producto (documento IF)                 | Cómo se cumple                                                                                          |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1. Colección entomológica digital       | Campo `Vistas_fotograficas` en la BD + estructura de carpetas por vista para el material de la Facultad |
+| 2. Base de datos de insectos amazónicos | `bd/bd_insectos.xlsx` → SQLite, 19 columnas, consultable desde el prototipo                             |
+| 3. Banco de imágenes (+5000 fotos)      | `datos/curado/` (repositorios) + `datos/campo/` (colecta propia)                                        |
+| Prototipo web de consulta               | `backend/` + `frontend/`                                                                                |
 
 ## 13. Riesgos
 
-| Riesgo | Mitigación |
-| --- | --- |
-| Familias sin datos suficientes en repositorios | Regla de admisión (§6) + clase `Otros_<Orden>`; se decide con el censo, no al final |
-| Brecha entre foto de repositorio y foto de campo | Conjunto de prueba de campo separado (§7.4); la métrica reportada es la de campo |
-| Demora de la Facultad en confirmar clases | Pipeline agnóstico a la lista; el censo avanza en paralelo |
+| Riesgo                                                        | Mitigación                                                                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Familias sin datos suficientes en repositorios                | Regla de admisión (§6) + clase `Otros_<Orden>`; se decide con el censo, no al final                     |
+| Brecha entre foto de repositorio y foto de campo              | Conjunto de prueba de campo separado (§7.4); la métrica reportada es la de campo                        |
+| Demora de la Facultad en confirmar clases                     | Pipeline agnóstico a la lista; el censo avanza en paralelo                                              |
 | Sesgo geográfico (mayoría de observaciones no son amazónicas) | El censo reporta disponibilidad con y sin filtro geográfico; se decide por clase si conviene restringir |
-| Licencias de imágenes | Solo Creative Commons; `descarga.py` registra licencia y autor por imagen para la atribución |
+| Licencias de imágenes                                         | Solo Creative Commons; `descarga.py` registra licencia y autor por imagen para la atribución            |
 
 ## 14. Decisiones cerradas
 
