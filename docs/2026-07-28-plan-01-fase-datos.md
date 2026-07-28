@@ -149,6 +149,16 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.3"]
 
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Explícito a propósito: la raíz tiene varios directorios (ontologia, bd,
+# tests, docs) y la detección automática de setuptools falla con
+# "Multiple top-level packages discovered in a flat-layout".
+packages = ["pipeline"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
