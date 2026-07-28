@@ -116,6 +116,9 @@ py -3.12 -m venv .venv
 __pycache__/
 *.pyc
 
+# metadata de build generada por "pip install -e" (nombre de paquete variable)
+*.egg-info/
+
 # datos: nunca se versionan (pesan GB y las licencias son por imagen)
 datos/
 
