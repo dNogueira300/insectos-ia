@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import logging
 from pathlib import Path
 
 import imagehash
@@ -9,16 +10,30 @@ from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = 100_000_000  # evita el aviso de bomba de descompresión
 
+# Longitud en caracteres hexadecimales de una huella de 64 bits.
+LARGO_HUELLA = 16
 
-def descargar_imagen(url: str, *, sesion, min_lado: int = 224, timeout: int = 30):
-    """Descarga una imagen. Devuelve None si falla o si es demasiado chica."""
+_log = logging.getLogger(__name__)
+
+
+def descargar_imagen(
+    url: str, *, sesion, min_lado: int = 224, timeout: int = 30
+) -> Image.Image | None:
+    """Descarga una imagen. Devuelve None si falla o si es demasiado chica.
+
+    Nunca propaga la excepción: una descarga masiva de horas no puede morir
+    por una foto rota. Pero sí registra el motivo, porque sin rastro es
+    imposible distinguir "la URL no respondió" de "el archivo está corrupto".
+    """
     try:
         respuesta = sesion.get(url, timeout=timeout)
         respuesta.raise_for_status()
         img = Image.open(io.BytesIO(respuesta.content)).convert("RGB")
-    except Exception:
+    except Exception as error:
+        _log.debug("no se pudo descargar %s: %s: %s", url, type(error).__name__, error)
         return None
     if min(img.size) < min_lado:
+        _log.debug("descartada %s: lado menor %d < %d", url, min(img.size), min_lado)
         return None
     return img
 
@@ -43,16 +58,29 @@ def hash_perceptual(img: Image.Image) -> str:
     return str(imagehash.phash(img))
 
 
+def _normalizada(hash_hex: str) -> str:
+    """Rellena la huella a 16 caracteres.
+
+    No es redundante: `bandas` trocea por posición de carácter, así que una
+    huella que perdió un cero a la izquierda al serializarse produciría bandas
+    desplazadas y sin solape con las de la misma huella bien formada. El
+    deduplicado dejaría pasar el duplicado en silencio. No quitar.
+    """
+    return hash_hex.zfill(LARGO_HUELLA)
+
+
 def distancia(hash_a: str, hash_b: str) -> int:
     """Distancia de Hamming entre dos huellas hexadecimales."""
-    return bin(int(hash_a, 16) ^ int(hash_b, 16)).count("1")
+    return bin(int(_normalizada(hash_a), 16) ^ int(_normalizada(hash_b), 16)).count("1")
 
 
 def bandas(hash_hex: str) -> tuple[str, str, str, str]:
     """Parte la huella en 4 bandas de 16 bits.
 
     Dos huellas a distancia <= 3 comparten al menos una banda idéntica
-    (principio del palomar). Es lo que hace viable deduplicar sin comparar
-    todos los pares.
+    (principio del palomar): tres diferencias no pueden repartirse entre
+    cuatro bandas disjuntas sin dejar una intacta. Es lo que hace viable
+    deduplicar sin comparar todos los pares.
     """
-    return (hash_hex[0:4], hash_hex[4:8], hash_hex[8:12], hash_hex[12:16])
+    huella = _normalizada(hash_hex)
+    return (huella[0:4], huella[4:8], huella[8:12], huella[12:16])

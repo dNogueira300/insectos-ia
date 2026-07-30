@@ -1,4 +1,5 @@
 import io
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -72,13 +73,67 @@ def test_bandas_son_cuatro_de_cuatro_hex():
     assert partes == ("0123", "4567", "89ab", "cdef")
 
 
-def test_hashes_cercanos_comparten_al_menos_una_banda():
-    """Garantía del principio del palomar en la que se apoya el deduplicado."""
+def con_bits_volteados(hash_hex: str, posiciones: tuple[int, ...]) -> str:
+    """Devuelve la huella con los bits indicados invertidos.
+
+    Permite construir huellas a una distancia de Hamming exacta, sin depender
+    de que una transformación de imagen produzca esa distancia por azar.
+    """
+    valor = int(hash_hex, 16)
+    for posicion in posiciones:
+        valor ^= 1 << posicion
+    return f"{valor:016x}"
+
+
+BASE = "3f2a9c07b15e6d84"
+
+
+@pytest.mark.parametrize(
+    "posiciones",
+    [(0,), (17,), (0, 40), (5, 33, 61), (2, 3, 4)],
+    ids=["1 bit", "1 bit lejano", "2 bits", "3 bits dispersos", "3 bits juntos"],
+)
+def test_hashes_a_distancia_maxima_tres_comparten_una_banda(posiciones):
+    """Garantía del principio del palomar en la que se apoya el deduplicado.
+
+    Con 4 bandas disjuntas de 16 bits, tres diferencias no pueden repartirse
+    entre las cuatro: al menos una banda queda intacta.
+    """
+    otra = con_bits_volteados(BASE, posiciones)
+    assert distancia(BASE, otra) == len(posiciones)
+    assert set(bandas(BASE)) & set(bandas(otra))
+
+
+def test_cuatro_bits_repartidos_pueden_no_compartir_banda():
+    """Control: el palomar solo garantiza hasta 3. Con 4 la garantía cesa."""
+    otra = con_bits_volteados(BASE, (0, 16, 32, 48))  # uno en cada banda
+    assert distancia(BASE, otra) == 4
+    assert not set(bandas(BASE)) & set(bandas(otra))
+
+
+def test_la_misma_huella_sin_cero_a_la_izquierda_da_las_mismas_bandas():
+    """Un cero perdido al serializar no debe desalinear el troceado."""
+    completa = "0abc123456789abc"
+    sin_cero = completa.lstrip("0")
+    assert distancia(completa, sin_cero) == 0
+    assert bandas(completa) == bandas(sin_cero)
+
+
+def test_imagen_recomprimida_conserva_banda_comun():
+    """La variante de una imagen debe seguir siendo detectable como duplicada."""
     img = imagen_patron(4)
     variante = Image.open(io.BytesIO(a_bytes(img.resize((260, 260))))).convert("RGB")
     a, b = hash_perceptual(img), hash_perceptual(variante)
-    if distancia(a, b) <= 3:
-        assert set(bandas(a)) & set(bandas(b))
+    assert distancia(a, b) <= 3
+    assert set(bandas(a)) & set(bandas(b))
+
+
+def test_descargar_imagen_registra_el_motivo_del_fallo(caplog):
+    """Un fallo silencioso en una descarga de horas es indiagnosticable."""
+    sesion = SesionImagen(b"esto no es una imagen")
+    with caplog.at_level(logging.DEBUG, logger="pipeline.imagenes"):
+        assert descargar_imagen("http://x/rota.jpg", sesion=sesion) is None
+    assert "http://x/rota.jpg" in caplog.text
 
 
 def test_normalizar_limita_el_lado_mayor():
