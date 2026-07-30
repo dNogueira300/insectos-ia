@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from pipeline.curacion import COLUMNAS_CURADO, curar, deduplicar, hashes_de, reporte_markdown
-from pipeline.descarga import COLUMNAS_MANIFIESTO, escribir_manifiesto
+from pipeline.descarga import COLUMNAS_MANIFIESTO, escribir_manifiesto, leer_manifiesto
 
 
 def fila(archivo, obs_id, orden="OrdenA", familia="FamX", hash_=None):
@@ -103,6 +103,63 @@ def test_curar_descarta_archivos_ilegibles(tmp_path: Path):
     resumen = curar(crudo, curado)
     assert resumen["conservadas"] == 1
     assert resumen["por_motivo"]["ilegible"] == 1
+
+
+def test_segunda_corrida_elimina_archivos_que_el_manifiesto_ya_no_incluye(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_imagen(crudo, "OrdenA/FamX/2.jpg", 77)
+    escribir_manifiesto(
+        [fila("OrdenA/FamX/1.jpg", 1), fila("OrdenA/FamX/2.jpg", 2)],
+        crudo / "manifiesto.csv",
+    )
+    curar(crudo, curado)
+    assert (curado / "OrdenA/FamX/2.jpg").exists()
+
+    # La descarga se corrige y el manifiesto de origen ya no trae la obs. 2.
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+    curar(crudo, curado)
+
+    assert not (curado / "OrdenA/FamX/2.jpg").exists()
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+
+
+def test_destino_coincide_exactamente_con_el_manifiesto_curado(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_imagen(crudo, "OrdenA/FamX/2.jpg", 1)   # duplicada de la 1
+    escribir_imagen(crudo, "OrdenA/FamX/3.jpg", 77)
+    escribir_manifiesto(
+        [fila("OrdenA/FamX/1.jpg", 1), fila("OrdenA/FamX/2.jpg", 2), fila("OrdenA/FamX/3.jpg", 3)],
+        crudo / "manifiesto.csv",
+    )
+
+    curar(crudo, curado)
+
+    conservadas = leer_manifiesto(curado / "manifiesto_curado.csv")
+    rutas_del_manifiesto = {(curado / c["archivo"]).resolve() for c in conservadas}
+    rutas_en_disco = {p.resolve() for p in curado.rglob("*.jpg")}
+    assert rutas_en_disco == rutas_del_manifiesto
+
+
+def test_curar_es_idempotente_en_corridas_repetidas(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_imagen(crudo, "OrdenA/FamX/2.jpg", 1)   # duplicada de la 1
+    escribir_imagen(crudo, "OrdenA/FamX/3.jpg", 77)
+    escribir_manifiesto(
+        [fila("OrdenA/FamX/1.jpg", 1), fila("OrdenA/FamX/2.jpg", 2), fila("OrdenA/FamX/3.jpg", 3)],
+        crudo / "manifiesto.csv",
+    )
+
+    resumen_1 = curar(crudo, curado)
+    archivos_1 = sorted(p.relative_to(curado) for p in curado.rglob("*.jpg"))
+
+    resumen_2 = curar(crudo, curado)
+    archivos_2 = sorted(p.relative_to(curado) for p in curado.rglob("*.jpg"))
+
+    assert resumen_1 == resumen_2
+    assert archivos_1 == archivos_2
 
 
 def test_reporte_menciona_el_factor_real_de_curacion():

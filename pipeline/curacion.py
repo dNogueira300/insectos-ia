@@ -18,6 +18,11 @@ from pipeline.descarga import COLUMNAS_MANIFIESTO, leer_manifiesto
 
 COLUMNAS_CURADO = COLUMNAS_MANIFIESTO + ("hash",)
 
+# Nombre del manifiesto que `curar` escribe en `raiz_curado`. También sirve de
+# marca: si ya existe, `raiz_curado` es un directorio de curación de una
+# corrida anterior y es seguro reconciliarlo (ver `_reconciliar_destino`).
+NOMBRE_MANIFIESTO_CURADO = "manifiesto_curado.csv"
+
 
 def hashes_de(filas: list[dict], raiz: Path) -> list[dict]:
     """Añade la columna `hash` a cada fila. Vacía si el archivo es ilegible."""
@@ -81,6 +86,46 @@ def _escribir_curado(filas: list[dict], ruta: Path) -> None:
             escritor.writerow({c: fila.get(c, "") for c in COLUMNAS_CURADO})
 
 
+def _reconciliar_destino(raiz_curado: Path, conservadas: list[dict]) -> None:
+    """Deja en `raiz_curado` solo los archivos listados en `conservadas`.
+
+    Una corrida anterior pudo haber copiado imágenes que esta corrida ya no
+    conserva -por ejemplo, si el manifiesto de origen cambió entre medio-.
+    Sin esto esos archivos quedarían huérfanos: sin fila que los respalde en
+    el CSV, pero visibles para cualquier cargador que liste carpetas
+    directamente en vez de leer el manifiesto (así funcionan los `ImageFolder`
+    típicos), coleándose al entrenamiento sin trazabilidad, sin licencia y
+    sin haber pasado por el particionado por observador de la Tarea 7.
+
+    Solo actúa si `raiz_curado` ya tiene su propio `manifiesto_curado.csv` de
+    una corrida previa: esa es la marca de que este módulo es dueño del
+    directorio. Si no está, no se borra nada -así un `--curado` mal escrito
+    que apunte a una carpeta ajena no pierde contenido que no puso `curar`-.
+    """
+    marca = raiz_curado / NOMBRE_MANIFIESTO_CURADO
+    if not marca.exists():
+        return
+
+    esperados = {(raiz_curado / fila["archivo"]).resolve() for fila in conservadas}
+    marca_resuelta = marca.resolve()
+    for existente in raiz_curado.rglob("*"):
+        if existente.is_file():
+            resuelta = existente.resolve()
+            if resuelta != marca_resuelta and resuelta not in esperados:
+                existente.unlink()
+
+    # Elimina las carpetas de clase que quedaron vacías tras el borrado,
+    # de las más profundas a las más superficiales.
+    carpetas = sorted(
+        (p for p in raiz_curado.rglob("*") if p.is_dir()),
+        key=lambda p: len(p.parts),
+        reverse=True,
+    )
+    for carpeta in carpetas:
+        if not any(carpeta.iterdir()):
+            carpeta.rmdir()
+
+
 def curar(
     raiz_crudo: Path,
     raiz_curado: Path,
@@ -101,7 +146,10 @@ def curar(
         destino.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(raiz_crudo / fila["archivo"], destino)
 
-    _escribir_curado(conservadas, raiz_curado / "manifiesto_curado.csv")
+    if raiz_curado.exists():
+        _reconciliar_destino(raiz_curado, conservadas)
+
+    _escribir_curado(conservadas, raiz_curado / NOMBRE_MANIFIESTO_CURADO)
 
     por_motivo: dict[str, int] = defaultdict(int)
     for fila in descartadas:
