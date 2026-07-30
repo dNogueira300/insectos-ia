@@ -119,6 +119,15 @@ def test_la_misma_huella_sin_cero_a_la_izquierda_da_las_mismas_bandas():
     assert bandas(completa) == bandas(sin_cero)
 
 
+def test_la_misma_huella_en_mayusculas_da_las_mismas_bandas_y_distancia_cero():
+    """Un cambio de mayúsculas (p. ej. al viajar por un CSV) no debe desalinear
+    el troceado ni hacer parecer distintas dos huellas idénticas."""
+    minusculas = "abcdefabcdefabcd"
+    mayusculas = minusculas.upper()
+    assert distancia(minusculas, mayusculas) == 0
+    assert bandas(minusculas) == bandas(mayusculas)
+
+
 def test_imagen_recomprimida_conserva_banda_comun():
     """La variante de una imagen debe seguir siendo detectable como duplicada."""
     img = imagen_patron(4)

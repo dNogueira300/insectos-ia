@@ -54,19 +54,32 @@ def guardar_jpeg(img: Image.Image, ruta: Path, calidad: int = 90) -> None:
 
 
 def hash_perceptual(img: Image.Image) -> str:
-    """Huella de 64 bits en hexadecimal. Resistente a recompresión y escalado."""
-    return str(imagehash.phash(img))
+    """Huella de 64 bits en hexadecimal. Resistente a recompresión y escalado.
+
+    Se fuerza minúsculas de forma explícita: `imagehash` hoy siempre las
+    produce, pero es un detalle interno de esa librería y no un contrato
+    documentado. Fijarlo aquí evita depender de que siga siendo así en una
+    versión futura.
+    """
+    return str(imagehash.phash(img)).lower()
 
 
 def _normalizada(hash_hex: str) -> str:
-    """Rellena la huella a 16 caracteres.
+    """Rellena la huella a 16 caracteres y la pasa a minúsculas.
 
     No es redundante: `bandas` trocea por posición de carácter, así que una
-    huella que perdió un cero a la izquierda al serializarse produciría bandas
-    desplazadas y sin solape con las de la misma huella bien formada. El
-    deduplicado dejaría pasar el duplicado en silencio. No quitar.
+    huella deformada por cualquiera de estas dos vías produciría bandas
+    desplazadas y sin solape con las de la misma huella bien formada, aunque
+    `distancia` (que compara el valor entero) no note ninguna diferencia:
+
+    - un cero a la izquierda perdido al serializarse (longitud < 16), o
+    - un cambio de mayúsculas/minúsculas (p. ej. al pasar por un CSV o una
+      hoja de cálculo que capitaliza texto).
+
+    En ambos casos el deduplicado dejaría pasar el duplicado en silencio. No
+    quitar ninguna de las dos normalizaciones.
     """
-    return hash_hex.zfill(LARGO_HUELLA)
+    return hash_hex.zfill(LARGO_HUELLA).lower()
 
 
 def distancia(hash_a: str, hash_b: str) -> int:
