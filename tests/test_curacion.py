@@ -248,6 +248,51 @@ def test_destino_con_contenido_y_sin_marca_es_rechazado_sin_escribir_nada(tmp_pa
     assert not (curado / "manifiesto_curado.csv").exists()
 
 
+def test_directorio_con_el_nombre_de_la_marca_no_cuenta_como_marca(tmp_path: Path):
+    """Un directorio llamado como `MARCA_DESTINO` no es una marca válida.
+
+    Antes de este arreglo, la marca se reconocía con `.exists()`, verdadero
+    tanto para un archivo como para un directorio. Una carpeta con ese
+    nombre -por accidente, o por un descomprimido raro- pasaba como marca
+    válida: `curar()` asumía la propiedad total del directorio y la
+    reconciliación borraba cualquier otro contenido que hubiera ahí, sin
+    que hiciera falta ninguna corrida previa.
+    """
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    curado.mkdir(parents=True)
+    (curado / MARCA_DESTINO).mkdir()  # directorio-disfraz, no un archivo
+    otro = curado / "otro_archivo.txt"
+    otro.write_text("contenido ajeno", encoding="utf-8")
+
+    with pytest.raises(ErrorDestinoNoReconocido):
+        curar(crudo, curado)
+
+    assert otro.exists()
+    assert otro.read_text(encoding="utf-8") == "contenido ajeno"
+    assert (curado / MARCA_DESTINO).is_dir()  # el directorio-disfraz sigue intacto
+
+
+def test_marca_que_es_archivo_regular_sigue_funcionando_como_antes(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    curado.mkdir(parents=True)
+    (curado / MARCA_DESTINO).write_text("marca", encoding="utf-8")  # marca valida: archivo regular
+    huerfano = curado / "OrdenA/FamX/99.jpg"
+    huerfano.parent.mkdir(parents=True)
+    huerfano.write_bytes(b"restos de una corrida anterior")
+
+    resumen = curar(crudo, curado)
+
+    assert resumen["conservadas"] == 1
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+    assert not huerfano.exists()  # se reconcilio con normalidad, como antes de este arreglo
+
+
 def test_destino_existente_y_vacio_se_acepta_con_normalidad(tmp_path: Path):
     crudo, curado = tmp_path / "crudo", tmp_path / "curado"
     escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)

@@ -30,6 +30,14 @@ NOMBRE_MANIFIESTO_CURADO = "manifiesto_curado.csv"
 # dejaría el directorio sin identificar y la siguiente corrida no
 # reconciliaría los archivos huérfanos. Ver `_marcar_destino` y `curar`.
 # No es basura: no borrar.
+#
+# La marca solo cuenta si es un ARCHIVO REGULAR: en todo el módulo se
+# comprueba con `.is_file()`, nunca con `.exists()`. Un directorio que por
+# accidente (o por un descomprimido raro) se llame igual que la marca no
+# debe confundirse con ella -si `.exists()` bastara, cualquier carpeta con
+# ese nombre haría que `curar()` asumiera la propiedad total del directorio
+# y reconciliara -es decir, borrara- contenido ajeno sin que hubiera existido
+# ninguna corrida previa.
 MARCA_DESTINO = ".curacion_destino"
 
 
@@ -113,11 +121,15 @@ def _verificar_destino(raiz_curado: Path) -> None:
     nunca llega a marcarse.
 
     No aplica a los tres casos legítimos: destino inexistente, existente y
-    vacío, o ya marcado por una corrida anterior.
+    vacío, o ya marcado por una corrida anterior. La marca solo cuenta si es
+    un archivo regular (`.is_file()`, no `.exists()`): un directorio que por
+    accidente se llame igual no es una marca válida, así que cae en la
+    comprobación de contenido de más abajo y el destino se rechaza -es
+    justamente el caso que se quiere atrapar-.
     """
     if not raiz_curado.exists():
         return
-    if (raiz_curado / MARCA_DESTINO).exists():
+    if (raiz_curado / MARCA_DESTINO).is_file():
         return
     if any(raiz_curado.iterdir()):
         raise ErrorDestinoNoReconocido(
@@ -138,10 +150,26 @@ def _marcar_destino(raiz_curado: Path) -> None:
     una corrida que se interrumpe a mitad de camino deje el directorio
     identificado como propio: la siguiente corrida completa podrá
     reconciliar lo que esta alcanzó a copiar.
+
+    En el flujo normal de `curar`, `_verificar_destino` ya descartó antes
+    cualquier directorio-disfraz con ese nombre (cuenta como "contenido" y
+    el destino se rechaza). Pero si algo distinto a un archivo regular
+    ocupara esta ruta -por ejemplo, si se llamara a esta función fuera de
+    ese flujo-, escribir ahí fallaría con una excepción cruda del sistema
+    de archivos (`IsADirectoryError` en algunos sistemas, `PermissionError`
+    en otros). Se comprueba explícitamente para fallar con un mensaje
+    legible en su lugar.
     """
     marca = raiz_curado / MARCA_DESTINO
-    if marca.exists():
+    if marca.is_file():
         return
+    if marca.exists():
+        raise ErrorDestinoNoReconocido(
+            f"'{marca}' ya existe pero no es un archivo regular, así que no "
+            f"puede usarse como marca de propiedad de '{raiz_curado}'. "
+            "Elimina manualmente esa ruta -revisando antes que no sea nada "
+            "importante- y vuelve a correr curar()."
+        )
     marca.parent.mkdir(parents=True, exist_ok=True)
     marca.write_text(
         "Este directorio es administrado por pipeline.curacion.curar().\n"
@@ -170,6 +198,16 @@ def _reconciliar_destino(raiz_curado: Path, conservadas: list[dict]) -> None:
     `MARCA_DESTINO` y `_marcar_destino`). No se repite esa comprobación aquí
     porque para este punto `_marcar_destino` ya escribió la marca de esta
     misma corrida, y comprobar su existencia ahora siempre daría verdadero.
+
+    ADVERTENCIA sobre el alcance del borrado: una vez que `raiz_curado` está
+    legítimamente marcado, esta función borra TODO lo que no esté en
+    `conservadas` (salvo el manifiesto y la marca) -incluido cualquier
+    contenido ajeno que hubiera quedado ahí de antes, aunque no lo haya
+    puesto `curar()`-. Esto es intencional, no un descuido: la marca
+    significa "este directorio me pertenece por completo", no "reconcilia
+    solo lo que yo mismo copié". `_verificar_destino` es la única barrera
+    contra perder contenido ajeno, y actúa antes de marcar; una vez marcado,
+    el directorio es del todo de `curar()`.
     """
     protegidos = {
         (raiz_curado / NOMBRE_MANIFIESTO_CURADO).resolve(),
@@ -217,7 +255,7 @@ def curar(
     # vacío -nunca contenido ajeno-, así que esta primera corrida no tiene
     # nada que reconciliar; solo deja la marca puesta para que la siguiente
     # sí pueda.
-    directorio_ya_propio = (raiz_curado / MARCA_DESTINO).exists()
+    directorio_ya_propio = (raiz_curado / MARCA_DESTINO).is_file()
     _marcar_destino(raiz_curado)
 
     filas = leer_manifiesto(raiz_crudo / "manifiesto.csv")
