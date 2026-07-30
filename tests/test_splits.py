@@ -359,6 +359,43 @@ def test_el_reporte_da_el_consejo_correcto_a_cada_causa():
     assert "se sustituyen por otras" not in texto
 
 
+def test_el_umbral_de_escasez_no_es_la_suma_de_los_minimos(ruta_ontologia: Path):
+    """Contraejemplo del revisor: 190 imágenes de 19 fotógrafos distintos.
+
+    Con la suma de los mínimos (150 + 30 = 180) como umbral, 190 imágenes
+    parecen "de sobra" y la familia se diagnostica como mal repartida. Pero
+    con un reparto proporcional 70/15/15, a train le tocan ~133 imágenes,
+    por debajo de su mínimo de 150: el problema es que no hay bastante
+    material, no que esté mal distribuido. Y con 19 fotógrafos distintos,
+    "hacen falta más fotógrafos" es exactamente el consejo falso: lo que
+    falta son más FOTOS, no más personas.
+    """
+    onto = cargar_ontologia(ruta_ontologia)  # minimos: 150 train / 30 test
+    filas = muchas(190, orden="OrdenZ", familia="FamMedia", por_observador=10)
+    asignacion = asignar_grupos(filas)
+    _, decisiones = aplicar_regla_admision(filas, asignacion, onto)
+
+    assert decisiones["FamMedia"] == DECISION_MATERIAL_ESCASO, (
+        "190 imágenes de 19 fotógrafos no llegan al mínimo de train con un "
+        "reparto proporcional: es escasez de material, no mal reparto"
+    )
+
+
+def test_material_concentrado_en_uno_o_dos_fotografos_sigue_siendo_sin_reparto(
+    ruta_ontologia: Path,
+):
+    """Contraparte del caso anterior: con material de sobra concentrado en muy
+    pocas personas, el diagnóstico correcto sigue siendo SIN_REPARTO."""
+    onto = cargar_ontologia(ruta_ontologia)
+    filas = [fila(i, "prolifico", "OrdenZ", "FamConcentrada") for i in range(590)] + [
+        fila(590 + i, "ocasional", "OrdenZ", "FamConcentrada") for i in range(10)
+    ]
+    asignacion = asignar_grupos(filas)
+    _, decisiones = aplicar_regla_admision(filas, asignacion, onto)
+
+    assert decisiones["FamConcentrada"] == DECISION_SIN_REPARTO
+
+
 def test_el_reporte_no_inventa_secciones_si_todas_las_familias_entran():
     resumen = {
         "total": 100,

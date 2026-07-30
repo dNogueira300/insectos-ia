@@ -335,7 +335,30 @@ def _diagnosticar_familias(
         entrada["observadores"].add(fila["observador"])
         entrada["por_split"][asignacion[fila["observador"]]] += 1
 
-    minimo_total = onto.minimo_familia_train + onto.minimo_familia_test
+    # El umbral de escasez NO es la suma de los mínimos (150 + 30 = 180 con los
+    # valores actuales). Esa suma ignora que el reparto real es PROPORCIONAL:
+    # a train solo le toca el 70% del total, no el total entero. Con 180
+    # imágenes, train recibe apenas ~126 (180 * 0.70), por debajo de su
+    # mínimo de 150 -y lo mismo puede pasar por el lado de test-, así que una
+    # familia justo por encima de 180 puede seguir sin llegar por pura
+    # escasez, no por mal reparto. El umbral correcto es el total que hace
+    # falta para que CADA split alcance su propio mínimo con su proporción; el
+    # más exigente de los dos manda (con los mínimos actuales, es train: unos
+    # 214 = 150 / 0.70).
+    #
+    # Por qué esto ya basta para no culpar a los fotógrafos equivocados: si
+    # una familia tiene MENOS imágenes que este umbral, no importa cuántos
+    # fotógrafos distintos las tomaron -3 o 30-, el reparto proporcional
+    # jamás le daría a train su mínimo. "Pocas fotos" y "muchos fotógrafos" no
+    # pueden coexistir del lado de SIN_REPARTO: el número de observadores que
+    # ya viaja en el diagnóstico (`entrada["observadores"]`, usado más abajo
+    # en el reporte) es precisamente lo que confirma, familia por familia, que
+    # el problema del lado de arriba del umbral es de concentración de
+    # fotógrafos y no de cantidad de material.
+    umbral_escasez = max(
+        onto.minimo_familia_train / PROPORCIONES["train"],
+        onto.minimo_familia_test / PROPORCIONES["test"],
+    )
     for entrada in datos.values():
         suficiente = (
             entrada["por_split"]["train"] >= onto.minimo_familia_train
@@ -343,9 +366,10 @@ def _diagnosticar_familias(
         )
         if suficiente:
             decision = DECISION_ADMITIDA
-        elif entrada["imagenes"] < minimo_total:
-            # Ni juntando todos los splits llega al mínimo: el problema es la
-            # cantidad de material, y ninguna asignación podría arreglarlo.
+        elif entrada["imagenes"] < umbral_escasez:
+            # Ni juntando todos los splits llega al mínimo que el reparto
+            # proporcional necesita: el problema es la cantidad de material,
+            # y ninguna asignación podría arreglarlo.
             decision = DECISION_MATERIAL_ESCASO
         else:
             # Hay material de sobra y aun así no se pudo repartir. Con el
