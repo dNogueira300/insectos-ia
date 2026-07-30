@@ -183,6 +183,30 @@ DECISION_SIN_REPARTO = "agrupada_sin_reparto"
 # irrelevante; con observadores especializados por familia -el caso real en
 # taxonomía- es lo único que impide que todos los fotógrafos de una familia
 # caigan del mismo lado. Se eligió empíricamente: ver `asignar_grupos`.
+#
+# LÍMITE CONOCIDO (deuda documentada, no un arreglo pendiente): el régimen
+# donde este valor se midió, y donde el reparto estratificado llega a CERO
+# familias mal plegadas, es aquel en que los fotógrafos de una misma familia
+# aportan cantidades PARECIDAS de fotos (ver
+# `test_bloques_parecidos_no_pliega_ninguna_familia` en tests/test_splits.py).
+#
+# Cuando aportan cantidades muy dispares -un fotógrafo prolífico y varios
+# ocasionales, que es lo habitual fuera de un escenario sintético- el reparto
+# sigue plegando una fracción de familias pese a que casi siempre son
+# repartibles: en un caso medido, bloques de 311, 145 y 144 imágenes admitían
+# un reparto válido (uno por split) que el algoritmo no encontró. Con datos
+# sintéticos de contraste se midió una tasa de plegado del 26,6% con 3
+# fotógrafos por familia y del 9,6% con 4 (ver
+# `test_bloques_desiguales_documentan_el_limite_conocido`). Además, 0.8 no es
+# el valor óptimo fuera del régimen donde se ajustó: con 3 fotógrafos por
+# familia, 0.7 da mejor resultado, y con 4, 1.0 da un resultado hasta tres
+# veces mejor. En el escenario mixto realista -familias comunes con
+# fotógrafos compartidos, más algunas raras con fotógrafos dedicados- el
+# reparto sí funciona limpio, que es el caso que más importa en la práctica.
+#
+# Este parámetro debe re-medirse cuando exista la lista real de clases del
+# entomólogo: los números de arriba son de escenarios sintéticos, y la
+# distribución real de fotógrafos por familia amazónica puede diferir.
 PESO_CLASE = 0.8
 
 

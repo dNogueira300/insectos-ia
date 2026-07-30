@@ -675,3 +675,131 @@ def test_main_para_si_la_asignacion_guardada_es_ilegible(
     assert codigo != 0
     assert not (destino / "train.csv").exists()
     assert "--regenerar-asignacion" in capsys.readouterr().out
+
+
+# --- Límite conocido del reparto estratificado (ver PESO_CLASE en pipeline/splits.py) ---
+#
+# Estas pruebas no arreglan nada: documentan un límite ya aceptado como deuda.
+# El reparto estratificado llega a cero familias mal plegadas cuando los
+# fotógrafos de una familia aportan cantidades PARECIDAS de fotos. Cuando
+# aportan cantidades muy dispares -un fotógrafo prolífico y varios
+# ocasionales, lo habitual fuera de un escenario sintético- una fracción de
+# familias sigue plegándose aunque casi siempre eran repartibles.
+
+
+def _bloques_parecidos(rng: random.Random, total: int, n: int) -> list[int]:
+    """Reparto equitativo entre los `n` fotógrafos: el régimen que sí funciona."""
+    del rng  # sin aleatoriedad: es justamente el caso "cantidades parecidas"
+    base = total // n
+    return [base] * n
+
+
+def _bloques_desiguales(rng: random.Random, total: int, n: int) -> list[int]:
+    """Un fotógrafo prolífico y varios ocasionales, no partes iguales."""
+    pesos = [rng.random() ** 3 for _ in range(n)]
+    suma = sum(pesos)
+    return [max(1, int(total * peso / suma)) for peso in pesos]
+
+
+def escenario_mixto(
+    *,
+    seed: int,
+    generador_bloques,
+    n_familias_raras: int = 30,
+    obs_por_familia: int = 3,
+    total_familia: int = 600,
+    n_familias_comunes: int = 6,
+    obs_comunes: int = 25,
+) -> tuple[list[dict], dict[str, list[int]]]:
+    """Mezcla realista: familias comunes con fotógrafos compartidos (que no se
+    pliegan, y generan la contención de cupo que sí ocurre con datos reales) y
+    familias raras con fotógrafos dedicados, en cantidades iguales o dispares
+    según `generador_bloques`."""
+    rng = random.Random(seed)
+    filas: list[dict] = []
+    oid = 0
+    bloques_por_familia: dict[str, list[int]] = {}
+    for i in range(n_familias_raras):
+        familia = f"Rara{i:02d}"
+        bloques = generador_bloques(rng, total_familia, obs_por_familia)
+        bloques_por_familia[familia] = bloques
+        for j, tamano in enumerate(bloques):
+            observador = f"{familia}_obs{j}"
+            for _ in range(tamano):
+                filas.append(fila(oid, observador, "OrdenZ", familia))
+                oid += 1
+
+    observadores_comunes = [f"comun_{k}" for k in range(obs_comunes)]
+    for fam_i in range(n_familias_comunes):
+        familia = f"Comun{fam_i}"
+        for observador in observadores_comunes:
+            n = rng.randint(20, 80)
+            for _ in range(n):
+                filas.append(fila(oid, observador, "OrdenZ", familia))
+                oid += 1
+    return filas, bloques_por_familia
+
+
+def _tasa_de_plegado(
+    filas: list[dict], bloques_por_familia: dict[str, list[int]], onto
+) -> float:
+    """Fracción de las familias "raras" que no llegan al umbral de admisión."""
+    asignacion = asignar_grupos(filas)
+    conteo: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for f in filas:
+        conteo[f["familia"]][asignacion[f["observador"]]] += 1
+
+    plegadas = 0
+    for familia in bloques_por_familia:
+        por_split = conteo[familia]
+        suficiente = (
+            por_split["train"] >= onto.minimo_familia_train
+            and por_split["test"] >= onto.minimo_familia_test
+        )
+        if not suficiente:
+            plegadas += 1
+    return plegadas / len(bloques_por_familia)
+
+
+@pytest.mark.parametrize("obs_por_familia", [3, 4])
+def test_bloques_parecidos_no_pliega_ninguna_familia(ruta_ontologia: Path, obs_por_familia: int):
+    """Fija el régimen que SÍ funciona, para que una regresión futura se note.
+
+    Con fotógrafos que aportan cantidades parecidas -incluso con solo 3 o 4
+    por familia-, el reparto estratificado no debería plegar ninguna."""
+    onto = cargar_ontologia(ruta_ontologia)
+    filas, bloques_por_familia = escenario_mixto(
+        seed=0, generador_bloques=_bloques_parecidos, obs_por_familia=obs_por_familia
+    )
+    tasa = _tasa_de_plegado(filas, bloques_por_familia, onto)
+    assert tasa == 0.0, (
+        f"con bloques parecidos no debería plegarse ninguna familia (tasa={tasa:.1%})"
+    )
+
+
+@pytest.mark.parametrize(
+    "obs_por_familia, minimo, maximo",
+    [(3, 0.10, 0.60), (4, 0.05, 0.40)],
+)
+def test_bloques_desiguales_documentan_el_limite_conocido(
+    ruta_ontologia: Path, obs_por_familia: int, minimo: float, maximo: float
+):
+    """Documenta el límite conocido: no es el comportamiento deseado, es la
+    realidad actual del algoritmo con contribuciones desiguales por fotógrafo.
+
+    No se marca como fallo esperado (no hay `xfail`): esta prueba debe pasar y
+    seguir describiendo la realidad. Si el rango deja de contener la tasa
+    medida, o bien el algoritmo mejoró (buena noticia, hay que angostar el
+    rango) o bien empeoró (regresión, hay que investigar) -pero de cualquier
+    forma el comentario de PESO_CLASE en pipeline/splits.py quedó desactualizado
+    y hay que revisarlo junto con esta prueba.
+    """
+    onto = cargar_ontologia(ruta_ontologia)
+    filas, bloques_por_familia = escenario_mixto(
+        seed=0, generador_bloques=_bloques_desiguales, obs_por_familia=obs_por_familia
+    )
+    tasa = _tasa_de_plegado(filas, bloques_por_familia, onto)
+    assert minimo < tasa <= maximo, (
+        f"tasa de plegado observada {tasa:.1%} fuera del rango documentado "
+        f"({minimo:.0%}, {maximo:.0%}] para {obs_por_familia} fotógrafos por familia"
+    )
