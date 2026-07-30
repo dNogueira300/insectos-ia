@@ -501,6 +501,26 @@ def test_leer_una_asignacion_inexistente_da_un_mapa_vacio(tmp_path: Path):
     assert leer_asignacion(tmp_path / "no_existe.yaml") == {}
 
 
+def test_una_asignacion_con_valor_no_textual_es_un_error_legible(tmp_path: Path):
+    """Un desliz de indentación en YAML convierte fácilmente el valor en una
+    lista o un mapa. Antes eso producía `TypeError: unhashable type` crudo, en
+    vez del mensaje legible que ya daba un YAML sintácticamente roto."""
+    ruta = tmp_path / ARCHIVO_ASIGNACION
+    ruta.write_text("ana:\n  - train\n  - test\n", encoding="utf-8")
+    with pytest.raises(ErrorAsignacion):
+        leer_asignacion(ruta)
+
+
+def test_una_asignacion_con_clave_no_textual_es_un_error_legible(tmp_path: Path):
+    """Una clave numérica (`123: train`, típico de un YAML sin comillas) debe
+    fallar igual de ruidosamente que un valor inválido, no colarse convertida
+    a texto en silencio."""
+    ruta = tmp_path / ARCHIVO_ASIGNACION
+    ruta.write_text("123: train\nana: test\n", encoding="utf-8")
+    with pytest.raises(ErrorAsignacion):
+        leer_asignacion(ruta)
+
+
 def test_una_asignacion_corrupta_es_un_error_y_no_un_silencio(tmp_path: Path):
     """Ignorar en silencio un archivo ilegible reintroduciría el defecto:
     la corrida repartiría todo de nuevo creyendo que no había nada guardado."""

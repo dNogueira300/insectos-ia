@@ -92,12 +92,28 @@ def leer_asignacion(ruta: Path) -> dict[str, str]:
 
     asignacion: dict[str, str] = {}
     for observador, split in datos.items():
-        if split not in PROPORCIONES:
+        # Un YAML con una sangría o un guion de más convierte fácilmente una
+        # línea `<observador>: <split>` en una lista o en otro mapa, y una
+        # clave sin comillas que parezca número se lee como int. Ambos casos
+        # deben fallar aquí, con un mensaje que diga qué se esperaba, en vez
+        # de llegar a `split not in PROPORCIONES` y reventar con
+        # `TypeError: unhashable type` cuando el valor no es hasheable.
+        if not isinstance(observador, str):
             raise ErrorAsignacion(
-                f"{ruta}: el observador '{observador}' tiene el split '{split}', que no "
-                f"es uno de {', '.join(PROPORCIONES)}"
+                f"{ruta}: la clave {observador!r} no es texto; se esperaba el nombre "
+                "de un observador (una cadena). Revisar la línea en el YAML: una "
+                "clave sin comillas que parezca número o una lista se leen como otra "
+                "cosa, no como texto."
             )
-        asignacion[str(observador)] = split
+        if not isinstance(split, str) or split not in PROPORCIONES:
+            raise ErrorAsignacion(
+                f"{ruta}: el observador '{observador}' tiene el valor {split!r}, que "
+                f"no es uno de los splits válidos ({', '.join(PROPORCIONES)}). Si el "
+                "valor es una lista o un mapa en vez de una palabra, suele ser una "
+                "sangría de más: la línea debe quedar `<observador>: <split>`, sin "
+                "guiones debajo."
+            )
+        asignacion[observador] = split
     return asignacion
 
 
