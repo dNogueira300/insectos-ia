@@ -207,7 +207,11 @@ def descargar_todo(
     sesion_api=None,
     sesion_img=None,
 ) -> list[dict]:
-    """Descarga la cuota de cada orden y de cada familia declarada.
+    """Descarga la cuota de cada familia declarada y, después, la de cada orden.
+
+    Las familias van primero a propósito: ver el comentario extenso dentro
+    del bucle. Invertirlo hace que la cuota de orden se coma las etiquetas
+    de familia.
 
     La reanudación es por `obs_id`: si el manifiesto ya existente en `raiz`
     lo tiene, se salta. Así una corrida interrumpida se retoma sin volver a
@@ -222,17 +226,31 @@ def descargar_todo(
     ya = {int(f["obs_id"]) for f in manifiesto if f.get("obs_id")}
 
     for orden in sorted(onto.ordenes, key=lambda o: o.nombre):
-        print(f"[{orden.nombre}] cuota de orden (cupo {cupo_orden})...")
-        nuevas = descargar_clase(
-            orden.nombre, "", orden.inat_taxon_id,
-            cupo=cupo_orden, raiz=raiz, ya_descargados=ya,
-            sesion_api=sesion_api, sesion_img=sesion_img,
-            manifiesto_previo=manifiesto,
-        )
-        manifiesto += nuevas
-        escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
-        print(f"  +{len(nuevas)} imágenes")
-
+        # EL ORDEN DE ESTOS DOS BUCLES IMPORTA: PRIMERO LAS FAMILIAS.
+        #
+        # Una familia es un subconjunto taxonómico de su orden, y
+        # `iterar_observaciones` pagina siempre desde la observación más
+        # antigua. Las dos cuotas se disputan, por tanto, exactamente las
+        # mismas observaciones, y `ya_descargados` se comparte entre ambas:
+        # la que corra primero se las lleva y la otra ya no puede
+        # recuperarlas.
+        #
+        # Si el orden fuese primero, cada observación que en realidad
+        # pertenece a una familia declarada quedaría archivada bajo
+        # `_sin_familia` con la etiqueta de familia vacía, de forma
+        # permanente: la familia pierde ese ejemplar y nadie se entera. En
+        # una familia escasa —justo las que la regla de admisión de
+        # `splits.py` está para adjudicar— eso basta para empujarla bajo el
+        # umbral y plegarla a `Otros_<Orden>`.
+        #
+        # Con las familias primero no se pierde nada, porque la relación es
+        # de dominancia estricta: toda fila descargada como familia sirve
+        # además como muestra de orden, ya que lleva el campo `orden`
+        # poblado. La cuota de orden se queda con lo que ninguna familia
+        # declarada reclamó, que es exactamente su propósito.
+        #
+        # No revertir este orden por estética ni por simetría con el resto
+        # del módulo.
         for fam in sorted(orden.familias, key=lambda f: f.nombre):
             print(f"[{orden.nombre}/{fam.nombre}] (cupo {cupo_familia})...")
             nuevas = descargar_clase(
@@ -244,6 +262,17 @@ def descargar_todo(
             manifiesto += nuevas
             escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
             print(f"  +{len(nuevas)} imágenes")
+
+        print(f"[{orden.nombre}] cuota de orden (cupo {cupo_orden})...")
+        nuevas = descargar_clase(
+            orden.nombre, "", orden.inat_taxon_id,
+            cupo=cupo_orden, raiz=raiz, ya_descargados=ya,
+            sesion_api=sesion_api, sesion_img=sesion_img,
+            manifiesto_previo=manifiesto,
+        )
+        manifiesto += nuevas
+        escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
+        print(f"  +{len(nuevas)} imágenes")
 
     return manifiesto
 

@@ -9,10 +9,12 @@ from PIL import Image
 from pipeline.descarga import (
     COLUMNAS_MANIFIESTO,
     descargar_clase,
+    descargar_todo,
     escribir_manifiesto,
     leer_manifiesto,
 )
 from pipeline.inat import Observacion
+from pipeline.ontologia import cargar_ontologia
 
 
 def bytes_imagen(lado=400):
@@ -211,6 +213,79 @@ def test_escritura_interrumpida_no_deja_temporales_huerfanos(tmp_path: Path, mon
 
     restantes = sorted(p.name for p in tmp_path.iterdir())
     assert restantes == ["manifiesto.csv"]
+
+
+def iterador_por_taxon(por_taxon):
+    """Iterador falso que responde distinto según el taxón pedido.
+
+    Reproduce la relación real: una familia es un subconjunto de su orden, y
+    `iterar_observaciones` pagina siempre desde la observación más antigua,
+    así que ambas cuotas se disputan exactamente las mismas observaciones.
+    """
+
+    def _iterar(taxon_id, *, limite, **kwargs):
+        for i, o in enumerate(por_taxon.get(taxon_id, [])):
+            if i >= limite:
+                return
+            yield o
+
+    return _iterar
+
+
+def test_la_cuota_de_orden_no_consume_observaciones_de_familias_declaradas(
+    tmp_path: Path, ruta_ontologia: Path, monkeypatch
+):
+    """Las familias se descargan ANTES que la cuota de orden.
+
+    Si el orden va primero se lleva las observaciones más antiguas —que son
+    justo las que la familia pediría después—, las archiva bajo
+    `_sin_familia` con la etiqueta de familia vacía, y `ya_descargados` hace
+    que la familia ya no pueda recuperarlas nunca. Cada observación robada es
+    un ejemplar que la familia pierde, y en una familia escasa eso la empuja
+    bajo el umbral de admisión.
+    """
+    import pipeline.descarga as mod
+
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    monkeypatch.setattr(
+        mod,
+        "iterar_observaciones",
+        iterador_por_taxon(
+            {
+                47208: [obs(i) for i in range(1, 11)],  # orden completo
+                62956: [obs(i) for i in (1, 2, 3, 4)],  # familia: subconjunto
+                50340: [obs(i) for i in (5, 6)],  # otra familia: subconjunto
+                47792: [obs(i) for i in (20, 21, 22)],
+                49279: [obs(i) for i in (20,)],
+            }
+        ),
+    )
+
+    manifiesto = descargar_todo(
+        cargar_ontologia(ruta_ontologia),
+        raiz=tmp_path,
+        cupo_orden=4,
+        cupo_familia=2,
+        sesion_api=None,
+        sesion_img=SesionImagenOK(),
+    )
+
+    por_familia = {}
+    for fila in manifiesto:
+        por_familia.setdefault(fila["familia"], []).append(fila["obs_id"])
+
+    assert sorted(por_familia.get("Curculionidae", [])) == [1, 2]
+    assert sorted(por_familia.get("Chrysomelidae", [])) == [5, 6]
+    assert sorted(por_familia.get("Libellulidae", [])) == [20]
+
+    # Ninguna observación que una familia declarada podía reclamar terminó
+    # archivada sin etiqueta de familia.
+    reclamables = {1, 2, 3, 4, 5, 6, 20}
+    sin_familia = {oid for oid in por_familia.get("", []) if oid in reclamables}
+    assert sin_familia == {3, 4}, (
+        "solo 3 y 4 sobran de Curculionidae (cupo 2 de 4 disponibles); "
+        f"se perdieron además {sin_familia - {3, 4}}"
+    )
 
 
 def test_manifiesto_se_persiste_a_mitad_de_una_clase(tmp_path: Path, monkeypatch):
