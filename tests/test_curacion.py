@@ -3,7 +3,14 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pipeline.curacion import COLUMNAS_CURADO, curar, deduplicar, hashes_de, reporte_markdown
+from pipeline.curacion import (
+    COLUMNAS_CURADO,
+    MARCA_DESTINO,
+    curar,
+    deduplicar,
+    hashes_de,
+    reporte_markdown,
+)
 from pipeline.descarga import COLUMNAS_MANIFIESTO, escribir_manifiesto, leer_manifiesto
 
 
@@ -160,6 +167,65 @@ def test_curar_es_idempotente_en_corridas_repetidas(tmp_path: Path):
 
     assert resumen_1 == resumen_2
     assert archivos_1 == archivos_2
+
+
+def test_borrar_el_manifiesto_a_mano_no_impide_reconciliar_en_la_siguiente_corrida(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_imagen(crudo, "OrdenA/FamX/2.jpg", 77)
+    escribir_manifiesto(
+        [fila("OrdenA/FamX/1.jpg", 1), fila("OrdenA/FamX/2.jpg", 2)],
+        crudo / "manifiesto.csv",
+    )
+    curar(crudo, curado)
+    assert (curado / "OrdenA/FamX/2.jpg").exists()
+
+    # Alguien borra el manifiesto curado a mano entre corridas.
+    (curado / "manifiesto_curado.csv").unlink()
+
+    # El manifiesto de origen tambien se corrige y ya no trae la obs. 2.
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+    curar(crudo, curado)
+
+    assert not (curado / "OrdenA/FamX/2.jpg").exists()
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+
+
+def test_corrida_interrumpida_deja_el_destino_marcado_y_se_reconcilia_despues(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    # Simula una corrida anterior que murio a mitad de camino: alcanzo a
+    # marcar el destino y a copiar una imagen, pero nunca llego a escribir
+    # el manifiesto curado.
+    huerfano = curado / "OrdenA/FamX/99.jpg"
+    huerfano.parent.mkdir(parents=True)
+    huerfano.write_bytes(b"copia parcial de una corrida interrumpida")
+    (curado / MARCA_DESTINO).write_text("marca", encoding="utf-8")
+    assert not (curado / "manifiesto_curado.csv").exists()
+
+    curar(crudo, curado)
+
+    assert not huerfano.exists()
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+
+
+def test_destino_ajeno_sin_marca_no_pierde_su_contenido_previo(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    # `curado` ya existe con contenido ajeno: nunca fue administrado por
+    # curar() (no tiene la marca de propiedad).
+    curado.mkdir(parents=True)
+    ajeno = curado / "notas_del_entomologo.txt"
+    ajeno.write_text("no tocar", encoding="utf-8")
+
+    curar(crudo, curado)
+
+    assert ajeno.exists()
+    assert ajeno.read_text(encoding="utf-8") == "no tocar"
 
 
 def test_reporte_menciona_el_factor_real_de_curacion():

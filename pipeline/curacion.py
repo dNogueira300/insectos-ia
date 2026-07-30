@@ -18,10 +18,19 @@ from pipeline.descarga import COLUMNAS_MANIFIESTO, leer_manifiesto
 
 COLUMNAS_CURADO = COLUMNAS_MANIFIESTO + ("hash",)
 
-# Nombre del manifiesto que `curar` escribe en `raiz_curado`. También sirve de
-# marca: si ya existe, `raiz_curado` es un directorio de curación de una
-# corrida anterior y es seguro reconciliarlo (ver `_reconciliar_destino`).
+# Nombre del manifiesto que `curar` escribe en `raiz_curado`.
 NOMBRE_MANIFIESTO_CURADO = "manifiesto_curado.csv"
+
+# Archivo centinela que marca `raiz_curado` como un directorio administrado
+# por `curar()`. A diferencia del manifiesto, se escribe al INICIO de la
+# corrida, antes de copiar nada: una descarga y curación real dura horas y
+# es justo el tipo de proceso que se interrumpe a mitad de camino, o al que
+# alguien le borra el manifiesto a mano entre corridas. Si la marca dependiera
+# del manifiesto (que se escribe al final), cualquiera de esos dos casos
+# dejaría el directorio sin identificar y la siguiente corrida no
+# reconciliaría los archivos huérfanos. Ver `_marcar_destino` y `curar`.
+# No es basura: no borrar.
+MARCA_DESTINO = ".curacion_destino"
 
 
 def hashes_de(filas: list[dict], raiz: Path) -> list[dict]:
@@ -86,32 +95,55 @@ def _escribir_curado(filas: list[dict], ruta: Path) -> None:
             escritor.writerow({c: fila.get(c, "") for c in COLUMNAS_CURADO})
 
 
+def _marcar_destino(raiz_curado: Path) -> None:
+    """Crea la marca de propiedad de `raiz_curado` si todavía no existe.
+
+    Se llama al principio de `curar`, antes de copiar nada, para que incluso
+    una corrida que se interrumpe a mitad de camino deje el directorio
+    identificado como propio: la siguiente corrida completa podrá
+    reconciliar lo que esta alcanzó a copiar.
+    """
+    marca = raiz_curado / MARCA_DESTINO
+    if marca.exists():
+        return
+    marca.parent.mkdir(parents=True, exist_ok=True)
+    marca.write_text(
+        "Este directorio es administrado por pipeline.curacion.curar().\n"
+        "No borrar este archivo: sin él, curar() no puede distinguir este\n"
+        "directorio de una carpeta ajena y deja de reconciliar archivos\n"
+        "huerfanos entre corridas, para no arriesgarse a borrar algo que no\n"
+        "puso.\n",
+        encoding="utf-8",
+    )
+
+
 def _reconciliar_destino(raiz_curado: Path, conservadas: list[dict]) -> None:
     """Deja en `raiz_curado` solo los archivos listados en `conservadas`.
 
     Una corrida anterior pudo haber copiado imágenes que esta corrida ya no
-    conserva -por ejemplo, si el manifiesto de origen cambió entre medio-.
-    Sin esto esos archivos quedarían huérfanos: sin fila que los respalde en
-    el CSV, pero visibles para cualquier cargador que liste carpetas
-    directamente en vez de leer el manifiesto (así funcionan los `ImageFolder`
-    típicos), coleándose al entrenamiento sin trazabilidad, sin licencia y
-    sin haber pasado por el particionado por observador de la Tarea 7.
+    conserva -por ejemplo, si el manifiesto de origen cambió entre medio, o
+    si una corrida previa murió a mitad de la copia-. Sin esto esos archivos
+    quedarían huérfanos: sin fila que los respalde en el CSV, pero visibles
+    para cualquier cargador que liste carpetas directamente en vez de leer
+    el manifiesto (así funcionan los `ImageFolder` típicos), coleándose al
+    entrenamiento sin trazabilidad, sin licencia y sin haber pasado por el
+    particionado por observador de la Tarea 7.
 
-    Solo actúa si `raiz_curado` ya tiene su propio `manifiesto_curado.csv` de
-    una corrida previa: esa es la marca de que este módulo es dueño del
-    directorio. Si no está, no se borra nada -así un `--curado` mal escrito
-    que apunte a una carpeta ajena no pierde contenido que no puso `curar`-.
+    Quien llama (`curar`) decide cuándo invocar esta función: solo cuando
+    `raiz_curado` ya era, antes de esta corrida, un directorio propio (ver
+    `MARCA_DESTINO` y `_marcar_destino`). No se repite esa comprobación aquí
+    porque para este punto `_marcar_destino` ya escribió la marca de esta
+    misma corrida, y comprobar su existencia ahora siempre daría verdadero.
     """
-    marca = raiz_curado / NOMBRE_MANIFIESTO_CURADO
-    if not marca.exists():
-        return
-
+    protegidos = {
+        (raiz_curado / NOMBRE_MANIFIESTO_CURADO).resolve(),
+        (raiz_curado / MARCA_DESTINO).resolve(),
+    }
     esperados = {(raiz_curado / fila["archivo"]).resolve() for fila in conservadas}
-    marca_resuelta = marca.resolve()
     for existente in raiz_curado.rglob("*"):
         if existente.is_file():
             resuelta = existente.resolve()
-            if resuelta != marca_resuelta and resuelta not in esperados:
+            if resuelta not in protegidos and resuelta not in esperados:
                 existente.unlink()
 
     # Elimina las carpetas de clase que quedaron vacías tras el borrado,
@@ -135,6 +167,16 @@ def curar(
 ) -> dict:
     """Cura el dataset completo y devuelve el resumen de lo ocurrido."""
     raiz_crudo, raiz_curado = Path(raiz_crudo), Path(raiz_curado)
+
+    # Se determina ANTES de tocar nada: si la marca ya estaba puesta, este
+    # directorio es propio desde una corrida anterior -completa o
+    # interrumpida- y es seguro reconciliarlo. Si no estaba, no hay forma de
+    # saber si el contenido preexistente es ajeno, así que esta corrida no
+    # borra nada -aunque sí deja la marca puesta para que la siguiente sí
+    # pueda-.
+    directorio_ya_propio = (raiz_curado / MARCA_DESTINO).exists()
+    _marcar_destino(raiz_curado)
+
     filas = leer_manifiesto(raiz_crudo / "manifiesto.csv")
     con_hash = hashes_de(filas, raiz_crudo)
     conservadas, descartadas = deduplicar(
@@ -146,7 +188,7 @@ def curar(
         destino.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(raiz_crudo / fila["archivo"], destino)
 
-    if raiz_curado.exists():
+    if directorio_ya_propio:
         _reconciliar_destino(raiz_curado, conservadas)
 
     _escribir_curado(conservadas, raiz_curado / NOMBRE_MANIFIESTO_CURADO)
