@@ -1,0 +1,95 @@
+# Clases candidatas a censar, ANTES de decidir cuáles entran al sistema.
+#
+# Este archivo no es la ontología del sistema: es la lista de lo que vale la
+# pena consultar. La ontología real vive en clases.yaml y se congela en la
+# Semana 3 con la tabla de disponibilidad delante.
+#
+# Estado: los 15 órdenes están completos. Sus taxon_id de iNaturalist y sus
+# claves de GBIF se resolvieron contra las APIs el 2026-07-30 (coincidencia
+# exacta en los 15 casos).
+#
+# LAS FAMILIAS ESTÁN PENDIENTES. Los órdenes de Insecta son un conjunto
+# taxonómico cerrado y se pueden listar sin consultar a nadie; qué familias
+# son de importancia económica para la Amazonía peruana es una decisión del
+# entomólogo de la Facultad. Al recibir esa lista, añadir cada familia bajo su
+# orden con el mismo formato y volver a correr el censo.
+version: 1
+minimos:
+  familia_train: 150
+  familia_test: 30
+ordenes:
+  - nombre: Coleoptera
+    inat_taxon_id: 47208
+    gbif_key: 1470
+    nombre_comun: escarabajos
+    familias: []
+  - nombre: Lepidoptera
+    inat_taxon_id: 47157
+    gbif_key: 797
+    nombre_comun: mariposas y polillas
+    familias: []
+  - nombre: Hymenoptera
+    inat_taxon_id: 47201
+    gbif_key: 1457
+    nombre_comun: abejas, avispas y hormigas
+    familias: []
+  - nombre: Diptera
+    inat_taxon_id: 47822
+    gbif_key: 811
+    nombre_comun: moscas y zancudos
+    familias: []
+  - nombre: Hemiptera
+    inat_taxon_id: 47744
+    gbif_key: 809
+    nombre_comun: chinches, pulgones y cigarras
+    familias: []
+  - nombre: Orthoptera
+    inat_taxon_id: 47651
+    gbif_key: 1458
+    nombre_comun: saltamontes y grillos
+    familias: []
+  - nombre: Odonata
+    inat_taxon_id: 47792
+    gbif_key: 789
+    nombre_comun: libélulas y caballitos del diablo
+    familias: []
+  - nombre: Blattodea
+    inat_taxon_id: 81769
+    gbif_key: 800
+    nombre_comun: cucarachas y termitas
+    familias: []
+  - nombre: Mantodea
+    inat_taxon_id: 48112
+    gbif_key: 788
+    nombre_comun: mantis
+    familias: []
+  - nombre: Thysanoptera
+    inat_taxon_id: 83201
+    gbif_key: 1228
+    nombre_comun: trips
+    familias: []
+  - nombre: Neuroptera
+    inat_taxon_id: 48763
+    gbif_key: 1501
+    nombre_comun: crisopas y hormigas león
+    familias: []
+  - nombre: Dermaptera
+    inat_taxon_id: 47793
+    gbif_key: 1224
+    nombre_comun: tijeretas
+    familias: []
+  - nombre: Phasmida
+    inat_taxon_id: 47198
+    gbif_key: 1460
+    nombre_comun: insectos palo
+    familias: []
+  - nombre: Trichoptera
+    inat_taxon_id: 62164
+    gbif_key: 1003
+    nombre_comun: frigáneas
+    familias: []
+  - nombre: Ephemeroptera
+    inat_taxon_id: 48011
+    gbif_key: 1225
+    nombre_comun: efímeras
+    familias: []
