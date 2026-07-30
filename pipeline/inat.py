@@ -5,11 +5,14 @@ paginación clásica en 10 000 resultados y el sistema necesita bajar más.
 """
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 
 import requests
+
+_log = logging.getLogger(__name__)
 
 API = "https://api.inaturalist.org/v1"
 USER_AGENT = "insectos-ia-UNAP/1.0 (proyecto academico; eliasdna0499@gmail.com)"
@@ -130,6 +133,10 @@ def iterar_observaciones(
     id_above = 0
 
     while entregadas < limite:
+        # El cursor con el que se pide esta página. Si al terminar de
+        # procesarla sigue igual, la próxima petición sería idéntica a esta.
+        cursor_pedido = id_above
+
         params = _parametros(taxon_id, solo_adultos, lugar_id) | {
             "per_page": POR_PAGINA,
             "order_by": "id",
@@ -153,6 +160,24 @@ def iterar_observaciones(
             entregadas += 1
             if entregadas >= limite:
                 return
+
+        # Guardia de progreso. La única condición de salida del bucle, aparte
+        # del límite, es que la API devuelva una página vacía; si el cursor no
+        # avanzó, la siguiente petición sería byte por byte la misma y el
+        # bucle giraría para siempre, con una pausa de un segundo dentro,
+        # martillando una API pública contra la que este proyecto se
+        # identifica con un correo personal. Pasa si una página no trae ningún
+        # identificador utilizable, y también si la API deja de honrar
+        # `id_above` por cualquier motivo. Cortar y avisar es preferible a
+        # colgar una descarga desatendida de horas.
+        if id_above == cursor_pedido:
+            _log.warning(
+                "taxon %s: el cursor no avanzó (id_above=%s) tras una página con %d "
+                "resultados; se corta la paginación para no repetir la misma petición "
+                "indefinidamente. Se entregaron %d observaciones de %d pedidas.",
+                taxon_id, id_above, len(resultados), entregadas, limite,
+            )
+            return
 
         if pausa:
             time.sleep(pausa)

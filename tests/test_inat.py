@@ -32,6 +32,30 @@ class SesionFalsa:
         return RespuestaFalsa(cuerpo)
 
 
+class SesionQueRepite:
+    """Devuelve siempre la misma página, sin agotarse nunca.
+
+    Simula una API que deja de honrar el cursor `id_above`. Aborta con un
+    fallo explícito si el iterador pide más páginas de las razonables, en
+    vez de colgar la suite: un bucle infinito en una prueba es un cuelgue,
+    no un fallo, y nadie sabría por qué.
+    """
+
+    def __init__(self, cuerpo, maximo=20):
+        self.cuerpo = cuerpo
+        self.maximo = maximo
+        self.llamadas = []
+
+    def get(self, url, params=None, timeout=None):
+        self.llamadas.append(params)
+        if len(self.llamadas) > self.maximo:
+            raise AssertionError(
+                "el iterador repitió la misma petición sin avanzar el cursor: "
+                f"{len(self.llamadas)} llamadas idénticas"
+            )
+        return RespuestaFalsa(self.cuerpo)
+
+
 def obs_cruda(oid, con_foto=True, licencia="cc-by"):
     return {
         "id": oid,
@@ -174,6 +198,41 @@ def test_iterar_reemplaza_solo_la_ultima_aparicion_de_square():
     sesion = SesionFalsa([{"results": [cruda]}, {"results": []}])
     o = next(iter(iterar_observaciones(47208, limite=1, sesion=sesion, pausa=0)))
     assert o.foto_url == "https://squarehost.example.com/photos/1/medium.jpg"
+
+
+def test_iterar_corta_si_el_cursor_no_avanza(caplog):
+    """Una página sin ningún identificador válido no mueve `id_above`.
+
+    Sin guardia, la siguiente petición sería idéntica a la anterior y el
+    bucle giraría para siempre —con una pausa de un segundo dentro— contra
+    una API pública, en una descarga desatendida de horas.
+    """
+    sin_id = obs_cruda(1)
+    del sin_id["id"]
+    sesion = SesionQueRepite({"results": [sin_id]})
+    obtenidas = list(iterar_observaciones(47208, limite=100, sesion=sesion, pausa=0))
+    assert obtenidas == []
+    assert len(sesion.llamadas) == 1
+    assert "cursor" in caplog.text.lower()
+
+
+def test_iterar_corta_si_la_api_repite_las_mismas_observaciones(caplog):
+    """Variante plausible: la API responde pero ignora `id_above`.
+
+    Los identificadores son válidos, pero nunca superan el cursor ya
+    alcanzado, así que la página se repite indefinidamente.
+    """
+    pagina = {"results": [obs_cruda(i) for i in range(1, 4)]}
+
+    class SesionQueIgnoraElCursor(SesionQueRepite):
+        pass
+
+    sesion = SesionQueIgnoraElCursor(pagina)
+    obtenidas = list(iterar_observaciones(47208, limite=1000, sesion=sesion, pausa=0))
+    # La primera página sí se entrega; la segunda ya no aporta cursor nuevo.
+    assert len(obtenidas) == 6
+    assert len(sesion.llamadas) == 2
+    assert "cursor" in caplog.text.lower()
 
 
 def test_buscar_lugar_sin_id_en_el_resultado_devuelve_none():
