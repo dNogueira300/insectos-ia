@@ -19,11 +19,36 @@ from pipeline.curacion import COLUMNAS_CURADO
 from pipeline.ontologia import Ontologia, cargar_ontologia
 
 SIN_FAMILIA = "_sin_familia"
-EXTENSIONES = {".jpg", ".jpeg", ".png"}
+# WEBP se acepta porque Pillow lo decodifica de forma nativa, sin depender de
+# ningún complemento adicional. HEIC (el formato por defecto de iPhone desde
+# iOS 11) queda deliberadamente fuera: Pillow no lo lee sin un plugin externo,
+# y no se añaden dependencias nuevas en esta ronda. Una foto en ese formato
+# debe convertirse antes de entregarse, y por eso produce un error explícito
+# más abajo en vez de desaparecer en silencio.
+EXTENSIONES = {".jpg", ".jpeg", ".png", ".webp"}
+
+# Archivos que el propio sistema operativo siembra en las carpetas (miniaturas
+# de Windows, metadatos de macOS) sin que nadie los haya "entregado": no son
+# fotos y se ignoran sin generar error. Los ocultos (que empiezan por punto,
+# como .DS_Store o un .gitkeep de control de versiones) quedan cubiertos por
+# la segunda condición de `_es_metadato_de_sistema`.
+NOMBRES_IGNORADOS = {"thumbs.db", ".ds_store"}
+
+
+def _es_metadato_de_sistema(ruta: Path) -> bool:
+    """True si el archivo es basura del sistema operativo, no una entrega."""
+    return ruta.name.lower() in NOMBRES_IGNORADOS or ruta.name.startswith(".")
 
 
 def ingerir(raiz_campo: Path, onto: Ontologia) -> tuple[list[dict], list[str]]:
-    """Recorre las carpetas y produce filas de manifiesto, o errores."""
+    """Recorre las carpetas y produce filas de manifiesto, o errores.
+
+    Ningún archivo entregado desaparece sin dejar constancia: una extensión
+    no reconocida (p. ej. .heic de iPhone o .webp mal escrito) se reporta
+    como error explícito en vez de omitirse en silencio, porque el conjunto
+    de campo es la única medición honesta del sistema y perder fotos sin
+    que nadie se entere invalidaría esa medición sin avisar.
+    """
     raiz_campo = Path(raiz_campo)
     ordenes = set(onto.nombres_ordenes())
     familias = set(onto.nombres_familias())
@@ -31,12 +56,20 @@ def ingerir(raiz_campo: Path, onto: Ontologia) -> tuple[list[dict], list[str]]:
     errores: list[str] = []
 
     for ruta in sorted(raiz_campo.rglob("*")):
-        if not ruta.is_file() or ruta.suffix.lower() not in EXTENSIONES:
+        if not ruta.is_file() or _es_metadato_de_sistema(ruta):
             continue
         relativo = ruta.relative_to(raiz_campo)
         if len(relativo.parts) != 3:
             errores.append(
                 f"{relativo}: se esperaba la estructura <Orden>/<Familia>/<archivo>"
+            )
+            continue
+
+        if ruta.suffix.lower() not in EXTENSIONES:
+            formatos = ", ".join(sorted(EXTENSIONES))
+            errores.append(
+                f"{relativo}: extensión '{ruta.suffix}' no reconocida; "
+                f"convertir a uno de estos formatos antes de ingerir: {formatos}"
             )
             continue
 
