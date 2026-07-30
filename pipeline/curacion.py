@@ -33,6 +33,10 @@ NOMBRE_MANIFIESTO_CURADO = "manifiesto_curado.csv"
 MARCA_DESTINO = ".curacion_destino"
 
 
+class ErrorDestinoNoReconocido(Exception):
+    """`raiz_curado` existe, tiene contenido y no es un destino de curación."""
+
+
 def hashes_de(filas: list[dict], raiz: Path) -> list[dict]:
     """Añade la columna `hash` a cada fila. Vacía si el archivo es ilegible."""
     raiz = Path(raiz)
@@ -93,6 +97,38 @@ def _escribir_curado(filas: list[dict], ruta: Path) -> None:
         escritor.writeheader()
         for fila in filas:
             escritor.writerow({c: fila.get(c, "") for c in COLUMNAS_CURADO})
+
+
+def _verificar_destino(raiz_curado: Path) -> None:
+    """Rechaza `raiz_curado` si existe, tiene contenido y no es propio.
+
+    Se llama antes de marcar y antes de copiar nada. Sin esta comprobación,
+    una primera corrida contra una carpeta ajena (p. ej. `--curado` escrito
+    por error) no borraba nada -correcto-, pero SÍ la marcaba y copiaba
+    imágenes ahí, dejándola lista para que una segunda corrida con la misma
+    ruta equivocada la reconociera como propia y borrara el contenido del
+    usuario. Basta con equivocarse dos veces con la misma ruta, algo
+    plausible en una herramienta de línea de comandos. Rechazar de entrada,
+    sin tocar nada, cierra esa ventana: un directorio ajeno con contenido
+    nunca llega a marcarse.
+
+    No aplica a los tres casos legítimos: destino inexistente, existente y
+    vacío, o ya marcado por una corrida anterior.
+    """
+    if not raiz_curado.exists():
+        return
+    if (raiz_curado / MARCA_DESTINO).exists():
+        return
+    if any(raiz_curado.iterdir()):
+        raise ErrorDestinoNoReconocido(
+            f"'{raiz_curado}' ya existe, tiene contenido, y no parece un "
+            f"destino de curación (no tiene la marca '{MARCA_DESTINO}' de una "
+            "corrida anterior de curar()). Para no arriesgarse a borrar "
+            "archivos ajenos por una ruta --curado mal escrita, curar() se "
+            "detiene sin tocar nada. Usa una carpeta vacía o inexistente "
+            "para --curado, o verifica que esta sea realmente la carpeta de "
+            "una corrida de curación anterior."
+        )
 
 
 def _marcar_destino(raiz_curado: Path) -> None:
@@ -165,15 +201,22 @@ def curar(
     umbral: int = 3,
     hashes_externos: set[str] | None = None,
 ) -> dict:
-    """Cura el dataset completo y devuelve el resumen de lo ocurrido."""
+    """Cura el dataset completo y devuelve el resumen de lo ocurrido.
+
+    Lanza `ErrorDestinoNoReconocido` si `raiz_curado` existe, tiene
+    contenido y no lleva la marca de una corrida anterior -ver
+    `_verificar_destino`-, sin escribir absolutamente nada en ese caso.
+    """
     raiz_crudo, raiz_curado = Path(raiz_crudo), Path(raiz_curado)
+    _verificar_destino(raiz_curado)
 
     # Se determina ANTES de tocar nada: si la marca ya estaba puesta, este
     # directorio es propio desde una corrida anterior -completa o
-    # interrumpida- y es seguro reconciliarlo. Si no estaba, no hay forma de
-    # saber si el contenido preexistente es ajeno, así que esta corrida no
-    # borra nada -aunque sí deja la marca puesta para que la siguiente sí
-    # pueda-.
+    # interrumpida- y es seguro reconciliarlo. Si no estaba, gracias a
+    # `_verificar_destino` sabemos que el directorio no existía o estaba
+    # vacío -nunca contenido ajeno-, así que esta primera corrida no tiene
+    # nada que reconciliar; solo deja la marca puesta para que la siguiente
+    # sí pueda.
     directorio_ya_propio = (raiz_curado / MARCA_DESTINO).exists()
     _marcar_destino(raiz_curado)
 

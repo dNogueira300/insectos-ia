@@ -1,11 +1,13 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from pipeline.curacion import (
     COLUMNAS_CURADO,
     MARCA_DESTINO,
+    ErrorDestinoNoReconocido,
     curar,
     deduplicar,
     hashes_de,
@@ -211,7 +213,16 @@ def test_corrida_interrumpida_deja_el_destino_marcado_y_se_reconcilia_despues(tm
     assert (curado / "OrdenA/FamX/1.jpg").exists()
 
 
-def test_destino_ajeno_sin_marca_no_pierde_su_contenido_previo(tmp_path: Path):
+def test_destino_con_contenido_y_sin_marca_es_rechazado_sin_escribir_nada(tmp_path: Path):
+    """Reemplaza a la prueba anterior de "no pierde contenido previo".
+
+    Antes, una corrida contra una carpeta ajena no borraba nada, pero SÍ la
+    marcaba y copiaba imágenes -dejándola lista para que una segunda corrida
+    con la misma ruta equivocada sí la reconociera como propia y borrara el
+    contenido del usuario-. Ahora la primera corrida debe rechazarse por
+    completo: ni marca, ni imágenes, ni manifiesto. Se verifica el contenido
+    de la carpeta antes y después, incluida una subcarpeta anidada.
+    """
     crudo, curado = tmp_path / "crudo", tmp_path / "curado"
     escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
     escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
@@ -219,13 +230,68 @@ def test_destino_ajeno_sin_marca_no_pierde_su_contenido_previo(tmp_path: Path):
     # `curado` ya existe con contenido ajeno: nunca fue administrado por
     # curar() (no tiene la marca de propiedad).
     curado.mkdir(parents=True)
-    ajeno = curado / "notas_del_entomologo.txt"
-    ajeno.write_text("no tocar", encoding="utf-8")
+    notas = curado / "notas_del_entomologo.txt"
+    notas.write_text("no tocar", encoding="utf-8")
+    foto_personal = curado / "fotos_personales" / "familia.jpg"
+    foto_personal.parent.mkdir(parents=True)
+    foto_personal.write_bytes(b"una foto que no tiene nada que ver con el dataset")
 
-    curar(crudo, curado)
+    contenido_antes = sorted(p.relative_to(curado) for p in curado.rglob("*") if p.is_file())
 
-    assert ajeno.exists()
-    assert ajeno.read_text(encoding="utf-8") == "no tocar"
+    with pytest.raises(ErrorDestinoNoReconocido):
+        curar(crudo, curado)
+
+    contenido_despues = sorted(p.relative_to(curado) for p in curado.rglob("*") if p.is_file())
+    assert contenido_despues == contenido_antes
+    assert notas.read_text(encoding="utf-8") == "no tocar"
+    assert not (curado / MARCA_DESTINO).exists()
+    assert not (curado / "manifiesto_curado.csv").exists()
+
+
+def test_destino_existente_y_vacio_se_acepta_con_normalidad(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    curado.mkdir(parents=True)  # existe, pero vacio
+
+    resumen = curar(crudo, curado)
+
+    assert resumen["conservadas"] == 1
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+    assert (curado / MARCA_DESTINO).exists()
+
+
+def test_destino_inexistente_se_acepta_con_normalidad(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+
+    assert not curado.exists()
+
+    resumen = curar(crudo, curado)
+
+    assert resumen["conservadas"] == 1
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+
+
+def test_destino_ya_marcado_de_corrida_previa_se_acepta_y_reconcilia(tmp_path: Path):
+    crudo, curado = tmp_path / "crudo", tmp_path / "curado"
+    escribir_imagen(crudo, "OrdenA/FamX/1.jpg", 1)
+    escribir_imagen(crudo, "OrdenA/FamX/2.jpg", 77)
+    escribir_manifiesto(
+        [fila("OrdenA/FamX/1.jpg", 1), fila("OrdenA/FamX/2.jpg", 2)],
+        crudo / "manifiesto.csv",
+    )
+    curar(crudo, curado)  # primera corrida: deja la marca puesta
+
+    # El manifiesto de origen se corrige y ya no trae la obs. 2.
+    escribir_manifiesto([fila("OrdenA/FamX/1.jpg", 1)], crudo / "manifiesto.csv")
+    resumen = curar(crudo, curado)  # segunda corrida: destino ya marcado
+
+    assert resumen["conservadas"] == 1
+    assert (curado / "OrdenA/FamX/1.jpg").exists()
+    assert not (curado / "OrdenA/FamX/2.jpg").exists()
 
 
 def test_reporte_menciona_el_factor_real_de_curacion():
