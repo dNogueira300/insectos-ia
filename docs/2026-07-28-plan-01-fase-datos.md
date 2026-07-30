@@ -960,7 +960,7 @@ def buscar_lugar(nombre: str, sesion=None) -> int | None:
 .venv\Scripts\python -m pytest tests/test_inat.py -v
 ```
 
-Esperado: PASS, 16 pruebas.
+Esperado: PASS, 18 pruebas.
 
 - [ ] **Step 5: Verificar contra la API real (una sola llamada)**
 
@@ -2455,7 +2455,7 @@ if __name__ == "__main__":
 .venv\Scripts\python -m pytest tests/test_descarga.py -v
 ```
 
-Esperado: PASS, 12 pruebas.
+Esperado: PASS, 13 pruebas.
 
 - [ ] **Step 5: Prueba de humo con cupos mínimos contra la API real**
 
@@ -3755,7 +3755,7 @@ if __name__ == "__main__":
 .venv\Scripts\python -m pytest tests/test_splits.py -v
 ```
 
-Esperado: PASS, 13 pruebas.
+Esperado: PASS, 57 pruebas.
 
 - [ ] **Step 5: Particionar el dataset real**
 
@@ -4730,7 +4730,7 @@ if __name__ == "__main__":
 .venv\Scripts\python -m pytest tests/test_campo.py -v
 ```
 
-Esperado: PASS, 10 pruebas.
+Esperado: PASS, 16 pruebas.
 
 - [ ] **Step 5: Correr la suite completa**
 
@@ -4738,7 +4738,7 @@ Esperado: PASS, 10 pruebas.
 .venv\Scripts\python -m pytest -v
 ```
 
-Esperado: PASS en las 129 pruebas de las nueve tareas.
+Esperado: PASS en las 182 pruebas de las nueve tareas.
 
 - [ ] **Step 6: Commit**
 
