@@ -1,7 +1,9 @@
+import csv
 import io
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from pipeline.descarga import (
@@ -160,3 +162,89 @@ def test_manifiesto_ida_y_vuelta(tmp_path: Path):
 
 def test_leer_manifiesto_inexistente_da_lista_vacia(tmp_path: Path):
     assert leer_manifiesto(tmp_path / "no_existe.csv") == []
+
+
+def test_escritura_interrumpida_no_trunca_el_manifiesto_anterior(tmp_path: Path, monkeypatch):
+    """Una escritura que revienta a mitad de camino no debe tocar el archivo anterior.
+
+    `escribir_manifiesto` nunca debe escribir directamente sobre el destino:
+    arma el CSV completo en un temporal y solo lo promueve con `os.replace`
+    cuando termina sin errores. Se simula el corte parcheando
+    `csv.DictWriter.writerows` (el paso que vuelca el cuerpo del CSV, ya con
+    la cabecera escrita) para que falle, sin matar el proceso de verdad.
+    """
+    ruta = tmp_path / "manifiesto.csv"
+    filas_previas = [
+        {c: "" for c in COLUMNAS_MANIFIESTO} | {"archivo": f"A/B/{i}.jpg", "obs_id": str(i)}
+        for i in range(1, 51)
+    ]
+    escribir_manifiesto(filas_previas, ruta)
+    contenido_previo = ruta.read_text(encoding="utf-8")
+    assert len(leer_manifiesto(ruta)) == 50
+
+    def _revienta(self, filas):
+        raise OSError("fallo de disco simulado a mitad de la reescritura")
+
+    monkeypatch.setattr(csv.DictWriter, "writerows", _revienta)
+
+    filas_nuevas = filas_previas + [
+        {c: "" for c in COLUMNAS_MANIFIESTO} | {"archivo": "A/B/99.jpg", "obs_id": "99"}
+    ]
+    with pytest.raises(OSError):
+        escribir_manifiesto(filas_nuevas, ruta)
+
+    assert ruta.read_text(encoding="utf-8") == contenido_previo
+    assert len(leer_manifiesto(ruta)) == 50
+
+
+def test_escritura_interrumpida_no_deja_temporales_huerfanos(tmp_path: Path, monkeypatch):
+    ruta = tmp_path / "manifiesto.csv"
+    escribir_manifiesto([], ruta)
+
+    def _revienta(self, filas):
+        raise OSError("fallo de disco simulado a mitad de la reescritura")
+
+    monkeypatch.setattr(csv.DictWriter, "writerows", _revienta)
+
+    with pytest.raises(OSError):
+        escribir_manifiesto([{c: "" for c in COLUMNAS_MANIFIESTO}], ruta)
+
+    restantes = sorted(p.name for p in tmp_path.iterdir())
+    assert restantes == ["manifiesto.csv"]
+
+
+def test_manifiesto_se_persiste_a_mitad_de_una_clase(tmp_path: Path, monkeypatch):
+    """Un corte a mitad de una clase no debe dejar el manifiesto vacío.
+
+    Se fuerza un fallo en `guardar_jpeg` (no capturado por `descargar_clase`,
+    a diferencia de los fallos de descarga de imagen) después de la quinta
+    observación, simulando que el proceso muere ahí. Con
+    `intervalo_persistencia=2` deben quedar en disco las filas de los dos
+    últimos volcados parciales completados (4), no ninguna.
+    """
+    import pipeline.descarga as mod
+
+    monkeypatch.setattr(mod, "iterar_observaciones", falso_iterador([obs(i) for i in range(1, 6)]))
+
+    contador = {"n": 0}
+    guardar_original = mod.imagenes.guardar_jpeg
+
+    def guardar_que_revienta_en_la_quinta(img, ruta):
+        contador["n"] += 1
+        if contador["n"] == 5:
+            raise RuntimeError("corte simulado a mitad de la clase")
+        guardar_original(img, ruta)
+
+    monkeypatch.setattr(mod.imagenes, "guardar_jpeg", guardar_que_revienta_en_la_quinta)
+
+    with pytest.raises(RuntimeError):
+        descargar_clase(
+            "OrdenA", "FamiliaX", 62956,
+            cupo=5, raiz=tmp_path, ya_descargados=set(),
+            sesion_api=None, sesion_img=SesionImagenOK(), pausa=0,
+            intervalo_persistencia=2,
+        )
+
+    filas_persistidas = leer_manifiesto(tmp_path / "manifiesto.csv")
+    assert len(filas_persistidas) == 4
+    assert [f["obs_id"] for f in filas_persistidas] == ["1", "2", "3", "4"]

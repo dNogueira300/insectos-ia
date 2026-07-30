@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -45,6 +46,15 @@ LICENCIAS_PERMITIDAS = frozenset(
 # desconoce (o cuyo taxón identificado no llega a nivel de familia).
 SIN_FAMILIA = "_sin_familia"
 
+# Cada cuántas imágenes NUEVAS, dentro de una misma clase, se vuelca el
+# manifiesto completo a disco (además del volcado al terminar la clase).
+# 25 acota lo que se repetiría al reanudar tras un corte a menos del 4% de
+# la cuota más chica (600, la de familia) sin multiplicar en exceso las
+# reescrituras completas del archivo, que crecen con el tamaño total del
+# manifiesto: un valor mucho más chico paga esa reescritura completa muchas
+# más veces de las necesarias; uno mucho más grande deja de proteger nada.
+INTERVALO_PERSISTENCIA_MANIFIESTO = 25
+
 
 def leer_manifiesto(ruta: Path) -> list[dict]:
     ruta = Path(ruta)
@@ -55,12 +65,30 @@ def leer_manifiesto(ruta: Path) -> list[dict]:
 
 
 def escribir_manifiesto(filas: list[dict], ruta: Path) -> None:
+    """Escribe el manifiesto de forma atómica.
+
+    Nunca trunca `ruta` directamente: arma el CSV completo en un archivo
+    temporal junto al destino y lo reemplaza con `os.replace` solo cuando la
+    escritura terminó sin fallos (mismo patrón que `importar()` en
+    `pipeline/bd.py`). `descargar_todo` llama a esta función una y otra vez
+    sobre el manifiesto completo y creciente, así que sin esta protección
+    una interrupción a mitad de una reescritura no solo perdería las filas
+    nuevas: truncaría también las que ya estaban a salvo en disco.
+    """
     ruta = Path(ruta)
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    with ruta.open("w", encoding="utf-8", newline="") as f:
-        escritor = csv.DictWriter(f, fieldnames=list(COLUMNAS_MANIFIESTO))
-        escritor.writeheader()
-        escritor.writerows(filas)
+    ruta_temporal = ruta.with_name(f".{ruta.name}.tmp-{os.getpid()}")
+    ruta_temporal.unlink(missing_ok=True)  # restos de una corrida anterior interrumpida
+
+    try:
+        with ruta_temporal.open("w", encoding="utf-8", newline="") as f:
+            escritor = csv.DictWriter(f, fieldnames=list(COLUMNAS_MANIFIESTO))
+            escritor.writeheader()
+            escritor.writerows(filas)
+        os.replace(ruta_temporal, ruta)
+    except Exception:
+        ruta_temporal.unlink(missing_ok=True)
+        raise
 
 
 def descargar_clase(
@@ -74,6 +102,8 @@ def descargar_clase(
     sesion_api,
     sesion_img,
     pausa: float = inat.PAUSA_SEGUNDOS,
+    manifiesto_previo: list[dict] = (),
+    intervalo_persistencia: int = INTERVALO_PERSISTENCIA_MANIFIESTO,
 ) -> list[dict]:
     """Descarga hasta `cupo` imágenes nuevas para una clase.
 
@@ -86,8 +116,18 @@ def descargar_clase(
     o si la fuente simplemente no tenía más observaciones que ofrecer. Sin
     ese aviso, una corrida de horas podría dejar una clase corta sin que
     nadie lo note hasta que la regla de admisión posterior la descarte.
+
+    La unidad de confirmación en el manifiesto no es la clase completa: cada
+    `intervalo_persistencia` imágenes nuevas se vuelca a disco el manifiesto
+    acumulado (`manifiesto_previo` más lo bajado hasta ese punto). Sin esto,
+    un corte a mitad de una clase con cupo alto (hasta 1200) dejaría en disco
+    archivos `.jpg` sin fila correspondiente: no contaminan el dataset -la
+    curación solo copia lo que figura en el manifiesto-, pero al reanudar
+    `ya_descargados` no los reconoce y la corrida los vuelve a bajar de la
+    red, tirando ese trabajo.
     """
     carpeta = familia or SIN_FAMILIA
+    ruta_manifiesto = Path(raiz) / "manifiesto.csv"
     filas: list[dict] = []
     vistas = 0
     descartes_repetida = 0
@@ -133,6 +173,8 @@ def descargar_clase(
                 "fuente": "iNaturalist",
             }
         )
+        if intervalo_persistencia and len(filas) % intervalo_persistencia == 0:
+            escribir_manifiesto(list(manifiesto_previo) + filas, ruta_manifiesto)
         if pausa:
             time.sleep(pausa * 0.15)
 
@@ -185,6 +227,7 @@ def descargar_todo(
             orden.nombre, "", orden.inat_taxon_id,
             cupo=cupo_orden, raiz=raiz, ya_descargados=ya,
             sesion_api=sesion_api, sesion_img=sesion_img,
+            manifiesto_previo=manifiesto,
         )
         manifiesto += nuevas
         escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
@@ -196,6 +239,7 @@ def descargar_todo(
                 orden.nombre, fam.nombre, fam.inat_taxon_id,
                 cupo=cupo_familia, raiz=raiz, ya_descargados=ya,
                 sesion_api=sesion_api, sesion_img=sesion_img,
+                manifiesto_previo=manifiesto,
             )
             manifiesto += nuevas
             escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
