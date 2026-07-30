@@ -13,6 +13,7 @@ from pipeline.splits import (
     DECISION_SIN_REPARTO,
     OBSERVADOR_DESCONOCIDO,
     PROPORCIONES,
+    SALIDA_ASIGNACION_INVALIDA,
     ErrorAsignacion,
     aplicar_regla_admision,
     asignar_grupos,
@@ -599,3 +600,21 @@ def test_main_no_toca_el_reporte_del_repositorio(tmp_path: Path, ruta_ontologia:
     argv, _ = preparar_corrida(tmp_path, ruta_ontologia, filas)
     main(argv)
     assert (tmp_path / "reporte.md").exists()
+
+
+def test_main_para_si_la_asignacion_guardada_es_ilegible(
+    tmp_path: Path, ruta_ontologia: Path, capsys
+):
+    """Ante un artefacto corrupto no puede repartir de cero por su cuenta: eso
+    movería observadores de examen a aprendizaje sin que nadie lo pidiera."""
+    filas, _ = escenario_corrida(n_obs=10)
+    argv, destino = preparar_corrida(tmp_path, ruta_ontologia, filas)
+    destino.mkdir(parents=True, exist_ok=True)
+    (destino / ARCHIVO_ASIGNACION).write_text("ana: entrenamiento\n", encoding="utf-8")
+
+    codigo = main(argv)
+
+    assert codigo == SALIDA_ASIGNACION_INVALIDA
+    assert codigo != 0
+    assert not (destino / "train.csv").exists()
+    assert "--regenerar-asignacion" in capsys.readouterr().out

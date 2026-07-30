@@ -29,6 +29,11 @@ class ErrorAsignacion(Exception):
     """El archivo de asignación existe pero no se puede interpretar."""
 
 
+# Códigos de salida de la línea de comandos.
+SALIDA_OK = 0
+SALIDA_ASIGNACION_INVALIDA = 1
+
+
 # Encabezado del artefacto. Se escribe siempre, y dice para qué sirve, porque
 # es exactamente el tipo de archivo que alguien borra creyéndolo caché.
 ENCABEZADO_ASIGNACION = """\
@@ -274,10 +279,16 @@ def asignar_grupos(
             continue
 
         def deficit(split: str, observador: str = observador) -> float:
+            # Un cupo de cero (proporción 0) no es un split candidato: se le da
+            # el déficit más bajo posible en vez de dividir entre cero.
+            if not cupos[split]:
+                return float("-inf")
             global_ = (cupos[split] - asignados[split]) / cupos[split]
             por_clase = 0.0
             for clase, n in aporte[observador].items():
                 cupo = cupos_clase[clase][split]
+                if not cupo:
+                    continue
                 faltante = cupo - asignados_clase[clase][split]
                 por_clase += (n / tamanos[observador]) * (faltante / cupo)
             return (1.0 - peso_clase) * global_ + peso_clase * por_clase
@@ -635,7 +646,19 @@ def main(argv: list[str] | None = None) -> int:
             "Cualquier modelo entrenado con la partición anterior queda invalidado."
         )
     else:
-        previa = leer_asignacion(ruta_asignacion)
+        try:
+            previa = leer_asignacion(ruta_asignacion)
+        except ErrorAsignacion as error:
+            # No se reparte de cero por las bravas: eso movería observadores de
+            # examen a aprendizaje sin que nadie lo pidiera. Se para y se
+            # explica cuál es la opción explícita.
+            print(f"  !! ERROR: {error}")
+            print(
+                "No se escribió nada. Corregir el archivo a mano, o rehacer el reparto "
+                "a propósito con --regenerar-asignacion (invalida cualquier modelo ya "
+                "entrenado)."
+            )
+            return SALIDA_ASIGNACION_INVALIDA
 
     particiones, resumen = particionar(filas, onto, asignacion_previa=previa)
 
@@ -658,7 +681,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{resumen['observadores_reusados']} observadores heredados, "
         f"{resumen['observadores_nuevos']} nuevos"
     )
-    return 0
+    return SALIDA_OK
 
 
 if __name__ == "__main__":
