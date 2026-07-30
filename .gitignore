@@ -7,7 +7,17 @@ __pycache__/
 *.egg-info/
 
 # datos: nunca se versionan (pesan GB y las licencias son por imagen)
-datos/
+datos/*
+
+# Excepcion: la asignacion observador->split. Pesa unos pocos KB, no contiene
+# imagenes ni nada sujeto a licencia (solo nombres de usuario y una etiqueta),
+# y es lo que garantiza que el conjunto de examen siga siendo el mismo entre
+# corridas. Si no se versiona, un clon nuevo o un workspace limpio la pierde y
+# la garantia desaparece en silencio, que es justo el defecto que el archivo
+# existe para evitar. Ver el encabezado del propio archivo y pipeline/splits.py.
+!datos/splits/
+datos/splits/*
+!datos/splits/asignacion_observadores.yaml
 
 # artefactos de modelo
 modelo/*.onnx
