@@ -204,9 +204,28 @@ DECISION_SIN_REPARTO = "agrupada_sin_reparto"
 # fotógrafos compartidos, más algunas raras con fotógrafos dedicados- el
 # reparto sí funciona limpio, que es el caso que más importa en la práctica.
 #
-# Este parámetro debe re-medirse cuando exista la lista real de clases del
-# entomólogo: los números de arriba son de escenarios sintéticos, y la
-# distribución real de fotógrafos por familia amazónica puede diferir.
+# RE-MEDIDO CON LA ONTOLOGÍA v1 (2026-09-12). Se hizo un simulacro de
+# `descargar_todo` con clases.yaml v1 (15 órdenes, 38 familias, cupos 1200/600):
+# mismas páginas de iNaturalist, mismos filtros de licencia, adultos y
+# exclusiones, y el mismo `ya_descargados` compartido, pero sin bajar
+# imágenes. Salieron 39 338 observaciones de 8091 fotógrafos. Sobre ellas se
+# simuló la curación (sobrevive 1/1.5, 5 semillas) y se aplicó la regla de
+# admisión:
+#
+#   peso 0.0 (sin estratificar): 2 a 5 familias SIN_REPARTO por semilla
+#                                 (Libellulidae, Gomphidae, Coenagrionidae...)
+#   peso 0.3 a 1.0:              0 familias SIN_REPARTO en las 5 semillas
+#
+# El reparto global queda en 69/16/15. La concentración real es alta en
+# Odonata (en Libellulidae, un solo fotógrafo aporta el 48% de las fotos y
+# los tres mayores, el 67%), y aun así se reparte bien. El límite con
+# bloques desiguales sigue siendo real en los escenarios sintéticos, pero no
+# se manifiesta con la distribución real de la v1. Se mantiene 0.8, en el
+# medio de la meseta. La única familia no admitida en el simulacro fue
+# Chalcididae, por MATERIAL_ESCASO (264 observaciones con licencia
+# utilizable), no por el reparto.
+#
+# Repetir la medición si cambia la ontología o los cupos de descarga.
 PESO_CLASE = 0.8
 
 
