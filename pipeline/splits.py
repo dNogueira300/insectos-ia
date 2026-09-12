@@ -213,17 +213,18 @@ DECISION_SIN_REPARTO = "agrupada_sin_reparto"
 # admisión:
 #
 #   peso 0.0 (sin estratificar): 2 a 5 familias SIN_REPARTO por semilla
-#                                 (Libellulidae, Gomphidae, Coenagrionidae...)
 #   peso 0.3 a 1.0:              0 familias SIN_REPARTO en las 5 semillas
 #
-# El reparto global queda en 69/16/15. La concentración real es alta en
-# Odonata (en Libellulidae, un solo fotógrafo aporta el 48% de las fotos y
-# los tres mayores, el 67%), y aun así se reparte bien. El límite con
+# El reparto global queda en 69/16/15. La concentración real llega a ser alta
+# (en la familia más concentrada, un solo fotógrafo aporta el 48% de las fotos
+# y los tres mayores, el 67%), y aun así se reparte bien. El límite con
 # bloques desiguales sigue siendo real en los escenarios sintéticos, pero no
 # se manifiesta con la distribución real de la v1. Se mantiene 0.8, en el
-# medio de la meseta. La única familia no admitida en el simulacro fue
-# Chalcididae, por MATERIAL_ESCASO (264 observaciones con licencia
-# utilizable), no por el reparto.
+# medio de la meseta. La única familia no admitida en el simulacro lo fue por
+# MATERIAL_ESCASO (264 observaciones con licencia utilizable), no por el
+# reparto. Los nombres y el detalle están en el mensaje del commit de esta
+# medición: aquí no se escriben nombres de clase (ver
+# test_ningun_modulo_escribe_nombres_de_clase_literales).
 #
 # Repetir la medición si cambia la ontología o los cupos de descarga.
 PESO_CLASE = 0.8
