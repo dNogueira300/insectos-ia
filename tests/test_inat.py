@@ -238,3 +238,26 @@ def test_iterar_corta_si_la_api_repite_las_mismas_observaciones(caplog):
 def test_buscar_lugar_sin_id_en_el_resultado_devuelve_none():
     sesion = SesionFalsa([{"results": [{"name": "Iquitos"}]}])
     assert buscar_lugar("Iquitos", sesion=sesion) is None
+
+
+def test_contar_sin_exclusiones_no_envia_without_taxon_id():
+    sesion = SesionFalsa([{"total_results": 10, "results": []}])
+    contar_observaciones(81769, sesion=sesion)
+    assert "without_taxon_id" not in sesion.llamadas[0]
+
+
+def test_contar_con_exclusiones_envia_without_taxon_id():
+    sesion = SesionFalsa([{"total_results": 10, "results": []}])
+    contar_observaciones(81769, excluir_taxon_ids=(118903, 5), sesion=sesion)
+    assert sesion.llamadas[0]["without_taxon_id"] == "118903,5"
+
+
+def test_iterar_con_exclusiones_las_envia_en_cada_pagina():
+    p1 = {"results": [obs_cruda(i) for i in range(1, 4)]}
+    sesion = SesionFalsa([p1, {"results": []}])
+    list(
+        iterar_observaciones(
+            81769, limite=100, excluir_taxon_ids=(118903,), sesion=sesion, pausa=0
+        )
+    )
+    assert [p["without_taxon_id"] for p in sesion.llamadas] == ["118903", "118903"]

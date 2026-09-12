@@ -188,3 +188,66 @@ def test_markdown_declara_los_supuestos_de_gbif_veredicto_y_adultos(ruta_ontolog
     # error_consulta queda explicado y no se confunde con insuficiente
     assert VEREDICTO_ERROR in texto
     assert "reintentar" in texto.lower()
+
+
+def test_censo_aplica_las_opciones_del_orden_a_orden_y_familias(tmp_path: Path):
+    (tmp_path / "c.yaml").write_text(
+        """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: OrdenA
+    inat_taxon_id: 1
+    excluir_taxon_ids: [2]
+    familias: [{nombre: FamiliaX, inat_taxon_id: 11}]
+  - nombre: OrdenB
+    inat_taxon_id: 2
+    solo_adultos: false
+    familias: [{nombre: FamiliaY, inat_taxon_id: 21}]
+""",
+        encoding="utf-8",
+    )
+    inat = SesionContadora({})
+    censar(
+        cargar_ontologia(tmp_path / "c.yaml"), lugar_id=7, pais_gbif=None,
+        sesion_inat=inat, sesion_gbif=SesionContadora({}, clave="count"), pausa_segundos=0,
+    )
+    por_taxon = {}
+    for params in inat.llamadas:
+        por_taxon.setdefault(params["taxon_id"], []).append(params)
+
+    for taxon in (1, 11):
+        assert all(p["without_taxon_id"] == "2" for p in por_taxon[taxon])
+        assert all(p["term_value_id"] == 2 for p in por_taxon[taxon])
+    for taxon in (2, 21):
+        assert all("without_taxon_id" not in p for p in por_taxon[taxon])
+        assert all("term_id" not in p for p in por_taxon[taxon])
+
+
+def test_markdown_declara_ordenes_sin_filtro_de_adultos_y_exclusiones(tmp_path: Path):
+    """Las cifras de esos órdenes no son comparables con el resto sin la aclaración."""
+    (tmp_path / "c.yaml").write_text(
+        """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: OrdenA
+    inat_taxon_id: 1
+    excluir_taxon_ids: [2]
+    familias: []
+  - nombre: OrdenB
+    inat_taxon_id: 2
+    solo_adultos: false
+    familias: []
+""",
+        encoding="utf-8",
+    )
+    texto = a_markdown([], cargar_ontologia(tmp_path / "c.yaml"))
+    assert "Excepciones al filtro de adultos: OrdenB" in texto
+    assert "OrdenA excluye los taxones 2" in texto
+
+
+def test_markdown_sin_opciones_no_menciona_excepciones(ruta_ontologia: Path):
+    texto = a_markdown([], cargar_ontologia(ruta_ontologia))
+    assert "Excepciones al filtro" not in texto
+    assert "excluye los taxones" not in texto

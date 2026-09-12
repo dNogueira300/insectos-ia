@@ -95,10 +95,16 @@ def censar(
         ]
 
         for nivel, nombre, taxon_id, gbif_key in candidatos:
+            opciones = {
+                "solo_adultos": orden.solo_adultos,
+                "excluir_taxon_ids": orden.excluir_taxon_ids,
+            }
             try:
-                global_ = inat.contar_observaciones(taxon_id, sesion=sesion_inat)
+                global_ = inat.contar_observaciones(taxon_id, sesion=sesion_inat, **opciones)
                 en_lugar = (
-                    inat.contar_observaciones(taxon_id, lugar_id=lugar_id, sesion=sesion_inat)
+                    inat.contar_observaciones(
+                        taxon_id, lugar_id=lugar_id, sesion=sesion_inat, **opciones
+                    )
                     if lugar_id
                     else 0
                 )
@@ -163,6 +169,25 @@ def a_markdown(filas: list[FilaCenso], onto: Ontologia) -> str:
         "estas cifras contra la web pública de iNaturalist verá números menores por esa razón; "
         "no es un error del censo.",
         "",
+    ]
+    sin_filtro = [o.nombre for o in onto.ordenes if not o.solo_adultos]
+    if sin_filtro:
+        lineas += [
+            f"**Excepciones al filtro de adultos: {', '.join(sin_filtro)}.** Estos órdenes "
+            "(y sus familias) cuentan todos los estados de vida, porque lo que se encuentra "
+            "en campo son obreras, soldados o inmaduros. Sus cifras no son comparables con "
+            "las del resto.",
+            "",
+        ]
+    for orden in onto.ordenes:
+        if orden.excluir_taxon_ids:
+            ids = ", ".join(str(t) for t in orden.excluir_taxon_ids)
+            lineas += [
+                f"**{orden.nombre} excluye los taxones {ids}** de iNaturalist (y sus "
+                "descendientes), porque el sistema los trata como un orden propio.",
+                "",
+            ]
+    lineas += [
         "**El veredicto se calcula solo con la columna *iNat global* (conteo mundial)**, no "
         "con *iNat en lugar*. Una clase abundante en el mundo pero casi ausente en la región "
         "configurada puede salir marcada como \"suficiente\" igual: no se debe leer "

@@ -36,6 +36,14 @@ class Orden:
     nombre_comun: str = ""
     gbif_key: int | None = None
     familias: tuple[Familia, ...] = ()
+    # Filtro "Life Stage = Adult" de iNaturalist. Se desactiva en órdenes
+    # cuyas castas o estados inmaduros son lo que se ve en campo (termitas).
+    solo_adultos: bool = True
+    # Subtaxones que no deben bajar con este orden porque el sistema los trata
+    # como un orden propio (p. ej. las termitas dentro de Blattodea). Sin
+    # esto, la misma foto quedaría con dos etiquetas de orden. Las familias
+    # del orden heredan la exclusión y el filtro de adultos.
+    excluir_taxon_ids: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -76,6 +84,22 @@ def _entero_obligatorio(dic: dict, clave: str, contexto: str) -> int:
     return valor
 
 
+def _opciones_de_orden(bruto: dict, nombre: str) -> tuple[bool, tuple[int, ...]]:
+    solo_adultos = bruto.get("solo_adultos", True)
+    if not isinstance(solo_adultos, bool):
+        raise ErrorOntologia(f"orden {nombre}: 'solo_adultos' debe ser true o false")
+
+    excluir = bruto.get("excluir_taxon_ids", [])
+    # bool es subclase de int: un `[true]` no debe pasar por un identificador.
+    if not isinstance(excluir, list) or not all(
+        isinstance(t, int) and not isinstance(t, bool) for t in excluir
+    ):
+        raise ErrorOntologia(f"orden {nombre}: 'excluir_taxon_ids' debe ser una lista de enteros")
+    if bruto.get("inat_taxon_id") in excluir:
+        raise ErrorOntologia(f"orden {nombre}: 'excluir_taxon_ids' contiene su propio inat_taxon_id")
+    return solo_adultos, tuple(excluir)
+
+
 def cargar_ontologia(ruta: Path) -> Ontologia:
     """Lee el YAML de clases y devuelve una Ontologia validada."""
     datos = yaml.safe_load(Path(ruta).read_text(encoding="utf-8"))
@@ -114,6 +138,7 @@ def cargar_ontologia(ruta: Path) -> Ontologia:
                 )
             )
 
+        solo_adultos, excluir = _opciones_de_orden(bruto, nombre)
         ordenes.append(
             Orden(
                 nombre=nombre,
@@ -121,6 +146,8 @@ def cargar_ontologia(ruta: Path) -> Ontologia:
                 nombre_comun=bruto.get("nombre_comun", ""),
                 gbif_key=bruto.get("gbif_key"),
                 familias=tuple(familias),
+                solo_adultos=solo_adultos,
+                excluir_taxon_ids=excluir,
             )
         )
 

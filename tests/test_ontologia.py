@@ -90,3 +90,78 @@ def test_ningun_modulo_escribe_nombres_de_clase_literales():
         texto = archivo.read_text(encoding="utf-8")
         for palabra in prohibidos:
             assert palabra not in texto, f"{archivo} contiene el literal {palabra}"
+
+
+YAML_ORDEN_CON_OPCIONES = """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: A
+    inat_taxon_id: 1
+    excluir_taxon_ids: [2]
+    familias: []
+  - nombre: B
+    inat_taxon_id: 2
+    solo_adultos: false
+    familias: []
+"""
+
+
+def test_orden_por_defecto_solo_adultos_y_sin_exclusiones(ruta_ontologia: Path):
+    onto = cargar_ontologia(ruta_ontologia)
+    for orden in onto.ordenes:
+        assert orden.solo_adultos is True
+        assert orden.excluir_taxon_ids == ()
+
+
+def test_orden_declara_exclusiones_y_filtro_de_adultos(tmp_path: Path):
+    (tmp_path / "c.yaml").write_text(YAML_ORDEN_CON_OPCIONES, encoding="utf-8")
+    a, b = cargar_ontologia(tmp_path / "c.yaml").ordenes
+    assert a.excluir_taxon_ids == (2,)
+    assert a.solo_adultos is True
+    assert b.solo_adultos is False
+
+
+@pytest.mark.parametrize(
+    "linea, clave",
+    [
+        ("excluir_taxon_ids: 2", "excluir_taxon_ids"),
+        ("excluir_taxon_ids: [dos]", "excluir_taxon_ids"),
+        ("excluir_taxon_ids: [true]", "excluir_taxon_ids"),
+        ("solo_adultos: 'no'", "solo_adultos"),
+    ],
+)
+def test_opciones_de_orden_con_tipo_invalido_fallan(tmp_path: Path, linea: str, clave: str):
+    """Un `solo_adultos: 'no'` leído como verdadero bajaría larvas sin avisar."""
+    (tmp_path / "c.yaml").write_text(
+        f"""
+version: 1
+minimos: {{familia_train: 10, familia_test: 5}}
+ordenes:
+  - nombre: A
+    inat_taxon_id: 1
+    {linea}
+    familias: []
+""",
+        encoding="utf-8",
+    )
+    with pytest.raises(ErrorOntologia, match=clave):
+        cargar_ontologia(tmp_path / "c.yaml")
+
+
+def test_orden_que_se_excluye_a_si_mismo_falla(tmp_path: Path):
+    """Excluir el propio taxón deja la clase vacía: es un error de escritura."""
+    (tmp_path / "c.yaml").write_text(
+        """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: A
+    inat_taxon_id: 1
+    excluir_taxon_ids: [1]
+    familias: []
+""",
+        encoding="utf-8",
+    )
+    with pytest.raises(ErrorOntologia, match="excluir_taxon_ids"):
+        cargar_ontologia(tmp_path / "c.yaml")

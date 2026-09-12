@@ -42,7 +42,12 @@ def nueva_sesion() -> requests.Session:
     return sesion
 
 
-def _parametros(taxon_id: int, solo_adultos: bool, lugar_id: int | None) -> dict:
+def _parametros(
+    taxon_id: int,
+    solo_adultos: bool,
+    lugar_id: int | None,
+    excluir_taxon_ids: tuple[int, ...] = (),
+) -> dict:
     params = {
         "taxon_id": taxon_id,
         "quality_grade": "research",
@@ -56,6 +61,8 @@ def _parametros(taxon_id: int, solo_adultos: bool, lugar_id: int | None) -> dict
         params["term_value_id"] = 2
     if lugar_id:
         params["place_id"] = lugar_id
+    if excluir_taxon_ids:
+        params["without_taxon_id"] = ",".join(str(t) for t in excluir_taxon_ids)
     return params
 
 
@@ -64,11 +71,12 @@ def contar_observaciones(
     *,
     solo_adultos: bool = True,
     lugar_id: int | None = None,
+    excluir_taxon_ids: tuple[int, ...] = (),
     sesion=None,
 ) -> int:
     """Cuántas observaciones existen, sin descargar ninguna."""
     sesion = sesion or nueva_sesion()
-    params = _parametros(taxon_id, solo_adultos, lugar_id) | {"per_page": 0}
+    params = _parametros(taxon_id, solo_adultos, lugar_id, excluir_taxon_ids) | {"per_page": 0}
     respuesta = sesion.get(f"{API}/observations", params=params, timeout=30)
     respuesta.raise_for_status()
     return int(respuesta.json().get("total_results", 0))
@@ -124,6 +132,7 @@ def iterar_observaciones(
     limite: int,
     solo_adultos: bool = True,
     lugar_id: int | None = None,
+    excluir_taxon_ids: tuple[int, ...] = (),
     sesion=None,
     pausa: float = PAUSA_SEGUNDOS,
 ) -> Iterator[Observacion]:
@@ -137,7 +146,7 @@ def iterar_observaciones(
         # procesarla sigue igual, la próxima petición sería idéntica a esta.
         cursor_pedido = id_above
 
-        params = _parametros(taxon_id, solo_adultos, lugar_id) | {
+        params = _parametros(taxon_id, solo_adultos, lugar_id, excluir_taxon_ids) | {
             "per_page": POR_PAGINA,
             "order_by": "id",
             "order": "asc",

@@ -323,3 +323,49 @@ def test_manifiesto_se_persiste_a_mitad_de_una_clase(tmp_path: Path, monkeypatch
     filas_persistidas = leer_manifiesto(tmp_path / "manifiesto.csv")
     assert len(filas_persistidas) == 4
     assert [f["obs_id"] for f in filas_persistidas] == ["1", "2", "3", "4"]
+
+
+def test_descargar_todo_aplica_las_opciones_del_orden(tmp_path: Path, monkeypatch):
+    """Las familias heredan el filtro de adultos y la exclusión de su orden.
+
+    Sin esto, las termitas bajarían también dentro de la cuota de su orden
+    taxonómico y la misma foto quedaría con dos etiquetas de orden.
+    """
+    import pipeline.descarga as mod
+
+    (tmp_path / "c.yaml").write_text(
+        """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: OrdenA
+    inat_taxon_id: 1
+    excluir_taxon_ids: [2]
+    familias: [{nombre: FamiliaX, inat_taxon_id: 11}]
+  - nombre: OrdenB
+    inat_taxon_id: 2
+    solo_adultos: false
+    familias: [{nombre: FamiliaY, inat_taxon_id: 21}]
+""",
+        encoding="utf-8",
+    )
+    pedidos = {}
+
+    def _iterar(taxon_id, *, limite, **kwargs):
+        pedidos[taxon_id] = kwargs
+        return iter(())
+
+    monkeypatch.setattr(mod, "iterar_observaciones", _iterar)
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    descargar_todo(
+        cargar_ontologia(tmp_path / "c.yaml"),
+        raiz=tmp_path / "crudo", cupo_orden=1, cupo_familia=1,
+        sesion_api=None, sesion_img=SesionImagenOK(),
+    )
+
+    for taxon in (1, 11):
+        assert pedidos[taxon]["excluir_taxon_ids"] == (2,)
+        assert pedidos[taxon]["solo_adultos"] is True
+    for taxon in (2, 21):
+        assert pedidos[taxon]["excluir_taxon_ids"] == ()
+        assert pedidos[taxon]["solo_adultos"] is False

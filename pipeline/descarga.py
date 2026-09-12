@@ -104,6 +104,8 @@ def descargar_clase(
     pausa: float = inat.PAUSA_SEGUNDOS,
     manifiesto_previo: list[dict] = (),
     intervalo_persistencia: int = INTERVALO_PERSISTENCIA_MANIFIESTO,
+    solo_adultos: bool = True,
+    excluir_taxon_ids: tuple[int, ...] = (),
 ) -> list[dict]:
     """Descarga hasta `cupo` imágenes nuevas para una clase.
 
@@ -135,7 +137,8 @@ def descargar_clase(
     descartes_imagen = 0
 
     for observacion in iterar_observaciones(
-        taxon_id, limite=cupo * 3, sesion=sesion_api, pausa=pausa
+        taxon_id, limite=cupo * 3, sesion=sesion_api, pausa=pausa,
+        solo_adultos=solo_adultos, excluir_taxon_ids=excluir_taxon_ids,
     ):
         if len(filas) >= cupo:
             break
@@ -258,6 +261,8 @@ def descargar_todo(
                 cupo=cupo_familia, raiz=raiz, ya_descargados=ya,
                 sesion_api=sesion_api, sesion_img=sesion_img,
                 manifiesto_previo=manifiesto,
+                solo_adultos=orden.solo_adultos,
+                excluir_taxon_ids=orden.excluir_taxon_ids,
             )
             manifiesto += nuevas
             escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
@@ -269,6 +274,8 @@ def descargar_todo(
             cupo=cupo_orden, raiz=raiz, ya_descargados=ya,
             sesion_api=sesion_api, sesion_img=sesion_img,
             manifiesto_previo=manifiesto,
+            solo_adultos=orden.solo_adultos,
+            excluir_taxon_ids=orden.excluir_taxon_ids,
         )
         manifiesto += nuevas
         escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
