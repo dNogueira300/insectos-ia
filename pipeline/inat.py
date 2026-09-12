@@ -11,6 +11,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 _log = logging.getLogger(__name__)
 
@@ -18,6 +20,21 @@ API = "https://api.inaturalist.org/v1"
 USER_AGENT = "insectos-ia-UNAP/1.0 (proyecto academico; eliasdna0499@gmail.com)"
 POR_PAGINA = 200
 PAUSA_SEGUNDOS = 1.0
+
+# Una descarga desatendida de horas no puede morir por un corte transitorio:
+# un simulacro contra iNaturalist se cayó con `RemoteDisconnected` a los pocos
+# minutos. Se reintentan los cortes de conexión y los códigos que indican
+# saturación del servidor (429 respeta `Retry-After`). Un 404 no: la foto no
+# existe y reintentarla solo carga la API. La espera crece 0, 4, 8, 16 y 32 s;
+# si se agotan los intentos, la respuesta mala llega a `raise_for_status` como
+# antes.
+REINTENTOS = Retry(
+    total=5,
+    backoff_factor=2,
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods=("GET",),
+    raise_on_status=False,
+)
 
 
 @dataclass(frozen=True)
@@ -36,9 +53,12 @@ class Observacion:
 
 
 def nueva_sesion() -> requests.Session:
-    """Sesión con el User-Agent que exige iNaturalist."""
+    """Sesión con el User-Agent que exige iNaturalist y reintentos de red."""
     sesion = requests.Session()
     sesion.headers.update({"User-Agent": USER_AGENT})
+    adaptador = HTTPAdapter(max_retries=REINTENTOS)
+    sesion.mount("https://", adaptador)
+    sesion.mount("http://", adaptador)
     return sesion
 
 

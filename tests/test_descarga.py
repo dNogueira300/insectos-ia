@@ -369,3 +369,53 @@ ordenes:
     for taxon in (2, 21):
         assert pedidos[taxon]["excluir_taxon_ids"] == ()
         assert pedidos[taxon]["solo_adultos"] is False
+
+
+def test_las_observaciones_ya_descargadas_no_consumen_el_margen(tmp_path: Path, monkeypatch):
+    """La cuota de orden corre después de sus familias y pagina desde las
+    observaciones más antiguas, que las familias ya se llevaron. Si esas
+    repetidas cuentan contra el margen de 3x, el orden se queda corto aunque
+    la fuente tenga material de sobra (medido: Coleoptera 1099 de 1200)."""
+    import pipeline.descarga as mod
+
+    monkeypatch.setattr(mod, "iterar_observaciones", falso_iterador([obs(i) for i in range(1, 13)]))
+    filas = descargar_clase(
+        "OrdenA", "", 1,
+        cupo=2, raiz=tmp_path, ya_descargados=set(range(1, 11)),
+        sesion_api=None, sesion_img=SesionImagenOK(), pausa=0,
+    )
+    assert [f["obs_id"] for f in filas] == [11, 12]
+
+
+def test_el_margen_sigue_acotando_las_observaciones_nuevas(tmp_path: Path, monkeypatch):
+    """Sin licencia utilizable no se pagina toda la fuente: el margen de 3x
+    sigue aplicando a las observaciones nuevas."""
+    import pipeline.descarga as mod
+
+    vistas = []
+
+    def _iterar(taxon_id, *, limite, **kwargs):
+        for i in range(1, min(limite, 1000) + 1):
+            vistas.append(i)
+            yield obs(i, licencia="")
+
+    monkeypatch.setattr(mod, "iterar_observaciones", _iterar)
+    filas = descargar_clase(
+        "OrdenA", "", 1,
+        cupo=2, raiz=tmp_path, ya_descargados=set(),
+        sesion_api=None, sesion_img=SesionImagenOK(), pausa=0,
+    )
+    assert filas == []
+    assert len(vistas) <= 7  # 6 del margen, más a lo sumo una de lectura
+
+
+def test_el_aviso_no_culpa_al_margen_si_la_fuente_se_agoto(tmp_path: Path, monkeypatch, caplog):
+    import pipeline.descarga as mod
+
+    monkeypatch.setattr(mod, "iterar_observaciones", falso_iterador([obs(i) for i in range(1, 11)]))
+    descargar_clase(
+        "OrdenA", "", 1,
+        cupo=2, raiz=tmp_path, ya_descargados=set(range(1, 11)),
+        sesion_api=None, sesion_img=SesionImagenOK(), pausa=0,
+    )
+    assert "la fuente no tenía más observaciones" in caplog.text

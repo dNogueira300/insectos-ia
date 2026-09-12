@@ -109,9 +109,12 @@ def descargar_clase(
 ) -> list[dict]:
     """Descarga hasta `cupo` imágenes nuevas para una clase.
 
-    Se pide un margen de `cupo * 3` observaciones al iterador porque se
-    descartan las ya vistas, las de licencia no permitida y las de imagen
-    inservible. Si aun con ese margen no se alcanza el cupo, no se falla en
+    Se admite un margen de `cupo * 3` observaciones NUEVAS porque se
+    descartan las de licencia no permitida y las de imagen inservible. Las ya
+    descargadas no cuentan contra ese margen: la cuota de orden corre después
+    de sus familias y pagina desde las mismas observaciones antiguas que ellas
+    ya se llevaron, así que contarlas dejaba al orden corto con la fuente
+    llena (medido en un simulacro: 1099 de 1200 en un orden con seis familias). Si aun con ese margen no se alcanza el cupo, no se falla en
     silencio: se deja constancia en el log de cuánto faltó y por qué se
     descartó cada observación, junto con una pista de si el margen se agotó
     (la fuente tenía observaciones de sobra pero se descartaron demasiadas)
@@ -130,22 +133,27 @@ def descargar_clase(
     """
     carpeta = familia or SIN_FAMILIA
     ruta_manifiesto = Path(raiz) / "manifiesto.csv"
+    margen = cupo * 3
     filas: list[dict] = []
     vistas = 0
+    vistas_nuevas = 0
     descartes_repetida = 0
     descartes_licencia = 0
     descartes_imagen = 0
 
+    # El límite del iterador solo acota la paginación: el corte real lo deciden
+    # el cupo y el margen de observaciones nuevas, dentro del bucle.
     for observacion in iterar_observaciones(
-        taxon_id, limite=cupo * 3, sesion=sesion_api, pausa=pausa,
+        taxon_id, limite=margen + len(ya_descargados), sesion=sesion_api, pausa=pausa,
         solo_adultos=solo_adultos, excluir_taxon_ids=excluir_taxon_ids,
     ):
-        if len(filas) >= cupo:
+        if len(filas) >= cupo or vistas_nuevas >= margen:
             break
         vistas += 1
         if observacion.id in ya_descargados:
             descartes_repetida += 1
             continue
+        vistas_nuevas += 1
         if observacion.licencia not in LICENCIAS_PERMITIDAS:
             descartes_licencia += 1
             continue
@@ -182,10 +190,10 @@ def descargar_clase(
             time.sleep(pausa * 0.15)
 
     if len(filas) < cupo:
-        # `vistas` llega a cupo * 3 solo si el iterador tenía tanto material
-        # como se le pidió; si se quedó corto, la causa es la propia fuente,
+        # Las nuevas llegan al margen solo si la fuente tenía tanto material
+        # como se le pidió; si se quedó corta, la causa es la propia fuente,
         # no el margen de 3x.
-        margen_insuficiente = vistas >= cupo * 3
+        margen_insuficiente = vistas_nuevas >= margen
         motivo = (
             "el margen de 3x no alcanzó (demasiados descartes)"
             if margen_insuficiente

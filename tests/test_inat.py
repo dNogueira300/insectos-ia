@@ -261,3 +261,87 @@ def test_iterar_con_exclusiones_las_envia_en_cada_pagina():
         )
     )
     assert [p["without_taxon_id"] for p in sesion.llamadas] == ["118903", "118903"]
+
+
+# --- Reintentos de red ---
+#
+# Se prueban contra un servidor HTTP local de verdad, no con una sesión falsa:
+# lo que importa es que `nueva_sesion` sobreviva a un corte real de conexión,
+# que es exactamente lo que tumbó un simulacro de descarga contra iNaturalist.
+
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+from pipeline.inat import nueva_sesion
+
+
+class _ServidorQueFalla:
+    """Responde con `fallos` respuestas malas y después con 200."""
+
+    def __init__(self, fallos: list[str]):
+        self.fallos = list(fallos)
+        self.peticiones = 0
+        servidor = self
+
+        class Manejador(BaseHTTPRequestHandler):
+            def do_GET(self):
+                servidor.peticiones += 1
+                fallo = servidor.fallos.pop(0) if servidor.fallos else None
+                if fallo == "corte":
+                    self.close_connection = True
+                    return  # cierra sin responder: RemoteDisconnected en el cliente
+                codigo = int(fallo) if fallo else 200
+                cuerpo = b'{"total_results": 7}'
+                self.send_response(codigo)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(cuerpo)))
+                self.end_headers()
+                self.wfile.write(cuerpo)
+
+            def log_message(self, *args):
+                pass
+
+        self.http = ThreadingHTTPServer(("127.0.0.1", 0), Manejador)
+        self.url = f"http://127.0.0.1:{self.http.server_address[1]}/observations"
+        threading.Thread(target=self.http.serve_forever, daemon=True).start()
+
+    def cerrar(self):
+        self.http.shutdown()
+        self.http.server_close()
+
+
+@pytest.fixture
+def servidor_que_falla():
+    creados = []
+
+    def _crear(fallos):
+        servidor = _ServidorQueFalla(fallos)
+        creados.append(servidor)
+        return servidor
+
+    yield _crear
+    for servidor in creados:
+        servidor.cerrar()
+
+
+def test_la_sesion_reintenta_una_conexion_cortada(servidor_que_falla):
+    servidor = servidor_que_falla(["corte"])
+    respuesta = nueva_sesion().get(servidor.url, timeout=5)
+    assert respuesta.status_code == 200
+    assert servidor.peticiones == 2
+
+
+@pytest.mark.parametrize("codigo", ["429", "502", "503"])
+def test_la_sesion_reintenta_errores_transitorios(servidor_que_falla, codigo):
+    servidor = servidor_que_falla([codigo])
+    respuesta = nueva_sesion().get(servidor.url, timeout=5)
+    assert respuesta.status_code == 200
+    assert servidor.peticiones == 2
+
+
+def test_la_sesion_no_reintenta_un_404(servidor_que_falla):
+    """Una foto borrada no es un fallo transitorio: reintentarla solo martilla la API."""
+    servidor = servidor_que_falla(["404"])
+    respuesta = nueva_sesion().get(servidor.url, timeout=5)
+    assert respuesta.status_code == 404
+    assert servidor.peticiones == 1
