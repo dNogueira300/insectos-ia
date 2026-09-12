@@ -92,7 +92,7 @@ ordenes:
     nombre_comun: escarabajos
     familias:
       - nombre: Curculionidae
-        inat_taxon_id: 62956
+        inat_taxon_id: 48736
         nombre_comun: gorgojos
         importancia: plaga
 ```

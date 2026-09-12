@@ -1,3 +1,23 @@
+# Ontología v1 del sistema — CONGELADA el 2026-09-12.
+#
+# Única fuente de verdad de las clases: el modelo toma de aquí los índices de
+# orden y familia y la matriz de pertenencia. Cambiar este archivo después de
+# entrenar invalida el modelo entrenado.
+#
+# Origen de la lista:
+#   - 15 órdenes de la ficha de requerimientos devuelta por la Facultad
+#     (Dra. Aldi Guerra Teixeira, 2026-08-03).
+#   - Familias de sus claves dicotómicas, depuradas con el censo de
+#     disponibilidad (docs/censo_disponibilidad.md). Las descartadas y su
+#     sustento están en ontologia/candidatas.yaml y en
+#     docs/censo_2026-09-12_con_descartadas.md.
+#   - Hemiptera (familias de la ficha, sin clave) y Coccinellidae (BD biológica)
+#     entran de forma provisional, pendientes de confirmación de la entomóloga.
+#   - Heterotermitidae y Termitidae no figuran en la clave: reemplazan a
+#     Rhinotermitidae y Mastotermitidae, sin material suficiente.
+#
+# Órdenes sin familias (Mantodea, Thysanoptera, Neuroptera, Dermaptera,
+# Phasmida, Psocodea) se identifican solo hasta orden.
 version: 1
 minimos:
   familia_train: 150
@@ -8,30 +28,119 @@ ordenes:
     gbif_key: 1470
     nombre_comun: escarabajos
     familias:
-      - nombre: Curculionidae
-        inat_taxon_id: 62956
-        nombre_comun: gorgojos
-        importancia: plaga
+      - {nombre: Curculionidae, inat_taxon_id: 48736, nombre_comun: gorgojos}  # clave
+      - {nombre: Cerambycidae, inat_taxon_id: 47961, nombre_comun: longicornios}  # clave
+      - {nombre: Scarabaeidae, inat_taxon_id: 48201, nombre_comun: escarabajos peloteros y afines}  # clave
+      - {nombre: Chrysomelidae, inat_taxon_id: 51146, nombre_comun: crisomélidos}  # clave
+      - {nombre: Carabidae, inat_taxon_id: 49567, nombre_comun: carábidos}  # clave
+      - {nombre: Coccinellidae, inat_taxon_id: 48486, nombre_comun: mariquitas}  # bd, ficha
   - nombre: Lepidoptera
     inat_taxon_id: 47157
     gbif_key: 797
     nombre_comun: mariposas y polillas
     familias:
-      - nombre: Noctuidae
-        inat_taxon_id: 49556
-        nombre_comun: nóctuidos
-        importancia: plaga
+      - {nombre: Pieridae, inat_taxon_id: 48508, nombre_comun: piéridos}  # clave
+      - {nombre: Papilionidae, inat_taxon_id: 47223, nombre_comun: papiliónidos}  # clave
+      - {nombre: Sphingidae, inat_taxon_id: 47213, nombre_comun: esfíngidos}  # clave
+      - {nombre: Pyralidae, inat_taxon_id: 49683, nombre_comun: pirálidos}  # clave
+      - {nombre: Noctuidae, inat_taxon_id: 48670, nombre_comun: nóctuidos}  # clave
   - nombre: Hymenoptera
     inat_taxon_id: 47201
     gbif_key: 1457
     nombre_comun: abejas, avispas y hormigas
     familias:
-      - nombre: Formicidae
-        inat_taxon_id: 47336
-        nombre_comun: hormigas
-        importancia: mixta
+      - {nombre: Formicidae, inat_taxon_id: 47336, nombre_comun: hormigas}  # clave
+      - {nombre: Apidae, inat_taxon_id: 47221, nombre_comun: abejas}  # clave
+      - {nombre: Vespidae, inat_taxon_id: 52747, nombre_comun: avispas sociales}  # clave
+      - {nombre: Ichneumonidae, inat_taxon_id: 47199, nombre_comun: icneumónidos}  # clave
+      - {nombre: Chalcididae, inat_taxon_id: 121516, nombre_comun: calcídidos}  # clave
+  - nombre: Diptera
+    inat_taxon_id: 47822
+    gbif_key: 811
+    nombre_comun: moscas y zancudos
+    familias:
+      - {nombre: Culicidae, inat_taxon_id: 52134, nombre_comun: zancudos}  # clave
+      - {nombre: Tephritidae, inat_taxon_id: 47990, nombre_comun: moscas de la fruta}  # clave
+      - {nombre: Drosophilidae, inat_taxon_id: 67742, nombre_comun: moscas del vinagre}  # clave
+      - {nombre: Anthomyiidae, inat_taxon_id: 49996, nombre_comun: antomíidos}  # clave
+  - nombre: Hemiptera
+    inat_taxon_id: 47744
+    gbif_key: 809
+    nombre_comun: chinches, pulgones y cigarras
+    familias:
+      - {nombre: Pentatomidae, inat_taxon_id: 47742, nombre_comun: chinches hediondas}  # ficha
+      - {nombre: Coreidae, inat_taxon_id: 51777, nombre_comun: coreidos}  # ficha
+      - {nombre: Reduviidae, inat_taxon_id: 48959, nombre_comun: chinches asesinas}  # ficha
+      - {nombre: Cicadellidae, inat_taxon_id: 53237, nombre_comun: chicharritas}  # ficha
+      - {nombre: Aphididae, inat_taxon_id: 52381, nombre_comun: pulgones}  # ficha
+  - nombre: Orthoptera
+    inat_taxon_id: 47651
+    gbif_key: 1458
+    nombre_comun: saltamontes y grillos
+    familias:
+      - {nombre: Tettigoniidae, inat_taxon_id: 48124, nombre_comun: saltamontes de antenas largas}  # clave
+      - {nombre: Gryllidae, inat_taxon_id: 52884, nombre_comun: grillos}  # clave
+      - {nombre: Acrididae, inat_taxon_id: 47649, nombre_comun: langostas y saltamontes}  # clave
   - nombre: Odonata
     inat_taxon_id: 47792
     gbif_key: 789
-    nombre_comun: libélulas
+    nombre_comun: libélulas y caballitos del diablo
+    familias:
+      - {nombre: Calopterygidae, inat_taxon_id: 47929, nombre_comun: caballitos de alas coloreadas}  # clave
+      - {nombre: Coenagrionidae, inat_taxon_id: 47925, nombre_comun: caballitos del diablo}  # clave
+      - {nombre: Gomphidae, inat_taxon_id: 51128, nombre_comun: gónfidos}  # clave
+      - {nombre: Aeshnidae, inat_taxon_id: 51469, nombre_comun: ésnidos}  # clave
+      - {nombre: Libellulidae, inat_taxon_id: 47819, nombre_comun: libélulas}  # clave
+  - nombre: Blattodea
+    inat_taxon_id: 81769
+    gbif_key: 800
+    nombre_comun: cucarachas
+    # Las termitas (Termitoidae) se clasifican como el orden Isoptera.
+    excluir_taxon_ids: [118903]
+    familias:
+      - {nombre: Blaberidae, inat_taxon_id: 84636, nombre_comun: cucarachas silvestres}  # clave
+      - {nombre: Blattidae, inat_taxon_id: 82232, nombre_comun: cucarachas domésticas}  # clave
+  # Isoptera ya no es un orden en iNaturalist ni en GBIF: las termitas son la
+  # epifamilia Termitoidae dentro de Blattodea, que las excluye. Sin gbif_key:
+  # GBIF no tiene un rango equivalente. Sin filtro de adultos: en campo se ven
+  # obreras y soldados, no alados.
+  - nombre: Isoptera
+    inat_taxon_id: 118903
+    nombre_comun: termitas
+    solo_adultos: false
+    familias:
+      - {nombre: Kalotermitidae, inat_taxon_id: 143496, nombre_comun: termitas de madera seca}  # clave
+      # iNaturalist dividió Rhinotermitidae: el grueso (Coptotermes,
+      # Heterotermes) pasó a Heterotermitidae, que ocupa su lugar.
+      - {nombre: Heterotermitidae, inat_taxon_id: 1566816, nombre_comun: termitas subterráneas}  # taxonomia
+      - {nombre: Termitidae, inat_taxon_id: 118902, nombre_comun: termitas superiores}  # taxonomia
+  - nombre: Mantodea
+    inat_taxon_id: 48112
+    gbif_key: 788
+    nombre_comun: mantis
+    familias: []
+  - nombre: Thysanoptera
+    inat_taxon_id: 83201
+    gbif_key: 1228
+    nombre_comun: trips
+    familias: []
+  - nombre: Neuroptera
+    inat_taxon_id: 48763
+    gbif_key: 1501
+    nombre_comun: crisopas y hormigas león
+    familias: []
+  - nombre: Dermaptera
+    inat_taxon_id: 47793
+    gbif_key: 1224
+    nombre_comun: tijeretas
+    familias: []
+  - nombre: Phasmida
+    inat_taxon_id: 47198
+    gbif_key: 1460
+    nombre_comun: insectos palo
+    familias: []
+  - nombre: Psocodea
+    inat_taxon_id: 83187
+    gbif_key: 7612838
+    nombre_comun: psócidos y piojos
     familias: []
