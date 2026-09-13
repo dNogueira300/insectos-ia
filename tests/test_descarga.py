@@ -419,3 +419,58 @@ def test_el_aviso_no_culpa_al_margen_si_la_fuente_se_agoto(tmp_path: Path, monke
         sesion_api=None, sesion_img=SesionImagenOK(), pausa=0,
     )
     assert "la fuente no tenía más observaciones" in caplog.text
+
+
+def test_reanudar_no_descarga_de_mas_en_clases_ya_completas_o_a_medias(
+    tmp_path: Path, ruta_ontologia: Path, monkeypatch
+):
+    """Una descarga de 15 horas se hace por partes: cortar y relanzar el mismo
+    comando no debe inflar ninguna clase por encima de su cupo.
+
+    El cupo es el total por clase, no lo nuevo de cada corrida: se descuenta
+    lo que el manifiesto ya tiene de esa clase.
+    """
+    import pipeline.descarga as mod
+
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    monkeypatch.setattr(
+        mod,
+        "iterar_observaciones",
+        iterador_por_taxon(
+            {
+                47208: [obs(i) for i in range(100, 120)],  # orden Coleoptera
+                62956: [obs(i) for i in range(1, 20)],  # Curculionidae
+                50340: [obs(i) for i in range(30, 50)],  # Chrysomelidae
+                47792: [obs(i) for i in range(200, 220)],  # orden Odonata
+                49279: [obs(i) for i in range(60, 80)],  # Libellulidae
+            }
+        ),
+    )
+    ontologia = cargar_ontologia(ruta_ontologia)
+    argumentos = dict(
+        raiz=tmp_path, cupo_orden=3, cupo_familia=2, sesion_api=None, sesion_img=SesionImagenOK()
+    )
+
+    # Primera corrida "cortada": Curculionidae completa y Chrysomelidae a medias.
+    previas = descargar_todo(ontologia, **{**argumentos, "cupo_orden": 0, "cupo_familia": 2})
+    previas = [f for f in previas if f["familia"] == "Curculionidae"] + [
+        f for f in previas if f["familia"] == "Chrysomelidae"
+    ][:1]
+    escribir_manifiesto(previas, tmp_path / "manifiesto.csv")
+
+    manifiesto = descargar_todo(ontologia, **argumentos)
+
+    por_clase = {}
+    for fila in manifiesto:
+        clave = (fila["orden"], fila["familia"])
+        por_clase[clave] = por_clase.get(clave, 0) + 1
+    assert por_clase == {
+        ("Coleoptera", "Curculionidae"): 2,
+        ("Coleoptera", "Chrysomelidae"): 2,
+        ("Coleoptera", ""): 3,
+        ("Odonata", "Libellulidae"): 2,
+        ("Odonata", ""): 3,
+    }
+
+    # Una tercera corrida sobre una descarga completa no agrega nada.
+    assert len(descargar_todo(ontologia, **argumentos)) == len(manifiesto)

@@ -225,7 +225,11 @@ def descargar_todo(
     de familia.
 
     La reanudación es por `obs_id`: si el manifiesto ya existente en `raiz`
-    lo tiene, se salta. Así una corrida interrumpida se retoma sin volver a
+    lo tiene, se salta. Además, los cupos son el TOTAL por clase, no lo nuevo
+    de cada corrida: se descuenta lo que el manifiesto ya tiene de esa clase,
+    y una clase completa ni siquiera se consulta. Sin ese descuento, cada
+    relanzamiento de una descarga hecha por partes volvía a pedir el cupo
+    entero y la clase crecía por encima de él. Así una corrida interrumpida se retoma sin volver a
     bajar nada. El manifiesto se reescribe después de cada clase, para no
     perder lo ya bajado si la corrida se corta a mitad de camino.
     """
@@ -235,6 +239,31 @@ def descargar_todo(
 
     manifiesto = leer_manifiesto(raiz / "manifiesto.csv")
     ya = {int(f["obs_id"]) for f in manifiesto if f.get("obs_id")}
+    existentes: dict[tuple[str, str], int] = {}
+    for fila in manifiesto:
+        clave = (fila["orden"], fila["familia"])
+        existentes[clave] = existentes.get(clave, 0) + 1
+
+    def _clase(orden, familia: str, taxon_id: int, cupo: int) -> None:
+        nonlocal manifiesto
+        etiqueta = f"{orden.nombre}/{familia}" if familia else f"{orden.nombre} (cuota de orden)"
+        tenidas = existentes.get((orden.nombre, familia), 0)
+        faltan = max(0, cupo - tenidas)
+        if not faltan:
+            print(f"[{etiqueta}] completa ({tenidas} de {cupo})")
+            return
+        print(f"[{etiqueta}] {tenidas} de {cupo}, faltan {faltan}...")
+        nuevas = descargar_clase(
+            orden.nombre, familia, taxon_id,
+            cupo=faltan, raiz=raiz, ya_descargados=ya,
+            sesion_api=sesion_api, sesion_img=sesion_img,
+            manifiesto_previo=manifiesto,
+            solo_adultos=orden.solo_adultos,
+            excluir_taxon_ids=orden.excluir_taxon_ids,
+        )
+        manifiesto += nuevas
+        escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
+        print(f"  +{len(nuevas)} imágenes")
 
     for orden in sorted(onto.ordenes, key=lambda o: o.nombre):
         # EL ORDEN DE ESTOS DOS BUCLES IMPORTA: PRIMERO LAS FAMILIAS.
@@ -263,31 +292,8 @@ def descargar_todo(
         # No revertir este orden por estética ni por simetría con el resto
         # del módulo.
         for fam in sorted(orden.familias, key=lambda f: f.nombre):
-            print(f"[{orden.nombre}/{fam.nombre}] (cupo {cupo_familia})...")
-            nuevas = descargar_clase(
-                orden.nombre, fam.nombre, fam.inat_taxon_id,
-                cupo=cupo_familia, raiz=raiz, ya_descargados=ya,
-                sesion_api=sesion_api, sesion_img=sesion_img,
-                manifiesto_previo=manifiesto,
-                solo_adultos=orden.solo_adultos,
-                excluir_taxon_ids=orden.excluir_taxon_ids,
-            )
-            manifiesto += nuevas
-            escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
-            print(f"  +{len(nuevas)} imágenes")
-
-        print(f"[{orden.nombre}] cuota de orden (cupo {cupo_orden})...")
-        nuevas = descargar_clase(
-            orden.nombre, "", orden.inat_taxon_id,
-            cupo=cupo_orden, raiz=raiz, ya_descargados=ya,
-            sesion_api=sesion_api, sesion_img=sesion_img,
-            manifiesto_previo=manifiesto,
-            solo_adultos=orden.solo_adultos,
-            excluir_taxon_ids=orden.excluir_taxon_ids,
-        )
-        manifiesto += nuevas
-        escribir_manifiesto(manifiesto, raiz / "manifiesto.csv")
-        print(f"  +{len(nuevas)} imágenes")
+            _clase(orden, fam.nombre, fam.inat_taxon_id, cupo_familia)
+        _clase(orden, "", orden.inat_taxon_id, cupo_orden)
 
     return manifiesto
 
