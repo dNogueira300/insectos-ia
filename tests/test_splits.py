@@ -14,6 +14,7 @@ from pipeline.splits import (
     OBSERVADOR_DESCONOCIDO,
     PROPORCIONES,
     SALIDA_ASIGNACION_INVALIDA,
+    SALIDA_SIN_FILTRO_CONTENIDO,
     ErrorAsignacion,
     aplicar_regla_admision,
     asignar_grupos,
@@ -595,7 +596,7 @@ def test_la_escritura_de_la_asignacion_es_atomica(tmp_path: Path, monkeypatch):
 def preparar_corrida(tmp_path: Path, ruta_ontologia: Path, filas: list[dict]):
     curado = tmp_path / "curado"
     curado.mkdir(parents=True, exist_ok=True)
-    with (curado / "manifiesto_curado.csv").open("w", encoding="utf-8", newline="") as f:
+    with (curado / "manifiesto_filtrado.csv").open("w", encoding="utf-8", newline="") as f:
         import csv
 
         escritor = csv.DictWriter(f, fieldnames=list(COLUMNAS_CURADO))
@@ -675,6 +676,24 @@ def test_main_para_si_la_asignacion_guardada_es_ilegible(
     assert codigo != 0
     assert not (destino / "train.csv").exists()
     assert "--regenerar-asignacion" in capsys.readouterr().out
+
+
+def test_main_para_si_no_existe_el_manifiesto_filtrado(
+    tmp_path: Path, ruta_ontologia: Path, capsys
+):
+    """Sin el filtro de contenido, los splits se harían con nidos y paisajes
+    etiquetados como insectos. Olvidar ese paso tiene que ser un error, no un
+    silencio: el manifiesto curado sin filtrar no se usa en su lugar."""
+    filas, _ = escenario_corrida(n_obs=10)
+    argv, destino = preparar_corrida(tmp_path, ruta_ontologia, filas)
+    curado = Path(argv[argv.index("--curado") + 1])
+    (curado / "manifiesto_filtrado.csv").rename(curado / "manifiesto_curado.csv")
+
+    codigo = main(argv)
+
+    assert codigo == SALIDA_SIN_FILTRO_CONTENIDO
+    assert not (destino / "train.csv").exists()
+    assert "pipeline.filtro_contenido" in capsys.readouterr().out
 
 
 # --- Límite conocido del reparto estratificado (ver PESO_CLASE en pipeline/splits.py) ---

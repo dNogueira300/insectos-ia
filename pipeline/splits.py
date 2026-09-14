@@ -32,6 +32,12 @@ class ErrorAsignacion(Exception):
 # Códigos de salida de la línea de comandos.
 SALIDA_OK = 0
 SALIDA_ASIGNACION_INVALIDA = 1
+SALIDA_SIN_FILTRO_CONTENIDO = 2
+
+# Manifiesto que consume el particionado: el curado, ya pasado por
+# `pipeline.filtro_contenido`. No se cae al manifiesto curado si falta, porque
+# ese todavía incluye nidos y paisajes etiquetados como insectos.
+NOMBRE_MANIFIESTO_ENTRADA = "manifiesto_filtrado.csv"
 
 
 # Encabezado del artefacto. Se escribe siempre, y dice para qué sirve, porque
@@ -718,7 +724,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     onto = cargar_ontologia(Path(args.ontologia))
-    with (Path(args.curado) / "manifiesto_curado.csv").open(encoding="utf-8", newline="") as f:
+    ruta_entrada = Path(args.curado) / NOMBRE_MANIFIESTO_ENTRADA
+    if not ruta_entrada.is_file():
+        print(f"  !! ERROR: no existe {ruta_entrada}.")
+        print(
+            "Falta el filtro de contenido. Ejecutar antes `python -m "
+            "pipeline.filtro_contenido`: el manifiesto curado sin filtrar todavía "
+            "incluye fotos sin insecto visible. No se escribió nada."
+        )
+        return SALIDA_SIN_FILTRO_CONTENIDO
+    with ruta_entrada.open(encoding="utf-8", newline="") as f:
         filas = list(csv.DictReader(f))
 
     destino = Path(args.destino)
