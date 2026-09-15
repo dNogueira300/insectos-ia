@@ -150,3 +150,24 @@ def test_reporte_muestra_el_porcentaje_descartado_por_clase():
     texto = reporte_markdown(resumen)
     assert "| OrdenA/FamiliaX | 4 | 2 | 50% |" in texto
     assert "0.5" in texto
+
+
+def test_ejecutar_informa_el_avance_por_lote(tmp_path: Path):
+    """Una pasada de decenas de minutos sin salida parece colgada."""
+    filas = [fila(imagen(tmp_path, f"{i}.png", 0.9), obs_id=i) for i in range(5)]
+    _escribir_curado(tmp_path, filas)
+    avances = []
+    ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5, lote=2,
+             informar=lambda hechas, total: avances.append((hechas, total)))
+    assert avances == [(2, 5), (4, 5), (5, 5)]
+
+
+def test_el_avance_cuenta_lo_que_ya_estaba_en_cache(tmp_path: Path):
+    filas = [fila(imagen(tmp_path, f"{i}.png", 0.9), obs_id=i) for i in range(3)]
+    _escribir_curado(tmp_path, filas)
+    ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5)
+    _escribir_curado(tmp_path, filas + [fila(imagen(tmp_path, "nueva.png", 0.9), obs_id=9)])
+    avances = []
+    ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5,
+             informar=lambda hechas, total: avances.append((hechas, total)))
+    assert avances == [(4, 4)]

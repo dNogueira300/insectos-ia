@@ -164,17 +164,35 @@ def _escribir_puntajes(ruta: Path, puntajes: dict[str, float | None]) -> None:
 
 
 def ejecutar(
-    raiz_curado: Path, clasificador: Clasificador, *, umbral: float = UMBRAL, lote: int = 64
+    raiz_curado: Path,
+    clasificador: Clasificador,
+    *,
+    umbral: float = UMBRAL,
+    lote: int = 64,
+    informar: Callable[[int, int], None] | None = None,
 ) -> dict:
+    """Filtra el manifiesto curado de `raiz_curado`.
+
+    `informar(hechas, total)` se llama tras cada lote clasificado, contando
+    también lo que ya estaba en la caché: una pasada de decenas de minutos sin
+    ninguna salida parece colgada.
+    """
     raiz_curado = Path(raiz_curado)
     with (raiz_curado / NOMBRE_MANIFIESTO_CURADO).open(encoding="utf-8", newline="") as f:
         filas = list(csv.DictReader(f))
 
     ruta_puntajes = raiz_curado / NOMBRE_PUNTAJES
+    archivos = [f["archivo"] for f in filas]
+
+    def _al_avanzar(parciales: dict[str, float | None]) -> None:
+        _escribir_puntajes(ruta_puntajes, parciales)
+        if informar is not None:
+            informar(sum(1 for a in archivos if a in parciales), len(archivos))
+
     puntajes = puntuar(
         filas, raiz_curado, clasificador, lote=lote,
         previos=_leer_puntajes(ruta_puntajes),
-        al_avanzar=lambda p: _escribir_puntajes(ruta_puntajes, p),
+        al_avanzar=_al_avanzar,
     )
     _escribir_puntajes(ruta_puntajes, puntajes)
 
@@ -258,7 +276,14 @@ def main() -> None:
     parser.add_argument("--reporte", default="docs/reporte_filtro_contenido.md")
     args = parser.parse_args()
 
-    resumen = ejecutar(Path(args.curado), clasificador_clip(), umbral=args.umbral)
+    print("Cargando el modelo de visión...", flush=True)
+    clasificador = clasificador_clip()
+
+    def _informar(hechas: int, total: int) -> None:
+        print(f"  {hechas}/{total} imágenes puntuadas ({100 * hechas // total}%)", end="\r", flush=True)
+
+    resumen = ejecutar(Path(args.curado), clasificador, umbral=args.umbral, informar=_informar)
+    print()
     Path(args.reporte).write_text(reporte_markdown(resumen), encoding="utf-8")
     print(f"Filtro de contenido: {resumen['conservadas']}/{resumen['entrada']} conservadas")
 
