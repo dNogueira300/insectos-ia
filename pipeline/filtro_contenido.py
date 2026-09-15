@@ -8,11 +8,11 @@ modelo que "montículo de tierra" es una familia, y la precisión con fotos de
 catálogo deja de decir nada sobre la foto de celular en campo.
 
 Se usa un modelo de visión preentrenado en modo zero-shot: cada foto se
-compara con descripciones de "insecto visible" y de "sin insecto", y el
-puntaje es la probabilidad acumulada del primer grupo. Las descripciones son
-genéricas a propósito: no nombran ninguna clase (ver
-`test_ningun_modulo_escribe_nombres_de_clase_literales`), así que el filtro no
-necesita cambiar si cambia la ontología.
+compara con descripciones de "insecto visible" y de "estructura sin insecto", y
+el puntaje es la probabilidad acumulada del primer grupo. Las descripciones no
+usan nombres de la ontología (ver
+`test_ningun_modulo_escribe_nombres_de_clase_literales`): describen cómo se ve
+un insecto en una foto, no a qué clase pertenece.
 
 No borra ni mueve imágenes, ni reescribe el manifiesto curado: escribe un
 manifiesto filtrado aparte (que es el que consume `pipeline.splits`), el
@@ -35,24 +35,34 @@ from pipeline.curacion import COLUMNAS_CURADO, NOMBRE_MANIFIESTO_CURADO
 NOMBRE_MANIFIESTO_FILTRADO = "manifiesto_filtrado.csv"
 NOMBRE_DESCARTES = "descartes_contenido.csv"
 NOMBRE_PUNTAJES = "puntajes_contenido.csv"
+# Firma de las descripciones y del modelo con que se calculó la caché.
+NOMBRE_FIRMA = "puntajes_contenido.firma"
 
 MOTIVO_SIN_INSECTO = "sin_insecto"
 MOTIVO_ILEGIBLE = "ilegible"
 
-# Calibrado el 2026-09-14 con 360 fotos del dataset real, etiquetadas a mano
-# como "se ve un insecto" o no. La muestra se cargó hacia las clases de riesgo:
-# 49 no mostraban insecto, casi todas nidos y montículos de termitas.
+# Primera versión (2026-09-14): descripciones negativas amplias ("una planta",
+# "un tronco", "madera dañada", "una hoja dañada"). Calibrada con 360 fotos
+# cargadas hacia las termitas, parecía perder solo el 5.5% de las fotos
+# buenas. Sobre el dataset completo descartó el 32% de Phasmida, el 16% de
+# Aphididae y el 14% de Noctuidae. Al revisar esos descartes, eran insectos
+# palo, colonias y polillas perfectamente visibles: las descripciones
+# negativas describían justo lo que aparentan los insectos camuflados.
 #
-#   umbral 0.10: atrapa el 73% de las malas y pierde el 2.3% de las buenas
-#   umbral 0.30: atrapa el 78% de las malas y pierde el 4.2% de las buenas
-#   umbral 0.50: atrapa el 88% de las malas y pierde el 5.5% de las buenas
-#   umbral 0.70: atrapa el 94% de las malas y pierde el 7.4% de las buenas
+# Segunda versión (2026-09-15): las negativas describen solo estructuras sin
+# insecto (nido, montículo, agujero, paisaje, suelo vacío) y las positivas
+# incluyen las formas difíciles (camuflaje, colonias, dentro de madera).
+# Evaluada sobre 520 fotos etiquetadas a mano (las 360 de la calibración y 160
+# descartes de la primera versión), con el umbral 0.5:
 #
-# Se elige 0.5. Las buenas que se pierden son sobre todo colonias, insectos
-# dentro de galerías de madera o sobre tallos cubiertos; el modelo final
-# tampoco aprende bien de ellas. El descarte fue una decisión del proyecto
-# sin revisión humana: preferir perder algunas fotos buenas a entrenar con
-# nidos etiquetados como familias.
+#   primera versión: atrapa 93 de 99 malas y pierde 127 de 421 buenas
+#   segunda versión: atrapa 57 de 99 malas y pierde   7 de 421 buenas
+#
+# Atrapa 15 de los 17 nidos y montículos de la muestra. Lo que deja pasar son
+# sobre todo hojas dañadas y follaje donde el insecto no se distingue, un
+# ruido menor que perder las colonias y los insectos camuflados. La evaluación
+# usa los mismos descartes que motivaron el cambio, así que es optimista: se
+# verifica revisando los descartes de la pasada completa.
 UMBRAL = 0.5
 
 DESCRIPCIONES_INSECTO = (
@@ -61,16 +71,22 @@ DESCRIPCIONES_INSECTO = (
     "a macro photo of an insect on a leaf",
     "a photo of insects on the ground",
     "a photo of an insect on a person's hand",
+    "a photo of a camouflaged insect",
+    "a photo of a stick insect on a branch",
+    "a photo of a moth resting on bark",
+    "a photo of a colony of small insects on a plant stem",
+    "a photo of many small insects inside rotting wood",
+    "a photo of a butterfly on a flower",
 )
 DESCRIPCIONES_SIN_INSECTO = (
     "a photo of an insect nest or a mound of soil",
+    "a photo of a tall earth mound in a field",
     "a photo of a landscape",
-    "a photo of damaged wood",
-    "a photo of a damaged leaf",
-    "a photo of bare soil",
-    "a photo of a tree trunk",
-    "a photo of a plant",
+    "a photo of a hole in the ground",
+    "a photo of an empty patch of bare soil",
 )
+MODELO_CLIP = ("ViT-B-32", "laion2b_s34b_b79k")
+FIRMA = "|".join([*MODELO_CLIP, *DESCRIPCIONES_INSECTO, "--", *DESCRIPCIONES_SIN_INSECTO])
 
 # Recibe imágenes RGB y devuelve, para cada una, la probabilidad de que se vea
 # un insecto (0 a 1).
@@ -170,18 +186,33 @@ def ejecutar(
     umbral: float = UMBRAL,
     lote: int = 64,
     informar: Callable[[int, int], None] | None = None,
+    firma: str = FIRMA,
 ) -> dict:
     """Filtra el manifiesto curado de `raiz_curado`.
 
     `informar(hechas, total)` se llama tras cada lote clasificado, contando
     también lo que ya estaba en la caché: una pasada de decenas de minutos sin
     ninguna salida parece colgada.
+
+    La caché solo se reutiliza si fue calculada con la misma `firma`
+    (descripciones y modelo); si no, se descarta y se vuelve a puntuar todo.
     """
     raiz_curado = Path(raiz_curado)
     with (raiz_curado / NOMBRE_MANIFIESTO_CURADO).open(encoding="utf-8", newline="") as f:
         filas = list(csv.DictReader(f))
 
     ruta_puntajes = raiz_curado / NOMBRE_PUNTAJES
+    ruta_firma = raiz_curado / NOMBRE_FIRMA
+    firma_previa = ruta_firma.read_text(encoding="utf-8") if ruta_firma.is_file() else None
+    if firma_previa == firma:
+        previos = _leer_puntajes(ruta_puntajes)
+    else:
+        # Se borra la caché ANTES de escribir la firma nueva: si la corrida se
+        # corta antes del primer lote, no puede quedar la firma nueva junto a
+        # puntajes calculados con las descripciones viejas.
+        previos = {}
+        ruta_puntajes.unlink(missing_ok=True)
+    ruta_firma.write_text(firma, encoding="utf-8")
     archivos = [f["archivo"] for f in filas]
 
     def _al_avanzar(parciales: dict[str, float | None]) -> None:
@@ -191,7 +222,7 @@ def ejecutar(
 
     puntajes = puntuar(
         filas, raiz_curado, clasificador, lote=lote,
-        previos=_leer_puntajes(ruta_puntajes),
+        previos=previos,
         al_avanzar=_al_avanzar,
     )
     _escribir_puntajes(ruta_puntajes, puntajes)
@@ -240,7 +271,7 @@ def reporte_markdown(resumen: dict) -> str:
     return "\n".join(lineas) + "\n"
 
 
-def clasificador_clip(modelo: str = "ViT-B-32", pesos: str = "laion2b_s34b_b79k") -> Clasificador:
+def clasificador_clip(modelo: str = MODELO_CLIP[0], pesos: str = MODELO_CLIP[1]) -> Clasificador:
     """Clasificador zero-shot con open_clip, en CPU.
 
     Se importa aquí dentro para que el resto del pipeline (y sus pruebas) no

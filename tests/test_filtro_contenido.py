@@ -171,3 +171,35 @@ def test_el_avance_cuenta_lo_que_ya_estaba_en_cache(tmp_path: Path):
     ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5,
              informar=lambda hechas, total: avances.append((hechas, total)))
     assert avances == [(4, 4)]
+
+
+def test_la_cache_no_se_reutiliza_si_cambian_las_descripciones_o_el_modelo(tmp_path: Path):
+    """Los puntajes dependen de las descripciones y del modelo. Reusar la caché
+    tras cambiarlos filtraría con puntajes viejos sin que nadie lo note."""
+    filas = [fila(imagen(tmp_path, "1.png", 0.9), obs_id=1)]
+    _escribir_curado(tmp_path, filas)
+    ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5, firma="v1")
+
+    misma = ClasificadorPorColor()
+    ejecutar(tmp_path, misma, umbral=0.5, firma="v1")
+    assert misma.lotes == []
+
+    otra = ClasificadorPorColor()
+    ejecutar(tmp_path, otra, umbral=0.5, firma="v2")
+    assert otra.lotes == [1]
+
+
+def test_una_corrida_con_firma_nueva_interrumpida_no_legitima_la_cache_vieja(tmp_path: Path):
+    filas = [fila(imagen(tmp_path, "1.png", 0.9), obs_id=1)]
+    _escribir_curado(tmp_path, filas)
+    ejecutar(tmp_path, ClasificadorPorColor(), umbral=0.5, firma="v1")
+
+    def revienta(imagenes):
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        ejecutar(tmp_path, revienta, umbral=0.5, firma="v2")
+
+    siguiente = ClasificadorPorColor()
+    ejecutar(tmp_path, siguiente, umbral=0.5, firma="v2")
+    assert siguiente.lotes == [1]
