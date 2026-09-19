@@ -18,6 +18,7 @@ dev = ["pytest>=8.3"]
 # Filtro de contenido (pipeline/filtro_contenido.py). torch se instala con el
 # índice de CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
 filtro = ["torch>=2.5", "open_clip_torch>=3.0"]
+modelo = ["torch>=2.5", "torchvision>=0.20", "timm>=1.0", "onnx>=1.17", "onnxruntime>=1.20", "matplotlib>=3.9"]
 
 [build-system]
 requires = ["setuptools>=68"]
