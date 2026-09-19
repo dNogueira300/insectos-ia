@@ -3,12 +3,21 @@
 Dos fases: primero las cabezas solas sobre un backbone congelado, después
 todo descongelado con tasa menor. La parada temprana vigila el macro-F1 de
 familia en validación, que es la métrica que decide el proyecto.
+
+Reanudable (adenda del Plan 02): el entrenamiento corre en Colab gratuito, que
+corta sesiones sin aviso, y dos cuentas se turnan sobre la misma carpeta de
+Drive. Al cerrar cada época se escribe `ultimo.pth` de forma atómica, con todo
+lo necesario para que una corrida cortada y reanudada sea indistinguible de
+una sin cortes: pesos, optimizador, escalador de precisión mixta, estado de
+los generadores aleatorios, historial y mejor métrica.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +34,14 @@ SEMILLA = 42
 EPOCAS_CONGELADO = 2
 PACIENCIA = 4
 
+ARCHIVO_ULTIMO = "ultimo.pth"
+ARCHIVO_MEJOR = "mejor.pth"
+ARCHIVO_CONFIG = "config.json"
+
+
+class ErrorCorrida(Exception):
+    """La carpeta de destino no admite la corrida pedida (ver `entrenar`)."""
+
 
 def fijar_semilla(valor: int = SEMILLA) -> None:
     random.seed(valor)
@@ -33,7 +50,10 @@ def fijar_semilla(valor: int = SEMILLA) -> None:
     torch.cuda.manual_seed_all(valor)
 
 
-def epoca_entrenamiento(modelo, cargador, perdida, optimizador, dispositivo) -> dict:
+def epoca_entrenamiento(
+    modelo, cargador, perdida, optimizador, dispositivo, escalador=None
+) -> dict:
+    """Una pasada por el cargador. Con `escalador` usa precisión mixta (GPU)."""
     modelo.train()
     sumas = {"perdida": 0.0, "perdida_orden": 0.0, "perdida_familia": 0.0}
     lotes = 0
@@ -44,10 +64,18 @@ def epoca_entrenamiento(modelo, cargador, perdida, optimizador, dispositivo) -> 
         y_familia = y_familia.to(dispositivo)
 
         optimizador.zero_grad()
-        logits_orden, logits_familia = modelo(imagenes)
-        total, de_orden, de_familia = perdida(logits_orden, logits_familia, y_orden, y_familia)
-        total.backward()
-        optimizador.step()
+        with torch.autocast(device_type="cuda", enabled=escalador is not None):
+            logits_orden, logits_familia = modelo(imagenes)
+            total, de_orden, de_familia = perdida(
+                logits_orden.float(), logits_familia.float(), y_orden, y_familia
+            )
+        if escalador is not None:
+            escalador.scale(total).backward()
+            escalador.step(optimizador)
+            escalador.update()
+        else:
+            total.backward()
+            optimizador.step()
 
         sumas["perdida"] += float(total.detach())
         sumas["perdida_orden"] += float(de_orden.detach())
@@ -70,9 +98,10 @@ def evaluar_cargador(modelo, cargador, espacio: EspacioEtiquetas, dispositivo) -
     probs_familia_todas: list[np.ndarray] = []
 
     for imagenes, y_orden, y_familia in cargador:
-        logits_orden, logits_familia = modelo(imagenes.to(dispositivo))
-        logits_orden = logits_orden.cpu().numpy()
-        logits_familia = logits_familia.cpu().numpy()
+        with torch.autocast(device_type="cuda", enabled=str(dispositivo) == "cuda"):
+            logits_orden, logits_familia = modelo(imagenes.to(dispositivo))
+        logits_orden = logits_orden.float().cpu().numpy()
+        logits_familia = logits_familia.float().cpu().numpy()
 
         for i in range(len(y_orden)):
             probs_o = softmax(logits_orden[i].astype(np.float64))
@@ -115,6 +144,62 @@ def evaluar_cargador(modelo, cargador, espacio: EspacioEtiquetas, dispositivo) -
     }
 
 
+def _fase(epoca: int) -> str:
+    return "congelado" if epoca < EPOCAS_CONGELADO else "descongelado"
+
+
+def _optimizador_de_fase(modelo, epoca: int, tasa: float):
+    """Congela o descongela el backbone según la época y arma su optimizador."""
+    if _fase(epoca) == "congelado":
+        modelo.congelar_backbone()
+        return torch.optim.AdamW([p for p in modelo.parameters() if p.requires_grad], lr=tasa)
+    modelo.descongelar_backbone()
+    return torch.optim.AdamW(modelo.parameters(), lr=tasa / 10)
+
+
+def _guardar_atomico(objeto, ruta: Path) -> None:
+    """Un corte de Colab a mitad de la escritura no puede dañar el checkpoint:
+    se escribe un temporal y se reemplaza solo cuando está completo."""
+    temporal = ruta.with_name(ruta.name + ".tmp")
+    torch.save(objeto, temporal)
+    os.replace(temporal, ruta)
+
+
+def _estado_rng() -> dict:
+    return {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch": torch.get_rng_state(),
+        "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+    }
+
+
+def _restaurar_rng(estado: dict) -> None:
+    random.setstate(estado["python"])
+    np.random.set_state(estado["numpy"])
+    torch.set_rng_state(estado["torch"])
+    if estado["cuda"] is not None and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all(estado["cuda"])
+
+
+def _fabricar_por_defecto(n_ordenes: int, n_familias: int, backbone: str):
+    return ModeloJerarquico(n_ordenes, n_familias, backbone=backbone)
+
+
+def _verificar_config(destino: Path, config: dict) -> None:
+    guardada = json.loads((destino / ARCHIVO_CONFIG).read_text(encoding="utf-8"))
+    distintas = [
+        f"{clave} (guardada {guardada.get(clave)!r}, pedida {valor!r})"
+        for clave, valor in config.items()
+        if guardada.get(clave) != valor
+    ]
+    if distintas:
+        raise ErrorCorrida(
+            f"{destino} es una corrida con otra configuración: {'; '.join(distintas)}. "
+            "No se reanuda una corrida con otros hiperparámetros: usar otro --destino."
+        )
+
+
 def entrenar(
     *,
     ruta_ontologia: Path,
@@ -126,82 +211,153 @@ def entrenar(
     lote: int = 32,
     tasa: float = 1e-3,
     lambda_familia: float = 1.0,
+    trabajadores: int = 4,
+    reanudar: bool = False,
+    al_terminar_epoca: Callable[[int], None] | None = None,
+    fabricar_modelo: Callable = _fabricar_por_defecto,
 ) -> dict:
-    fijar_semilla()
+    """Entrena (o reanuda) una corrida en `destino`.
+
+    - Si `destino` ya tiene `ultimo.pth` y no se pide `reanudar`, falla: en una
+      carpeta de Drive compartida, pisar la corrida del compañero por olvidar
+      la opción borraría horas de GPU.
+    - Con `reanudar` y sin checkpoint, empieza de cero (el cuaderno de Colab
+      siempre pasa la opción).
+    - `al_terminar_epoca(epoca)` se llama después de guardar el checkpoint de
+      esa época: lo usa el turno compartido para actualizar su latido.
+    """
+    destino = Path(destino)
+    destino.mkdir(parents=True, exist_ok=True)
     dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Dispositivo: {dispositivo}")
 
-    onto = cargar_ontologia(ruta_ontologia)
     filas_train = leer_split(Path(ruta_splits) / "train.csv")
     filas_val = leer_split(Path(ruta_splits) / "val.csv")
+    config = {
+        "semilla": SEMILLA,
+        "backbone": backbone,
+        "epocas": epocas,
+        "lote": lote,
+        "tasa": tasa,
+        "lambda_familia": lambda_familia,
+        "n_train": len(filas_train),
+        "n_val": len(filas_val),
+    }
 
+    ruta_ultimo = destino / ARCHIVO_ULTIMO
+    estado = None
+    if ruta_ultimo.is_file():
+        if not reanudar:
+            raise ErrorCorrida(
+                f"{destino} ya tiene una corrida ({ARCHIVO_ULTIMO}). Para continuarla, "
+                "usar --reanudar; para empezar otra, usar otro --destino."
+            )
+        _verificar_config(destino, config)
+        estado = torch.load(ruta_ultimo, map_location=dispositivo, weights_only=False)
+        if estado["terminado"]:
+            print(f"La corrida de {destino} ya había terminado; no se entrena de nuevo.")
+            return estado["resultado"]
+        print(f"Reanudando desde la época {estado['epoca'] + 1}")
+    else:
+        (destino / ARCHIVO_CONFIG).write_text(
+            json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+    fijar_semilla()
+    onto = cargar_ontologia(ruta_ontologia)
     espacio = construir_espacio(filas_train, onto)
-    destino = Path(destino)
     espacio.guardar(destino / "etiquetas.json")
     print(f"{len(espacio.ordenes)} órdenes, {len(espacio.familias)} familias")
 
     cargador_train, cargador_val = cargadores(
-        filas_train, filas_val, raiz_imagenes, espacio, lote=lote
+        filas_train, filas_val, raiz_imagenes, espacio, lote=lote, trabajadores=trabajadores
     )
-
-    modelo = ModeloJerarquico(
-        len(espacio.ordenes), len(espacio.familias), backbone=backbone
-    ).to(dispositivo)
+    modelo = fabricar_modelo(len(espacio.ordenes), len(espacio.familias), backbone).to(dispositivo)
     perdida = PerdidaCombinada(
         pesos_familia=pesos_de_familia(filas_train, espacio).to(dispositivo),
         lambda_familia=lambda_familia,
     )
+    escalador = torch.amp.GradScaler("cuda") if dispositivo == "cuda" else None
 
-    mejor = -1.0
-    mejor_epoca = -1
-    historial = []
+    mejor, mejor_epoca, historial, inicio = -1.0, -1, [], 0
+    if estado is not None:
+        modelo.load_state_dict(estado["modelo"])
+        if escalador is not None and estado["escalador"] is not None:
+            escalador.load_state_dict(estado["escalador"])
+        mejor, mejor_epoca = estado["mejor"], estado["mejor_epoca"]
+        historial = estado["historial"]
+        inicio = estado["epoca"] + 1
+        # Al final: construir el modelo y los cargadores consume azar, y lo que
+        # debe continuar es el azar tal como quedó al cerrar la última época.
+        _restaurar_rng(estado["rng"])
 
-    for epoca in range(epocas):
-        if epoca == 0:
-            modelo.congelar_backbone()
-            optimizador = torch.optim.AdamW(
-                [p for p in modelo.parameters() if p.requires_grad], lr=tasa
-            )
-        elif epoca == EPOCAS_CONGELADO:
-            modelo.descongelar_backbone()
-            optimizador = torch.optim.AdamW(modelo.parameters(), lr=tasa / 10)
+    resultado: dict = {}
+    for epoca in range(inicio, epocas):
+        if epoca == inicio or epoca == EPOCAS_CONGELADO:
+            optimizador = _optimizador_de_fase(modelo, epoca, tasa)
+            # El estado del optimizador solo sirve dentro de su misma fase: al
+            # cruzar a la fase descongelada, la corrida sin cortes también
+            # empieza con un optimizador nuevo.
+            if estado is not None and epoca == inicio and _fase(epoca) == _fase(estado["epoca"]):
+                optimizador.load_state_dict(estado["optimizador"])
 
         resumen_train = epoca_entrenamiento(
-            modelo, cargador_train, perdida, optimizador, dispositivo
+            modelo, cargador_train, perdida, optimizador, dispositivo, escalador
         )
         resumen_val = evaluar_cargador(modelo, cargador_val, espacio, dispositivo)
         historial.append({"epoca": epoca, **resumen_train, **resumen_val})
         print(
             f"época {epoca:2d} | pérdida {resumen_train['perdida']:.3f} | "
             f"F1 orden {resumen_val['macro_f1_orden']:.3f} | "
-            f"F1 familia {resumen_val['macro_f1_familia']:.3f}"
+            f"F1 familia {resumen_val['macro_f1_familia']:.3f}",
+            flush=True,
         )
 
+        detener = epoca == epocas - 1
         if resumen_val["macro_f1_familia"] > mejor:
             mejor = resumen_val["macro_f1_familia"]
             mejor_epoca = epoca
-            torch.save(modelo.state_dict(), destino / "mejor.pth")
+            _guardar_atomico(modelo.state_dict(), destino / ARCHIVO_MEJOR)
         elif epoca - mejor_epoca >= PACIENCIA:
             print(f"parada temprana en la época {epoca}")
+            detener = True
+
+        if detener:
+            resultado = {
+                **config,
+                "epocas_corridas": len(historial),
+                "mejor_epoca": mejor_epoca,
+                "mejor_macro_f1_familia_val": mejor,
+                "historial": historial,
+            }
+            (destino / "metricas.json").write_text(
+                json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+
+        _guardar_atomico(
+            {
+                "epoca": epoca,
+                "modelo": modelo.state_dict(),
+                "optimizador": optimizador.state_dict(),
+                "escalador": escalador.state_dict() if escalador is not None else None,
+                "mejor": mejor,
+                "mejor_epoca": mejor_epoca,
+                "historial": historial,
+                "rng": _estado_rng(),
+                "terminado": detener,
+                "resultado": resultado,
+            },
+            ruta_ultimo,
+        )
+        if al_terminar_epoca is not None:
+            al_terminar_epoca(epoca)
+        if detener:
             break
 
-    resultado = {
-        "semilla": SEMILLA,
-        "backbone": backbone,
-        "epocas_corridas": len(historial),
-        "mejor_epoca": mejor_epoca,
-        "mejor_macro_f1_familia_val": mejor,
-        "n_train": len(filas_train),
-        "n_val": len(filas_val),
-        "historial": historial,
-    }
-    (destino / "metricas.json").write_text(
-        json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
     return resultado
 
 
-def main() -> None:
+def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Entrena el modelo jerárquico")
     parser.add_argument("--ontologia", default="ontologia/clases.yaml")
     parser.add_argument("--imagenes", default="datos/curado")
@@ -212,9 +368,17 @@ def main() -> None:
     parser.add_argument("--lote", type=int, default=32)
     parser.add_argument("--tasa", type=float, default=1e-3)
     parser.add_argument("--lambda-familia", type=float, default=1.0)
-    args = parser.parse_args()
+    parser.add_argument("--trabajadores", type=int, default=4)
+    parser.add_argument(
+        "--reanudar",
+        action="store_true",
+        help="continúa la corrida de --destino desde su último checkpoint, si existe",
+    )
+    return parser
 
-    Path(args.destino).mkdir(parents=True, exist_ok=True)
+
+def main() -> None:
+    args = construir_parser().parse_args()
     resultado = entrenar(
         ruta_ontologia=Path(args.ontologia),
         raiz_imagenes=Path(args.imagenes),
@@ -225,6 +389,8 @@ def main() -> None:
         lote=args.lote,
         tasa=args.tasa,
         lambda_familia=args.lambda_familia,
+        trabajadores=args.trabajadores,
+        reanudar=args.reanudar,
     )
     print(f"Mejor macro-F1 de familia en validación: {resultado['mejor_macro_f1_familia_val']:.3f}")
 

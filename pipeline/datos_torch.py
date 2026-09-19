@@ -112,7 +112,7 @@ def cargadores(
             batch_size=lote,
             shuffle=True,
             num_workers=trabajadores,
-            pin_memory=True,
+            pin_memory=torch.cuda.is_available(),
             drop_last=True,
         ),
         DataLoader(
@@ -120,6 +120,6 @@ def cargadores(
             batch_size=lote,
             shuffle=False,
             num_workers=trabajadores,
-            pin_memory=True,
+            pin_memory=torch.cuda.is_available(),
         ),
     )
