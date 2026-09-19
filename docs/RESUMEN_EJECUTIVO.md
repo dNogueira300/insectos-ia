@@ -1,85 +1,100 @@
 # Resumen ejecutivo — Sistema de identificación de insectos amazónicos
 
-**Fecha:** 30 de julio de 2026
-**Estado:** fase de datos **construida, auditada y cerrada**. Lista para pasar a la etapa de entrenamiento.
-**Repositorio:** https://github.com/dNogueira300/insectos-ia — rama `plan-01-fase-datos`
+**Fecha:** 19 de septiembre de 2026
+**Estado:** la etapa de datos está **cerrada sobre el material real** y el **código del modelo está terminado y probado**. Falta el entrenamiento en Google Colab.
+**Repositorio:** https://github.com/dNogueira300/insectos-ia
+
+- Rama `main`: la etapa de datos cerrada.
+- Rama `plan-02-modelo`: el código del modelo.
 
 ---
 
 ## Qué es este proyecto
 
-Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden** y a qué **familia** pertenece, y muestra la información biológica asociada: nombre común, cultivo al que afecta, tipo de daño e importancia económica.
+Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden** y a qué **familia** pertenece, y muestra la información biológica asociada. El trabajo tiene tres etapas:
 
-El trabajo se dividió en tres etapas. Esta primera construye **la maquinaria que prepara los datos**: consigue las fotografías, las limpia, y las organiza de forma que el sistema pueda aprender de ellas sin engañarse a sí mismo. Las otras dos etapas —entrenar el modelo y construir la página web de consulta— están planificadas en detalle pero aún no ejecutadas.
+1. Preparar los datos.
+2. Entrenar el modelo.
+3. Construir la página web de consulta.
 
-## Qué se completó
+## Dónde estamos
 
-Las nueve piezas de la etapa de datos están escritas y probadas: **182 pruebas automáticas, todas en verde**. En concreto, el sistema ya sabe:
+|                                  |                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| Lista de clases                  | **Cerrada.** 15 órdenes y 38 familias.                                             |
+| Etapa de datos                   | **Cerrada.** 34 360 fotografías listas, repartidas y verificadas.                  |
+| Código del modelo                | **Terminado.** 9 piezas, 316 pruebas automáticas en verde, prueba de punta a punta superada. |
+| Entrenamiento                    | **Siguiente paso.** En Google Colab gratuito, con el cuaderno ya preparado.        |
+| Página web de consulta           | Planificada en detalle. Sin empezar.                                               |
 
-- **Consultar cuántas fotografías existen** de cada grupo de insectos en los repositorios científicos internacionales, antes de descargar nada.
-- **Descargar esas fotografías** registrando de dónde vino cada una, quién la tomó y bajo qué licencia, que es una obligación legal.
-- **Limpiar el material**: descartar duplicados, fotos demasiado pequeñas y archivos dañados.
-- **Repartir las fotos** entre el material de aprendizaje y el de examen, con una precaución que se explica más abajo.
-- **Validar la base de datos biológica** que llena el equipo de Agronomía, rechazando registros inconsistentes.
-- **Recibir las fotografías de campo** que aporte la Facultad y comprobar que no se solapen con el material de aprendizaje.
+## La lista de clases quedó cerrada
 
-## El primer resultado concreto: el censo
+El 3 de agosto la Facultad devolvió la ficha de requerimientos y las claves dicotómicas de la Dra. Aldi Guerra Teixeira. Con ese material se armó la lista y se comprobó con datos cuánto material fotográfico existe para cada clase.
 
-Se ejecutó el censo real contra los repositorios internacionales. El documento está en `docs/censo_disponibilidad.md` y es el insumo para la reunión de decisión.
+- **15 órdenes**, los de la ficha. Las termitas (Isoptera) se tratan como un orden propio, tal como pide la entomóloga, aunque los repositorios internacionales ya las clasifican dentro de Blattodea. El sistema las separa al descargar para que ninguna foto quede con dos órdenes.
+- **38 familias.** Salen de las claves, más cinco familias de Hemiptera y Coccinellidae, que entran **de forma provisional**: la ficha las proponía, pero todavía no tienen clave.
+- **Cuatro familias descartadas**, con el dato que lo justifica:
+  - _Agromyzidae_: 229 fotos de adultos, bajo el mínimo; casi todo el material son hojas minadas, no la mosca.
+  - _Mastotermitidae_: 13 fotos; es una familia exclusiva de Australia.
+  - _Rhinotermitidae_: 10 fotos; los repositorios la dividieron y su grueso pasó a _Heterotermitidae_, que entra en su lugar.
+  - _Locustidae_: no existe como familia en las bases actuales; las langostas están dentro de _Acrididae_.
 
-**Los 15 órdenes de insectos superan holgadamente el mínimo necesario.** A nivel de orden no hay que descartar nada. Dos observaciones:
+Al preparar la lista apareció un error serio en la versión de prueba del sistema: el identificador usado para la familia de las polillas _Noctuidae_ correspondía en realidad a los **ciempiés**. Si se hubiera descargado con él, esa clase se habría llenado de ciempiés. Quedó corregido.
 
-**Los trips (Thysanoptera) están al límite.** 487 fotografías disponibles en todo el mundo frente a un objetivo de 270. Pasa, pero con tan poco margen que al repartirlas entre aprendizaje y examen quedan muy pocas de cada lado. Como son una plaga agrícola relevante, conviene que el entomólogo decida si vale la pena incluirlos.
+## El material fotográfico
 
-**Casi no hay material fotografiado en Perú.** Trips: 0. Efímeras: 2. Frigáneas: 3. Crisopas: 15. Esto no impide entrenar —el sistema aprenderá con fotografías de todo el mundo— pero sí anticipa que **habrá una diferencia entre lo bien que funcione con fotos de catálogo y lo bien que funcione con una foto tomada con celular en una parcela amazónica**. Medir esa diferencia honestamente es exactamente para lo que sirve el conjunto de fotografías de campo.
+| Paso                                                         | Fotografías |
+| ------------------------------------------------------------ | ----------: |
+| Descargadas de iNaturalist, con licencia y autor registrados | 39 668      |
+| Tras quitar duplicados                                       | 39 542      |
+| Tras quitar fotos en las que no se ve el insecto             | 38 760      |
+| Tras limitar el aporte de cada fotógrafo                     | **34 360**  |
+
+Las 34 360 fotos son de **7 974 fotógrafos distintos** y se reparten así:
+
+- **24 032 para aprendizaje**;
+- **5 163 para ajuste**;
+- **5 165 para el examen final**.
+
+Ningún fotógrafo aparece en dos grupos: si sus fotos estuvieran en el aprendizaje y en el examen, el sistema parecería mejor de lo que es. **Las 38 familias alcanzaron el mínimo necesario.**
+
+Dos pasos de esa tabla se agregaron en esta etapa, porque los datos reales mostraron problemas que no se veían en el plan:
+
+- **Fotos sin insecto.** En la familia de termitas _Termitidae_, la mitad de las fotos eran montículos de tierra y paisajes, no termitas. Un modelo entrenado con eso aprendería que "montículo" es una familia. Ahora un modelo de visión revisa cada foto y descarta las que solo muestran nidos, montículos, agujeros o paisaje. En esa familia, lo que queda sin insecto bajó de la mitad a menos de una de cada diez.
+- **Fotógrafos que dominan una familia.** En algunas familias, una sola persona aportaba casi la mitad de las fotos, y el examen de una familia de polillas dependía de solo 3 fotógrafos. Se limitó a 20 fotos por fotógrafo en cada clase. El mínimo de fotógrafos distintos en el examen subió de 3 a 6.
+
+## Problemas encontrados y corregidos
+
+Cada pieza se verificó contra los datos reales, no solo en pruebas. Estos fueron los hallazgos que importan:
+
+- **El primer filtro de fotos descartaba insectos buenos.** Confundía insectos palo, polillas sobre corteza y colonias de pulgones con "ramas", "madera" y "plantas": llegó a descartar un tercio de una clase. Se detectó revisando a ojo lo descartado, se rediseñó y se volvió a comprobar. Ahora las fotos buenas perdidas fuera de las termitas son del orden de 0.2 %.
+- **Una descarga de 15 horas no sobrevivía a un corte de internet.** Ahora reintenta sola, se puede pausar y retomar por partes, y al retomar no duplica fotos.
+- **La verificación del modelo exportado dio una falsa alarma.** La prueba de punta a punta con datos reales mostró que la comprobación comparaba mal. Se corrigió para medir lo que importa: con fotos reales, el modelo exportado da la misma respuesta que el original en el 100 % de los casos.
+
+## Cómo se va a entrenar
+
+En **Google Colab gratuito**, desde una sola cuenta. El cuaderno de Colab ya está listo: basta con subir a Google Drive el paquete de datos (un solo archivo) y ejecutar todas las celdas.
+
+- Colab gratuito corta las sesiones sin aviso. El entrenamiento **guarda su avance en Drive al terminar cada vuelta** y, si se corta, continúa donde quedó al volver a ejecutar el cuaderno. Como mucho se pierde una vuelta.
+- El tiempo estimado es de una a dos horas.
+- Al terminar produce tres cosas: el modelo listo para la página web, sus métricas y un informe de evaluación.
 
 ## Lo que está esperando a la Facultad
 
-**La lista de familias.** Los 15 órdenes son un conjunto cerrado y estándar; se pudieron determinar sin consultar a nadie. Pero **qué familias de importancia económica interesan para la Amazonía peruana es una decisión del entomólogo**, y sin ella no se puede descargar el material definitivo: serían decenas de miles de imágenes contra una lista que puede cambiar.
+- **Confirmar las familias provisionales:** las cinco de Hemiptera y Coccinellidae. Hoy están en el sistema, pero no tienen clave dicotómica.
+- **La meta de precisión.** La ficha pide 99 % tanto en órdenes como en familias y no acepta recortar familias. Es una meta que ningún sistema de este tipo alcanza con fotos de campo. Conviene acordar por escrito una meta realista antes de presentar resultados, para que no se lean como un incumplimiento. El sistema está diseñado para **decir "no estoy seguro"** y mostrar sus tres mejores opciones cuando duda, en vez de afirmar algo equivocado.
+- **Fotografías de campo.** Sin fotos tomadas en parcelas amazónicas, la calificación final mide fotos de catálogo, que es la parte fácil. El informe de evaluación lo declara explícitamente. Con ese material se podría medir la calidad real en campo.
 
-Todo el código para hacerlo está escrito y probado. El día que se cierre esa lista, ejecutar la descarga es cuestión de configurar un archivo y dejar el proceso corriendo.
+## Límites conocidos, declarados a propósito
 
-**La base de datos biológica necesita reconciliarse.** Se probó importar el Excel de la reunión y fue rechazado con tres errores: las familias *Apidae*, *Coccinellidae* y *Libellulidae* no figuran en la lista de clases del sistema. Los cuatro órdenes usados sí estaban. Ese rechazo es el comportamiento correcto —el sistema no acepta datos que no puede interpretar— y la lista de errores dice exactamente qué hay que poner de acuerdo.
+- **Casi no hay material de Perú.** Solo alrededor del 0.5 % de las fotos (unas 170) fue tomado en el país. El sistema aprende con fotos de todo el mundo. Es de esperar una diferencia entre su desempeño con fotos de catálogo y con fotos de celular en campo.
+- **Tres familias de libélulas y caballitos del diablo tienen poca diversidad de fotógrafos** en su examen o en su grupo de ajuste: 5 o 6 personas. Su calificación será menos confiable que la del resto. Se puede mejorar descargando más fotos de otros fotógrafos.
+- **Licencias.** El 73 % de las fotos tiene licencia **no comercial**. Es válido para un proyecto académico y de responsabilidad social. Si el sistema llegara a tener un uso comercial, habría que revisarlo; la licencia de cada foto está registrada.
+- **Cinco familias quedaron justas en cantidad de material:** _Chalcididae_, _Termitidae_ y tres de libélulas.
 
-## Sobre la calidad del trabajo
+## Próximos pasos
 
-Cada una de las nueve piezas pasó por una revisión independiente, y varias necesitaron hasta cuatro rondas de corrección. Se detectaron y corrigieron problemas que no eran evidentes:
-
-- **Dos casos en que el sistema destruía información buena antes de tener la nueva.** Al reimportar la base de datos biológica, si algo fallaba a mitad de camino se perdían los datos anteriores *y* los nuevos. Lo mismo con el registro de las fotografías descargadas: una interrupción a mitad de una descarga de horas podía borrar el registro de todo lo ya bajado, incluida la información de licencias sin la cual las imágenes no se pueden usar legalmente.
-
-- **Una herramienta que podía borrar archivos personales.** El módulo de limpieza borra material obsoleto de su carpeta de trabajo. Si alguien escribía mal la ruta y apuntaba, por ejemplo, a su carpeta de Documentos, podía perder archivos. Se cerró tras cuatro rondas, cada una tapando una vía distinta.
-
-- **Fotografías que desaparecían sin avisar.** Las fotos en formato de iPhone se descartaban en silencio. El escenario realista: la Facultad entrega 200 fotografías de campo, la pantalla dice "60 procesadas", y nadie se entera de que faltan 140 del único conjunto que mide la calidad real del sistema.
-
-## Los cuatro problemas de fondo que encontró la auditoría final
-
-Una revisión del conjunto completo —distinta de las revisiones pieza por pieza— encontró **cuatro problemas que solo se ven mirando cómo encajan los módulos entre sí**. Los cuatro atacaban la promesa central del proyecto: que la calificación final del sistema sea honesta. **Los cuatro están corregidos y verificados con mediciones independientes.**
-
-**1. El reparto de fotos no tenía en cuenta las familias.** Al separar el material de aprendizaje del de examen, el sistema equilibraba el total pero no vigilaba que cada familia quedara representada en ambos lados. En simulación, **38 de cada 100 familias con 600 fotografías quedaban marcadas como "sin datos suficientes"** — y el informe recomendaba entonces conseguir más imágenes, justo lo contrario de lo necesario. Corregido: el reparto ahora considera cada familia por separado, y en el escenario realista la cifra bajó a **cero**.
-
-**2. La verificación de las fotos de campo se podía saltar sin darse cuenta.** Si el archivo de referencia no estaba donde se esperaba, el programa continuaba e informaba éxito. Corregido: ahora es un error explícito, y la comprobación se hace contra los tres conjuntos (aprendizaje, validación y examen), no solo contra uno.
-
-**3. Repetir el reparto reorganizaba las fotos.** Ejecutarlo dos veces movía **42 de cada 100 fotógrafos** entre el grupo de aprendizaje y el de examen. Como la lista de clases todavía va a cambiar, eso iba a pasar con seguridad, y habría dado calificaciones falsamente buenas. Corregido: el reparto se guarda en un archivo y se reutiliza, así que quien ya está asignado no se mueve. La cifra bajó a **cero**.
-
-**4. Al descargar, las fotos de orden quitaban la etiqueta a las de familia.** Fotografías correctamente identificadas hasta el nivel de familia se archivaban como "familia desconocida". Corregido invirtiendo el orden de las descargas.
-
-## Un límite conocido, documentado a propósito
-
-El reparto por familias funciona limpiamente cuando los fotógrafos de una familia aportan cantidades parecidas de fotos, y también en el escenario realista donde unas familias son comunes y otras raras. Pero cuando los aportes son muy desiguales —un fotógrafo prolífico y varios ocasionales— **todavía quedan algunas familias mal clasificadas que sí se podrían haber repartido**.
-
-No se corrigió porque exige rediseñar el criterio y volver a calibrarlo, y **la calibración correcta solo se puede hacer con la lista real de familias**, que aún no existe. Está anotado en el código con las cifras medidas y con dos pruebas automáticas: una que fija el comportamiento bueno para que no se degrade, y otra que describe el límite tal cual es. Es deuda declarada, no un problema escondido.
-
-## Qué conviene añadir más adelante
-
-La auditoría recomendó dos cosas que nadie pidió y que harán falta: un manual de uso que explique en qué orden se ejecutan las nueve herramientas, y un verificador que compruebe sobre los datos reales —no solo en pruebas— que no hay contaminación entre el material de aprendizaje y el de examen.
-
-## Situación general
-
-| | |
-|---|---|
-| Etapa de datos | **Cerrada.** Construida, auditada y corregida. 182 pruebas en verde. |
-| Entrenamiento del modelo | Planificado en detalle. Listo para empezar. |
-| Página web de consulta | Planificada en detalle. Sin empezar. |
-| Bloqueo externo | La lista de familias del entomólogo. |
-
-El proyecto está donde debería estar: la infraestructura funciona y está auditada, sabemos con datos qué material hay disponible, y lo que queda pendiente está declarado y medido en lugar de escondido.
+1. Subir el paquete de datos a Google Drive y entrenar en Colab.
+2. Revisar el informe de evaluación: dónde acierta y dónde se confunde el modelo.
+3. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
+4. Construir la página web de consulta (tercera etapa).
