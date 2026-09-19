@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import os
 import sys
 from collections import defaultdict
@@ -234,6 +235,42 @@ DECISION_SIN_REPARTO = "agrupada_sin_reparto"
 #
 # Repetir la medición si cambia la ontología o los cupos de descarga.
 PESO_CLASE = 0.8
+
+
+# Máximo de imágenes que un mismo fotógrafo aporta a una misma clase. En
+# iNaturalist unos pocos naturalistas muy activos concentran las fotos de
+# algunas familias (en el dataset v1, uno solo aportaba casi la mitad de una
+# familia de libélulas). Sin tope, el modelo aprende su cámara y su fondo, y la
+# evaluación de esa clase mide a 2 o 3 personas. Medido sobre el dataset v1
+# (2026-09-19), el mínimo de fotógrafos distintos en test y en val de una clase
+# queda así:
+#
+#   sin tope: 3 en test y 2 en val (38760 imágenes)
+#   tope 30:  5 en test y 4 en val (35602 imágenes)
+#   tope 20:  6 en test y 5 en val (34360 imágenes)
+#
+# Con cualquiera de esos topes se admiten las 38 familias.
+TOPE_POR_OBSERVADOR = 20
+
+
+def aplicar_tope(filas: list[dict], tope: int | None) -> list[dict]:
+    """Deja como mucho `tope` imágenes por (observador, clase).
+
+    La selección es determinista y no depende del orden de llegada: se ordena
+    por un hash del nombre de archivo, no por antigüedad. La descarga pagina
+    desde la observación más antigua, y quedarse con las primeras repetiría
+    ese sesgo temporal.
+    """
+    if tope is None:
+        return filas
+    grupos: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for fila in filas:
+        grupos[(fila["observador"], _clave_clase(fila))].append(fila)
+    elegidas: set[int] = set()
+    for grupo in grupos.values():
+        grupo.sort(key=lambda f: hashlib.sha1(f["archivo"].encode("utf-8")).hexdigest())
+        elegidas.update(id(f) for f in grupo[:tope])
+    return [f for f in filas if id(f) in elegidas]
 
 
 def _clave_clase(fila: dict) -> str:
@@ -608,6 +645,13 @@ def reporte_markdown(resumen: dict) -> str:
     for split, cantidad in resumen["por_split"].items():
         lineas.append(f"| {split} | {cantidad} |")
 
+    if resumen.get("tope") is not None:
+        lineas += [
+            "",
+            f"Se aplicó un **tope de {resumen['tope']} imágenes por fotógrafo y clase**: "
+            f"quedaron fuera {resumen['descartadas_por_tope']} imágenes, para que unos "
+            "pocos fotógrafos muy activos no dominen ni el aprendizaje ni el examen.",
+        ]
     lineas += [
         "",
         "El particionado agrupa por **observador**: ninguna persona aparece en dos "
@@ -712,6 +756,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--destino", default="datos/splits")
     parser.add_argument("--reporte", default="docs/reporte_splits.md")
     parser.add_argument(
+        "--tope-por-observador",
+        type=int,
+        default=TOPE_POR_OBSERVADOR,
+        help="máximo de imágenes por fotógrafo y clase; 0 desactiva el tope",
+    )
+    parser.add_argument(
         "--regenerar-asignacion",
         action="store_true",
         help=(
@@ -759,7 +809,12 @@ def main(argv: list[str] | None = None) -> int:
             )
             return SALIDA_ASIGNACION_INVALIDA
 
+    tope = args.tope_por_observador or None
+    entrada = len(filas)
+    filas = aplicar_tope(filas, tope)
     particiones, resumen = particionar(filas, onto, asignacion_previa=previa)
+    resumen["tope"] = tope
+    resumen["descartadas_por_tope"] = entrada - len(filas)
 
     # La asignación se persiste ANTES que los CSV: es el artefacto del que
     # todo lo demás se deriva. Si la corrida muere entre las dos escrituras,

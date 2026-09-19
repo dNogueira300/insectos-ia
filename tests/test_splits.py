@@ -822,3 +822,55 @@ def test_bloques_desiguales_documentan_el_limite_conocido(
         f"tasa de plegado observada {tasa:.1%} fuera del rango documentado "
         f"({minimo:.0%}, {maximo:.0%}] para {obs_por_familia} fotógrafos por familia"
     )
+
+
+# --- Tope de imágenes por fotógrafo y clase ---------------------------------
+
+from pipeline.splits import aplicar_tope
+
+
+def test_el_tope_limita_las_fotos_de_cada_fotografo_en_cada_clase():
+    filas = [fila(i, "prolifico", "OrdenA", "FamX") for i in range(50)]
+    filas += [fila(100 + i, "prolifico", "OrdenA", "FamY") for i in range(5)]
+    filas += [fila(200 + i, "ocasional", "OrdenA", "FamX") for i in range(3)]
+    salida = aplicar_tope(filas, 20)
+    conteo = defaultdict(int)
+    for f in salida:
+        conteo[(f["observador"], f["familia"])] += 1
+    assert conteo == {("prolifico", "FamX"): 20, ("prolifico", "FamY"): 5, ("ocasional", "FamX"): 3}
+
+
+def test_el_tope_es_determinista_e_independiente_del_orden_de_llegada():
+    filas = [fila(i, "prolifico") for i in range(40)]
+    a = {f["obs_id"] for f in aplicar_tope(filas, 10)}
+    b = {f["obs_id"] for f in aplicar_tope(list(reversed(filas)), 10)}
+    assert a == b
+
+
+def test_el_tope_no_se_queda_con_las_fotos_mas_antiguas():
+    """La descarga pagina desde la observación más antigua: quedarse con las
+    primeras repetiría ese sesgo temporal en vez de muestrear al fotógrafo."""
+    filas = [fila(i, "prolifico") for i in range(100)]
+    elegidas = sorted(int(f["obs_id"]) for f in aplicar_tope(filas, 10))
+    assert elegidas != list(range(10))
+
+
+def test_sin_tope_no_se_toca_nada():
+    filas = [fila(i, "prolifico") for i in range(40)]
+    assert aplicar_tope(filas, None) == filas
+
+
+def test_main_aplica_el_tope_y_lo_informa(tmp_path: Path, ruta_ontologia: Path):
+    filas = [fila(i, f"obs{i % 40}", "Coleoptera", "Curculionidae") for i in range(400)]
+    filas += [fila(1000 + i, "prolifico", "Coleoptera", "Curculionidae") for i in range(100)]
+    argv, destino = preparar_corrida(tmp_path, ruta_ontologia, filas)
+    assert main(argv + ["--tope-por-observador", "20"]) == 0
+    import csv as _csv
+
+    total = sum(
+        1 for s in ("train", "val", "test")
+        for f in _csv.DictReader((destino / f"{s}.csv").open(encoding="utf-8"))
+        if f["observador"] == "prolifico"
+    )
+    assert total == 20
+    assert "tope" in (tmp_path / "reporte.md").read_text(encoding="utf-8").lower()

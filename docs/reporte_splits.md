@@ -1,12 +1,14 @@
 # Reporte de particionado
 
-Total de imágenes: **38760**
+Total de imágenes: **34360**
 
 | Split | Imágenes |
 | --- | ---: |
-| train | 26811 |
-| val | 6109 |
-| test | 5840 |
+| train | 24032 |
+| val | 5163 |
+| test | 5165 |
+
+Se aplicó un **tope de 20 imágenes por fotógrafo y clase**: quedaron fuera 4400 imágenes, para que unos pocos fotógrafos muy activos no dominen ni el aprendizaje ni el examen.
 
 El particionado agrupa por **observador**: ninguna persona aparece en dos splits. Es la defensa contra la fuga de datos descrita en el diseño (§7). La asignación se estratifica además por clase, para que los fotógrafos de una misma familia no caigan todos del mismo lado.
 
@@ -63,59 +65,59 @@ Cada celda muestra **imágenes / observadores distintos**: si el número de obse
 
 | Clase | train | val | test |
 | --- | ---: | ---: | ---: |
-| Blattodea/Blaberidae | 409 img / 302 obs | 87 img / 59 obs | 88 img / 62 obs |
-| Blattodea/Blattidae | 416 img / 305 obs | 88 img / 58 obs | 89 img / 64 obs |
-| Blattodea/_sin_familia | 831 img / 512 obs | 176 img / 109 obs | 178 img / 104 obs |
-| Coleoptera/Carabidae | 408 img / 248 obs | 87 img / 44 obs | 99 img / 10 obs |
-| Coleoptera/Cerambycidae | 420 img / 180 obs | 89 img / 47 obs | 90 img / 51 obs |
-| Coleoptera/Chrysomelidae | 415 img / 212 obs | 88 img / 37 obs | 89 img / 44 obs |
-| Coleoptera/Coccinellidae | 411 img / 203 obs | 87 img / 40 obs | 88 img / 43 obs |
-| Coleoptera/Curculionidae | 399 img / 187 obs | 84 img / 43 obs | 116 img / 7 obs |
-| Coleoptera/Scarabaeidae | 418 img / 258 obs | 88 img / 48 obs | 89 img / 42 obs |
-| Coleoptera/_sin_familia | 823 img / 315 obs | 174 img / 60 obs | 176 img / 59 obs |
-| Dermaptera/_sin_familia | 831 img / 545 obs | 176 img / 105 obs | 178 img / 108 obs |
-| Diptera/Anthomyiidae | 418 img / 240 obs | 89 img / 50 obs | 90 img / 43 obs |
-| Diptera/Culicidae | 418 img / 202 obs | 89 img / 43 obs | 90 img / 23 obs |
-| Diptera/Drosophilidae | 417 img / 200 obs | 88 img / 35 obs | 89 img / 20 obs |
-| Diptera/Tephritidae | 418 img / 226 obs | 89 img / 54 obs | 90 img / 43 obs |
-| Diptera/_sin_familia | 839 img / 204 obs | 177 img / 36 obs | 180 img / 37 obs |
-| Hemiptera/Aphididae | 421 img / 232 obs | 89 img / 51 obs | 90 img / 48 obs |
-| Hemiptera/Cicadellidae | 420 img / 143 obs | 89 img / 25 obs | 90 img / 28 obs |
-| Hemiptera/Coreidae | 382 img / 190 obs | 81 img / 45 obs | 82 img / 44 obs |
-| Hemiptera/Pentatomidae | 418 img / 227 obs | 89 img / 37 obs | 90 img / 43 obs |
-| Hemiptera/Reduviidae | 418 img / 214 obs | 88 img / 32 obs | 89 img / 46 obs |
-| Hemiptera/_sin_familia | 829 img / 346 obs | 175 img / 72 obs | 177 img / 71 obs |
-| Hymenoptera/Apidae | 413 img / 157 obs | 87 img / 24 obs | 89 img / 25 obs |
-| Hymenoptera/Chalcididae | 183 img / 125 obs | 39 img / 28 obs | 39 img / 25 obs |
-| Hymenoptera/Formicidae | 390 img / 184 obs | 83 img / 22 obs | 84 img / 38 obs |
-| Hymenoptera/Ichneumonidae | 420 img / 227 obs | 89 img / 40 obs | 90 img / 46 obs |
-| Hymenoptera/Vespidae | 417 img / 170 obs | 88 img / 36 obs | 89 img / 39 obs |
-| Hymenoptera/_sin_familia | 828 img / 300 obs | 175 img / 67 obs | 177 img / 67 obs |
-| Isoptera/Heterotermitidae | 389 img / 155 obs | 83 img / 51 obs | 84 img / 62 obs |
-| Isoptera/Kalotermitidae | 412 img / 318 obs | 87 img / 60 obs | 88 img / 63 obs |
-| Isoptera/Termitidae | 233 img / 167 obs | 50 img / 32 obs | 50 img / 34 obs |
-| Isoptera/_sin_familia | 704 img / 462 obs | 149 img / 90 obs | 151 img / 95 obs |
-| Lepidoptera/Noctuidae | 372 img / 79 obs | 98 img / 10 obs | 125 img / 3 obs |
-| Lepidoptera/Papilionidae | 410 img / 117 obs | 87 img / 23 obs | 88 img / 21 obs |
-| Lepidoptera/Pieridae | 411 img / 111 obs | 87 img / 14 obs | 91 img / 8 obs |
-| Lepidoptera/Pyralidae | 404 img / 96 obs | 105 img / 10 obs | 87 img / 16 obs |
-| Lepidoptera/Sphingidae | 418 img / 148 obs | 89 img / 25 obs | 90 img / 38 obs |
-| Lepidoptera/_sin_familia | 821 img / 94 obs | 201 img / 3 obs | 175 img / 13 obs |
-| Mantodea/_sin_familia | 838 img / 520 obs | 177 img / 97 obs | 179 img / 104 obs |
-| Neuroptera/_sin_familia | 836 img / 387 obs | 177 img / 75 obs | 179 img / 82 obs |
-| Odonata/Aeshnidae | 299 img / 145 obs | 235 img / 3 obs | 64 img / 24 obs |
-| Odonata/Calopterygidae | 420 img / 198 obs | 89 img / 16 obs | 90 img / 35 obs |
-| Odonata/Coenagrionidae | 348 img / 49 obs | 174 img / 3 obs | 75 img / 13 obs |
-| Odonata/Gomphidae | 365 img / 90 obs | 154 img / 2 obs | 81 img / 9 obs |
-| Odonata/Libellulidae | 430 img / 49 obs | 72 img / 12 obs | 95 img / 8 obs |
-| Odonata/_sin_familia | 812 img / 147 obs | 208 img / 5 obs | 174 img / 29 obs |
-| Orthoptera/Acrididae | 413 img / 189 obs | 87 img / 37 obs | 88 img / 36 obs |
-| Orthoptera/Gryllidae | 406 img / 252 obs | 86 img / 56 obs | 87 img / 48 obs |
-| Orthoptera/Tettigoniidae | 413 img / 233 obs | 88 img / 50 obs | 89 img / 40 obs |
-| Orthoptera/_sin_familia | 835 img / 455 obs | 177 img / 87 obs | 179 img / 94 obs |
-| Phasmida/_sin_familia | 836 img / 475 obs | 177 img / 101 obs | 179 img / 104 obs |
-| Psocodea/_sin_familia | 838 img / 301 obs | 177 img / 65 obs | 179 img / 63 obs |
-| Thysanoptera/_sin_familia | 318 img / 163 obs | 67 img / 25 obs | 68 img / 7 obs |
+| Blattodea/Blaberidae | 408 img / 303 obs | 88 img / 62 obs | 88 img / 58 obs |
+| Blattodea/Blattidae | 415 img / 307 obs | 89 img / 63 obs | 89 img / 57 obs |
+| Blattodea/_sin_familia | 827 img / 520 obs | 177 img / 97 obs | 177 img / 108 obs |
+| Coleoptera/Carabidae | 369 img / 219 obs | 80 img / 41 obs | 80 img / 42 obs |
+| Coleoptera/Cerambycidae | 407 img / 194 obs | 87 img / 43 obs | 87 img / 41 obs |
+| Coleoptera/Chrysomelidae | 414 img / 205 obs | 89 img / 49 obs | 89 img / 39 obs |
+| Coleoptera/Coccinellidae | 405 img / 205 obs | 87 img / 42 obs | 87 img / 39 obs |
+| Coleoptera/Curculionidae | 326 img / 172 obs | 70 img / 33 obs | 70 img / 32 obs |
+| Coleoptera/Scarabaeidae | 413 img / 252 obs | 89 img / 46 obs | 89 img / 50 obs |
+| Coleoptera/_sin_familia | 800 img / 311 obs | 172 img / 64 obs | 172 img / 59 obs |
+| Dermaptera/_sin_familia | 810 img / 540 obs | 174 img / 111 obs | 174 img / 107 obs |
+| Diptera/Anthomyiidae | 416 img / 241 obs | 90 img / 46 obs | 90 img / 46 obs |
+| Diptera/Culicidae | 360 img / 197 obs | 78 img / 41 obs | 78 img / 30 obs |
+| Diptera/Drosophilidae | 363 img / 188 obs | 78 img / 33 obs | 78 img / 34 obs |
+| Diptera/Tephritidae | 411 img / 234 obs | 89 img / 42 obs | 88 img / 47 obs |
+| Diptera/_sin_familia | 729 img / 200 obs | 156 img / 41 obs | 157 img / 36 obs |
+| Hemiptera/Aphididae | 399 img / 239 obs | 86 img / 47 obs | 86 img / 45 obs |
+| Hemiptera/Cicadellidae | 380 img / 138 obs | 82 img / 29 obs | 82 img / 29 obs |
+| Hemiptera/Coreidae | 381 img / 205 obs | 82 img / 33 obs | 82 img / 41 obs |
+| Hemiptera/Pentatomidae | 417 img / 216 obs | 90 img / 49 obs | 90 img / 42 obs |
+| Hemiptera/Reduviidae | 397 img / 203 obs | 85 img / 42 obs | 86 img / 47 obs |
+| Hemiptera/_sin_familia | 809 img / 350 obs | 174 img / 74 obs | 174 img / 65 obs |
+| Hymenoptera/Apidae | 371 img / 152 obs | 80 img / 31 obs | 80 img / 23 obs |
+| Hymenoptera/Chalcididae | 183 img / 129 obs | 39 img / 20 obs | 39 img / 29 obs |
+| Hymenoptera/Formicidae | 379 img / 184 obs | 81 img / 29 obs | 82 img / 31 obs |
+| Hymenoptera/Ichneumonidae | 419 img / 225 obs | 90 img / 46 obs | 90 img / 42 obs |
+| Hymenoptera/Vespidae | 401 img / 171 obs | 86 img / 37 obs | 86 img / 37 obs |
+| Hymenoptera/_sin_familia | 728 img / 316 obs | 156 img / 63 obs | 156 img / 55 obs |
+| Isoptera/Heterotermitidae | 253 img / 187 obs | 55 img / 40 obs | 55 img / 41 obs |
+| Isoptera/Kalotermitidae | 411 img / 311 obs | 88 img / 65 obs | 88 img / 65 obs |
+| Isoptera/Termitidae | 233 img / 173 obs | 50 img / 32 obs | 50 img / 28 obs |
+| Isoptera/_sin_familia | 658 img / 459 obs | 141 img / 92 obs | 141 img / 96 obs |
+| Lepidoptera/Noctuidae | 278 img / 64 obs | 60 img / 18 obs | 60 img / 10 obs |
+| Lepidoptera/Papilionidae | 373 img / 118 obs | 80 img / 21 obs | 80 img / 22 obs |
+| Lepidoptera/Pieridae | 360 img / 100 obs | 77 img / 17 obs | 77 img / 16 obs |
+| Lepidoptera/Pyralidae | 332 img / 87 obs | 72 img / 18 obs | 72 img / 17 obs |
+| Lepidoptera/Sphingidae | 397 img / 158 obs | 86 img / 29 obs | 86 img / 24 obs |
+| Lepidoptera/_sin_familia | 467 img / 80 obs | 100 img / 16 obs | 100 img / 14 obs |
+| Mantodea/_sin_familia | 817 img / 510 obs | 175 img / 108 obs | 175 img / 103 obs |
+| Neuroptera/_sin_familia | 813 img / 386 obs | 174 img / 81 obs | 174 img / 77 obs |
+| Odonata/Aeshnidae | 267 img / 126 obs | 58 img / 20 obs | 57 img / 26 obs |
+| Odonata/Calopterygidae | 383 img / 181 obs | 82 img / 35 obs | 82 img / 33 obs |
+| Odonata/Coenagrionidae | 173 img / 49 obs | 37 img / 10 obs | 38 img / 6 obs |
+| Odonata/Gomphidae | 225 img / 79 obs | 48 img / 5 obs | 48 img / 17 obs |
+| Odonata/Libellulidae | 178 img / 54 obs | 38 img / 9 obs | 38 img / 6 obs |
+| Odonata/_sin_familia | 483 img / 136 obs | 104 img / 25 obs | 104 img / 20 obs |
+| Orthoptera/Acrididae | 410 img / 191 obs | 88 img / 39 obs | 88 img / 32 obs |
+| Orthoptera/Gryllidae | 405 img / 258 obs | 87 img / 49 obs | 87 img / 49 obs |
+| Orthoptera/Tettigoniidae | 401 img / 235 obs | 86 img / 46 obs | 86 img / 42 obs |
+| Orthoptera/_sin_familia | 833 img / 459 obs | 179 img / 86 obs | 179 img / 91 obs |
+| Phasmida/_sin_familia | 770 img / 483 obs | 165 img / 96 obs | 165 img / 101 obs |
+| Psocodea/_sin_familia | 705 img / 296 obs | 151 img / 68 obs | 151 img / 65 obs |
+| Thysanoptera/_sin_familia | 270 img / 143 obs | 58 img / 26 obs | 58 img / 26 obs |
 
 ## Alerta: clases cuyo test depende de un solo fotógrafo
 
