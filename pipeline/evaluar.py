@@ -87,6 +87,12 @@ def reporte_markdown(
     return "\n".join(lineas) + "\n"
 
 
+def destino_resultados(ruta_pesos: Path) -> Path:
+    """Los resultados van junto a los pesos evaluados, no a una ruta fija:
+    en Colab la corrida vive en Drive y `modelo/` no existe."""
+    return Path(ruta_pesos).with_name("evaluacion.json")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluación final del modelo")
     parser.add_argument("--pesos", default="modelo/mejor.pth")
@@ -121,7 +127,7 @@ def main() -> None:
 
     Path(args.salida).parent.mkdir(parents=True, exist_ok=True)
     Path(args.salida).write_text(reporte_markdown(resultados, espacio), encoding="utf-8")
-    Path("modelo/evaluacion.json").write_text(
+    destino_resultados(Path(args.pesos)).write_text(
         json.dumps(resultados, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     print(f"Informe en {args.salida}")

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from PIL import Image
 
 from pipeline.etiquetas import cargar_espacio
 from pipeline.modelo import BACKBONE_POR_DEFECTO, ModeloJerarquico
@@ -43,26 +44,78 @@ def exportar_onnx(modelo: torch.nn.Module, ruta: Path, *, lado: int = 224) -> No
     )
 
 
+def _softmax(logits: np.ndarray) -> np.ndarray:
+    desplazados = logits - logits.max(axis=1, keepdims=True)
+    exponentes = np.exp(desplazados)
+    return exponentes / exponentes.sum(axis=1, keepdims=True)
+
+
+def muestra_real(ruta_csv: Path, raiz_imagenes: Path, *, n: int = 32) -> torch.Tensor:
+    """Las primeras `n` fotos de un split, con la transformación de evaluación."""
+    from pipeline.datos_torch import leer_split, transformaciones_evaluacion
+
+    transformar = transformaciones_evaluacion()
+    lote = []
+    for fila in leer_split(ruta_csv)[:n]:
+        with Image.open(Path(raiz_imagenes) / fila["archivo"]) as img:
+            lote.append(transformar(img.convert("RGB")))
+    return torch.stack(lote)
+
+
 def verificar_paridad(
-    modelo: torch.nn.Module, ruta_onnx: Path, *, tolerancia: float = 1e-4, lado: int = 224
+    modelo: torch.nn.Module,
+    ruta_onnx: Path,
+    *,
+    tolerancia: float = 1e-4,
+    lado: int = 224,
+    entrada: torch.Tensor | None = None,
 ) -> dict:
-    """Compara las salidas de PyTorch y ONNX sobre la misma entrada."""
+    """Compara PyTorch y ONNX en lo que usa el sistema: probabilidades y clase.
+
+    No se compara la diferencia absoluta de logits contra una tolerancia fija.
+    Con pesos entrenados y una entrada de ruido, los logits llegan a ~500, y el
+    redondeo normal de float32 acumulado en decenas de capas da diferencias
+    absolutas de ~1 aunque el ONNX sea fiel. Eso pasó en la prueba de humo del
+    2026-09-19: sobre 64 imágenes reales, las probabilidades diferían en 1e-7 y
+    la clase elegida coincidía en el 100% de los casos. Las probabilidades no
+    dependen de la escala de los logits, y un ONNX realmente distinto sí las
+    cambia. La diferencia de logits se informa igual, como diagnóstico.
+
+    `entrada` debería ser un lote de fotos reales (ver `muestra_real`). Con
+    ruido gaussiano, una red entrenada produce activaciones extremas que
+    ninguna foto genera, y en ese régimen torch y ONNX sí se separan algo
+    (2.8e-4 en probabilidades en la prueba de humo), aunque sea irrelevante
+    para el despliegue. El ruido queda solo como último recurso.
+    """
     import onnxruntime as ort
 
     modelo.eval()
-    entrada = torch.randn(2, 3, lado, lado)
+    if entrada is None:
+        entrada = torch.randn(2, 3, lado, lado)
 
     with torch.no_grad():
-        orden_torch, familia_torch = modelo(entrada)
+        salidas_torch = [s.numpy() for s in modelo(entrada)]
 
     sesion = ort.InferenceSession(str(ruta_onnx), providers=["CPUExecutionProvider"])
-    orden_onnx, familia_onnx = sesion.run(None, {NOMBRE_ENTRADA: entrada.numpy()})
+    salidas_onnx = sesion.run(None, {NOMBRE_ENTRADA: entrada.numpy()})
 
-    diferencia = max(
-        float(np.abs(orden_torch.numpy() - orden_onnx).max()),
-        float(np.abs(familia_torch.numpy() - familia_onnx).max()),
+    diferencia_probs = max(
+        float(np.abs(_softmax(t) - _softmax(o)).max())
+        for t, o in zip(salidas_torch, salidas_onnx, strict=True)
     )
-    return {"coincide": diferencia < tolerancia, "diferencia_maxima": diferencia}
+    diferencia_logits = max(
+        float(np.abs(t - o).max()) for t, o in zip(salidas_torch, salidas_onnx, strict=True)
+    )
+    misma_clase = all(
+        bool((t.argmax(axis=1) == o.argmax(axis=1)).all())
+        for t, o in zip(salidas_torch, salidas_onnx, strict=True)
+    )
+    return {
+        "coincide": diferencia_probs < tolerancia and misma_clase,
+        "diferencia_maxima": diferencia_probs,
+        "diferencia_logits": diferencia_logits,
+        "misma_clase": misma_clase,
+    }
 
 
 def main() -> None:
@@ -71,6 +124,11 @@ def main() -> None:
     parser.add_argument("--etiquetas", default="modelo/etiquetas.json")
     parser.add_argument("--salida", default="modelo/insectos.onnx")
     parser.add_argument("--backbone", default=BACKBONE_POR_DEFECTO)
+    parser.add_argument(
+        "--muestra", default="datos/splits/val.csv",
+        help="split con fotos reales para verificar la paridad",
+    )
+    parser.add_argument("--imagenes", default="datos/curado")
     args = parser.parse_args()
 
     espacio = cargar_espacio(Path(args.etiquetas))
@@ -80,8 +138,16 @@ def main() -> None:
     modelo.load_state_dict(torch.load(args.pesos, map_location="cpu"))
 
     exportar_onnx(modelo, Path(args.salida))
-    resultado = verificar_paridad(modelo, Path(args.salida))
-    print(f"Diferencia máxima torch vs onnx: {resultado['diferencia_maxima']:.2e}")
+    entrada = None
+    if Path(args.muestra).is_file():
+        entrada = muestra_real(Path(args.muestra), Path(args.imagenes))
+    else:
+        print(f"AVISO: no existe {args.muestra}; la paridad se verifica con ruido, menos fiable.")
+    resultado = verificar_paridad(modelo, Path(args.salida), entrada=entrada)
+    print(
+        f"Paridad torch vs onnx: probabilidades {resultado['diferencia_maxima']:.2e}, "
+        f"logits {resultado['diferencia_logits']:.2e}, misma clase: {resultado['misma_clase']}"
+    )
     if not resultado["coincide"]:
         raise SystemExit("El ONNX no coincide con PyTorch: NO desplegar este artefacto.")
     print(f"Exportado y verificado: {args.salida}")

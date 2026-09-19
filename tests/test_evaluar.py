@@ -55,3 +55,14 @@ def test_reporte_reporta_la_brecha_entre_test_y_campo():
 def test_sin_campo_el_reporte_lo_dice_explicitamente():
     texto = reporte_markdown({"test": resultado(0.93, 0.87)}, ESPACIO)
     assert "sin conjunto de campo" in texto.lower()
+
+
+def test_los_resultados_se_guardan_junto_a_los_pesos():
+    """En Colab no existe `modelo/`: los resultados van con la corrida."""
+    from pathlib import Path
+
+    from pipeline.evaluar import destino_resultados
+
+    assert destino_resultados(Path("drive/corridas/v1/mejor.pth")) == Path(
+        "drive/corridas/v1/evaluacion.json"
+    )
