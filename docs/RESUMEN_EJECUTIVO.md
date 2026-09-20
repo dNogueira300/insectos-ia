@@ -2,10 +2,7 @@
 
 **Fecha:** 19 de septiembre de 2026
 **Estado:** la etapa de datos está **cerrada sobre el material real** y el **código del modelo está terminado y probado**. Falta el entrenamiento en Google Colab.
-**Repositorio:** https://github.com/dNogueira300/insectos-ia
-
-- Rama `main`: la etapa de datos cerrada.
-- Rama `plan-02-modelo`: el código del modelo.
+**Repositorio:** https://github.com/dNogueira300/insectos-ia (todo en la rama `main`)
 
 ---
 
