@@ -1,0 +1,10 @@
+{
+  "semilla": 42,
+  "backbone": "efficientnet_b0",
+  "epocas": 25,
+  "lote": 32,
+  "tasa": 0.001,
+  "lambda_familia": 1.0,
+  "n_train": 24032,
+  "n_val": 5163
+}

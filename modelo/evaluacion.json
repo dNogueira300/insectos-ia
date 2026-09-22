@@ -1,0 +1,11 @@
+{
+  "test": {
+    "macro_f1_orden": 0.8318504028089546,
+    "macro_f1_familia": 0.791134269742518,
+    "exactitud_orden": 0.8402710551790901,
+    "exactitud_familia": 0.7843878954607978,
+    "exactitud_jerarquica": 0.78232462173315,
+    "top3_familia": 0.8634800550206327,
+    "n": 5165
+  }
+}
