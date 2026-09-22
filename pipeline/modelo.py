@@ -51,17 +51,28 @@ class ModeloJerarquico(nn.Module):
             parametro.requires_grad = True
 
 
+# Cuánto se reparte la certeza de la etiqueta correcta entre las demás clases.
+# Con 0.1, el objetivo deja de ser "esta clase con probabilidad 1" y pasa a ser
+# "esta clase con 0.9". Frena la memorización y, en un problema donde algunas
+# familias se distinguen por detalles que la foto no siempre muestra, evita que
+# el modelo aprenda a estar seguro de lo que no puede saber.
+SUAVIZADO = 0.1
+
+
 class PerdidaCombinada(nn.Module):
     """`L = L_orden + lambda * L_familia`, ignorando familias desconocidas."""
 
     def __init__(
-        self, pesos_familia: torch.Tensor | None = None, lambda_familia: float = 1.0
+        self,
+        pesos_familia: torch.Tensor | None = None,
+        lambda_familia: float = 1.0,
+        suavizado: float = SUAVIZADO,
     ) -> None:
         super().__init__()
         self.lambda_familia = lambda_familia
-        self.perdida_orden = nn.CrossEntropyLoss()
+        self.perdida_orden = nn.CrossEntropyLoss(label_smoothing=suavizado)
         self.perdida_familia = nn.CrossEntropyLoss(
-            weight=pesos_familia, ignore_index=SIN_FAMILIA_IDX
+            weight=pesos_familia, ignore_index=SIN_FAMILIA_IDX, label_smoothing=suavizado
         )
 
     def forward(

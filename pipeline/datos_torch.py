@@ -20,14 +20,29 @@ PESO_MAXIMO = 5.0
 
 
 def transformaciones_entrenamiento() -> transforms.Compose:
-    """Aumentos suaves: el insecto puede aparecer en cualquier escala y encuadre."""
+    """Aumentos del modelo v2, más fuertes que los del v1.
+
+    El v1 se sobreajustó: la pérdida de entrenamiento bajó a 0.085 mientras el
+    macro-F1 de familia en validación se estancó en 0.76 desde la época 12. Con
+    24 mil imágenes y 53 clases, el margen está en variar más cada foto, no en
+    entrenar más tiempo.
+
+    - El recorte llega hasta el 40% del área (antes 60%): el insecto aparece a
+      escalas muy distintas según quién y con qué tomó la foto.
+    - `RandAugment` aplica dos operaciones al azar (giros suaves, contraste,
+      nitidez, color...). Reemplaza al `ColorJitter` fijo del v1.
+    - `RandomErasing` tapa un trozo pequeño de la imagen, para que el modelo no
+      dependa de una sola marca (una antena, un reflejo) y aprenda el conjunto.
+      Va después de normalizar, porque opera sobre el tensor.
+    """
     return transforms.Compose(
         [
-            transforms.RandomResizedCrop(LADO, scale=(0.6, 1.0)),
+            transforms.RandomResizedCrop(LADO, scale=(0.4, 1.0)),
             transforms.RandomHorizontalFlip(),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+            transforms.RandAugment(num_ops=2, magnitude=7),
             transforms.ToTensor(),
             transforms.Normalize(MEDIA, DESVIACION),
+            transforms.RandomErasing(p=0.25, scale=(0.02, 0.15)),
         ]
     )
 

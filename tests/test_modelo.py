@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from pipeline.etiquetas import SIN_FAMILIA_IDX
@@ -101,3 +102,31 @@ def test_el_gradiente_llega_al_backbone():
     total.backward()
     primer_parametro = next(modelo.backbone.parameters())
     assert primer_parametro.grad is not None
+
+
+def test_el_suavizado_de_etiquetas_penaliza_la_certeza_absoluta():
+    """Con suavizado, una predicción perfecta ya no da pérdida cero: es lo que
+    frena la memorización que mostró el modelo v1."""
+    from pipeline.modelo import PerdidaCombinada
+
+    logits_orden = torch.tensor([[20.0, -20.0]])
+    logits_familia = torch.tensor([[20.0, -20.0]])
+    y_orden = torch.tensor([0])
+    y_familia = torch.tensor([0])
+
+    sin_suavizado = PerdidaCombinada(suavizado=0.0)
+    con_suavizado = PerdidaCombinada(suavizado=0.1)
+    total_sin, _, _ = sin_suavizado(logits_orden, logits_familia, y_orden, y_familia)
+    total_con, _, _ = con_suavizado(logits_orden, logits_familia, y_orden, y_familia)
+    assert float(total_sin) == pytest.approx(0.0, abs=1e-6)
+    assert float(total_con) > 0.5
+
+
+def test_el_suavizado_no_cambia_cual_clase_tiene_menor_perdida():
+    from pipeline.modelo import PerdidaCombinada
+
+    perdida = PerdidaCombinada(suavizado=0.1)
+    logits = torch.tensor([[5.0, 1.0]])
+    buena, _, _ = perdida(logits, logits, torch.tensor([0]), torch.tensor([0]))
+    mala, _, _ = perdida(logits, logits, torch.tensor([1]), torch.tensor([1]))
+    assert float(buena) < float(mala)

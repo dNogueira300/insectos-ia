@@ -179,3 +179,29 @@ def test_se_guardan_mejor_pth_y_metricas(tmp_path: Path, base: dict):
 
 def test_la_linea_de_comandos_acepta_reanudar():
     assert "--reanudar" in mod.construir_parser().format_help()
+
+
+def test_la_tasa_baja_gradualmente_en_la_fase_descongelada(tmp_path: Path, base: dict):
+    """El modelo v1 se estancó con tasa fija. El descenso en coseno afina al
+    final del entrenamiento en vez de seguir dando saltos grandes."""
+    resultado = entrenar(destino=tmp_path / "corrida", **{**base, "epocas": 6})
+    tasas = [e["tasa"] for e in resultado["historial"]]
+
+    congeladas = tasas[: mod.EPOCAS_CONGELADO]
+    descongeladas = tasas[mod.EPOCAS_CONGELADO :]
+    assert len(set(congeladas)) == 1, "durante el calentamiento la tasa no cambia"
+    assert descongeladas == sorted(descongeladas, reverse=True)
+    assert descongeladas[-1] < descongeladas[0] / 2
+
+
+def test_reanudar_conserva_el_descenso_de_la_tasa(tmp_path: Path, base: dict):
+    """Si el planificador no viaja en el checkpoint, al reanudar la tasa vuelve
+    a su valor inicial y el entrenamiento se desarma sin aviso."""
+    argumentos = {**base, "epocas": 6}
+    seguida = entrenar(destino=tmp_path / "seguida", **argumentos)
+
+    with pytest.raises(Corte):
+        entrenar(destino=tmp_path / "cortada", al_terminar_epoca=_cortar_tras(3), **argumentos)
+    reanudada = entrenar(destino=tmp_path / "cortada", reanudar=True, **argumentos)
+
+    assert [e["tasa"] for e in reanudada["historial"]] == [e["tasa"] for e in seguida["historial"]]

@@ -27,12 +27,22 @@ from pipeline import metricas
 from pipeline.datos_torch import cargadores, leer_split, pesos_de_familia
 from pipeline.etiquetas import SIN_FAMILIA_IDX, EspacioEtiquetas, construir_espacio
 from pipeline.inferencia import enmascarar, softmax
-from pipeline.modelo import BACKBONE_POR_DEFECTO, ModeloJerarquico, PerdidaCombinada
+from pipeline.modelo import (
+    BACKBONE_POR_DEFECTO,
+    SUAVIZADO,
+    ModeloJerarquico,
+    PerdidaCombinada,
+)
 from pipeline.ontologia import cargar_ontologia
 
 SEMILLA = 42
 EPOCAS_CONGELADO = 2
 PACIENCIA = 4
+
+# Fracción de la tasa inicial a la que se llega al final del entrenamiento. El
+# v1 entrenó con tasa fija y se estancó: los últimos pasos seguían siendo tan
+# grandes como los primeros y el modelo oscilaba en torno al mismo punto.
+FRACCION_TASA_FINAL = 0.02
 
 ARCHIVO_ULTIMO = "ultimo.pth"
 ARCHIVO_MEJOR = "mejor.pth"
@@ -148,13 +158,32 @@ def _fase(epoca: int) -> str:
     return "congelado" if epoca < EPOCAS_CONGELADO else "descongelado"
 
 
-def _optimizador_de_fase(modelo, epoca: int, tasa: float):
-    """Congela o descongela el backbone según la época y arma su optimizador."""
+def _optimizador_de_fase(modelo, epoca: int, tasa: float, epocas: int):
+    """Congela o descongela el backbone, y arma optimizador y planificador.
+
+    Durante el calentamiento la tasa es fija: son dos épocas en las que solo se
+    acomodan las cabezas. Al descongelar, la tasa baja en coseno hasta una
+    fracción de la inicial a lo largo de las épocas que queden, para afinar al
+    final en vez de seguir dando saltos grandes.
+    """
     if _fase(epoca) == "congelado":
         modelo.congelar_backbone()
-        return torch.optim.AdamW([p for p in modelo.parameters() if p.requires_grad], lr=tasa)
+        optimizador = torch.optim.AdamW(
+            [p for p in modelo.parameters() if p.requires_grad], lr=tasa
+        )
+        return optimizador, None
+
     modelo.descongelar_backbone()
-    return torch.optim.AdamW(modelo.parameters(), lr=tasa / 10)
+    inicial = tasa / 10
+    optimizador = torch.optim.AdamW(modelo.parameters(), lr=inicial)
+    planificador = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizador,
+        # Un paso menos que las épocas descongeladas: así la última entrena ya
+        # en el mínimo, en vez de quedarse a medio camino del descenso.
+        T_max=max(1, epocas - EPOCAS_CONGELADO - 1),
+        eta_min=inicial * FRACCION_TASA_FINAL,
+    )
+    return optimizador, planificador
 
 
 def _guardar_atomico(objeto, ruta: Path) -> None:
@@ -211,6 +240,7 @@ def entrenar(
     lote: int = 32,
     tasa: float = 1e-3,
     lambda_familia: float = 1.0,
+    suavizado: float = SUAVIZADO,
     trabajadores: int = 4,
     reanudar: bool = False,
     al_terminar_epoca: Callable[[int], None] | None = None,
@@ -240,6 +270,7 @@ def entrenar(
         "lote": lote,
         "tasa": tasa,
         "lambda_familia": lambda_familia,
+        "suavizado": suavizado,
         "n_train": len(filas_train),
         "n_val": len(filas_val),
     }
@@ -276,9 +307,11 @@ def entrenar(
     perdida = PerdidaCombinada(
         pesos_familia=pesos_de_familia(filas_train, espacio).to(dispositivo),
         lambda_familia=lambda_familia,
+        suavizado=suavizado,
     )
     escalador = torch.amp.GradScaler("cuda") if dispositivo == "cuda" else None
 
+    planificador = None
     mejor, mejor_epoca, historial, inicio = -1.0, -1, [], 0
     if estado is not None:
         modelo.load_state_dict(estado["modelo"])
@@ -294,18 +327,25 @@ def entrenar(
     resultado: dict = {}
     for epoca in range(inicio, epocas):
         if epoca == inicio or epoca == EPOCAS_CONGELADO:
-            optimizador = _optimizador_de_fase(modelo, epoca, tasa)
+            optimizador, planificador = _optimizador_de_fase(modelo, epoca, tasa, epocas)
             # El estado del optimizador solo sirve dentro de su misma fase: al
             # cruzar a la fase descongelada, la corrida sin cortes también
-            # empieza con un optimizador nuevo.
+            # empieza con un optimizador nuevo. El planificador viaja con él:
+            # sin su estado, al reanudar la tasa volvería a su valor inicial.
             if estado is not None and epoca == inicio and _fase(epoca) == _fase(estado["epoca"]):
                 optimizador.load_state_dict(estado["optimizador"])
+                if planificador is not None and estado["planificador"] is not None:
+                    planificador.load_state_dict(estado["planificador"])
+
+        tasa_actual = optimizador.param_groups[0]["lr"]
 
         resumen_train = epoca_entrenamiento(
             modelo, cargador_train, perdida, optimizador, dispositivo, escalador
         )
         resumen_val = evaluar_cargador(modelo, cargador_val, espacio, dispositivo)
-        historial.append({"epoca": epoca, **resumen_train, **resumen_val})
+        if planificador is not None:
+            planificador.step()
+        historial.append({"epoca": epoca, "tasa": tasa_actual, **resumen_train, **resumen_val})
         print(
             f"época {epoca:2d} | pérdida {resumen_train['perdida']:.3f} | "
             f"F1 orden {resumen_val['macro_f1_orden']:.3f} | "
@@ -339,6 +379,7 @@ def entrenar(
                 "epoca": epoca,
                 "modelo": modelo.state_dict(),
                 "optimizador": optimizador.state_dict(),
+                "planificador": planificador.state_dict() if planificador is not None else None,
                 "escalador": escalador.state_dict() if escalador is not None else None,
                 "mejor": mejor,
                 "mejor_epoca": mejor_epoca,
@@ -368,6 +409,7 @@ def construir_parser() -> argparse.ArgumentParser:
     parser.add_argument("--lote", type=int, default=32)
     parser.add_argument("--tasa", type=float, default=1e-3)
     parser.add_argument("--lambda-familia", type=float, default=1.0)
+    parser.add_argument("--suavizado", type=float, default=SUAVIZADO)
     parser.add_argument("--trabajadores", type=int, default=4)
     parser.add_argument(
         "--reanudar",
@@ -389,6 +431,7 @@ def main() -> None:
         lote=args.lote,
         tasa=args.tasa,
         lambda_familia=args.lambda_familia,
+        suavizado=args.suavizado,
         trabajadores=args.trabajadores,
         reanudar=args.reanudar,
     )

@@ -113,3 +113,24 @@ def test_leer_split_devuelve_diccionarios(tmp_path: Path):
     csv.write_text("archivo,orden,familia\na.jpg,OrdenA,FamX\n", encoding="utf-8")
     filas = leer_split(csv)
     assert filas == [{"archivo": "a.jpg", "orden": "OrdenA", "familia": "FamX"}]
+
+
+def test_la_transformacion_de_entrenamiento_no_devuelve_siempre_lo_mismo(tmp_path: Path):
+    """Sin aleatoriedad real no hay aumento de datos, y el modelo v1 se
+    sobreajustó (pérdida de entrenamiento 0.085 con la validación estancada)."""
+    escribir_imagen(tmp_path, "a.jpg", lado=400)
+    conjunto = DatasetInsectos(
+        [fila("a.jpg", "OrdenA", "FamX")], tmp_path, ESPACIO, transformaciones_entrenamiento()
+    )
+    torch.manual_seed(0)
+    primera, _, _ = conjunto[0]
+    segunda, _, _ = conjunto[0]
+    assert not torch.allclose(primera, segunda)
+
+
+def test_la_transformacion_de_evaluacion_es_determinista(tmp_path: Path):
+    escribir_imagen(tmp_path, "a.jpg", lado=400)
+    conjunto = DatasetInsectos(
+        [fila("a.jpg", "OrdenA", "FamX")], tmp_path, ESPACIO, transformaciones_evaluacion()
+    )
+    assert torch.allclose(conjunto[0][0], conjunto[0][0])
