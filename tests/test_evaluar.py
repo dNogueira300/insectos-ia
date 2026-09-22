@@ -66,3 +66,31 @@ def test_los_resultados_se_guardan_junto_a_los_pesos():
     assert destino_resultados(Path("drive/corridas/v1/mejor.pth")) == Path(
         "drive/corridas/v1/evaluacion.json"
     )
+
+
+def test_evaluar_split_usa_la_resolucion_que_se_le_pide(tmp_path):
+    """Evaluar a 224 un modelo entrenado a 288 mediría otra cosa: el modelo
+    recibiría un encuadre que nunca vio."""
+    import csv as _csv
+    from pathlib import Path
+
+    import numpy as np
+    import torch
+    from PIL import Image
+
+    from pipeline.etiquetas import EspacioEtiquetas
+    from pipeline.evaluar import evaluar_split
+
+    espacio = EspacioEtiquetas(ordenes=("A",), familias=("X",), matriz=((True,),))
+    Image.fromarray(np.zeros((400, 400, 3), dtype=np.uint8)).save(tmp_path / "a.jpg")
+    filas = [{"archivo": "a.jpg", "orden": "A", "familia": "X"}]
+
+    vistos = []
+
+    class ModeloEspia(torch.nn.Module):
+        def forward(self, x):
+            vistos.append(tuple(x.shape[-2:]))
+            return torch.zeros(len(x), 1), torch.zeros(len(x), 1)
+
+    evaluar_split(ModeloEspia(), filas, tmp_path, espacio, "cpu", lado=288)
+    assert vistos == [(288, 288)]

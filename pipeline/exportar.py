@@ -8,6 +8,8 @@ import numpy as np
 import torch
 from PIL import Image
 
+from pipeline.corrida import opcion_de_corrida
+from pipeline.datos_torch import LADO
 from pipeline.etiquetas import cargar_espacio
 from pipeline.modelo import BACKBONE_POR_DEFECTO, ModeloJerarquico
 
@@ -15,7 +17,7 @@ NOMBRE_ENTRADA = "imagen"
 NOMBRES_SALIDA = ["logits_orden", "logits_familia"]
 
 
-def exportar_onnx(modelo: torch.nn.Module, ruta: Path, *, lado: int = 224) -> None:
+def exportar_onnx(modelo: torch.nn.Module, ruta: Path, *, lado: int = LADO) -> None:
     """Exporta con eje de lote dinámico. El modelo queda en modo evaluación."""
     modelo.eval()
     ruta = Path(ruta)
@@ -50,11 +52,13 @@ def _softmax(logits: np.ndarray) -> np.ndarray:
     return exponentes / exponentes.sum(axis=1, keepdims=True)
 
 
-def muestra_real(ruta_csv: Path, raiz_imagenes: Path, *, n: int = 32) -> torch.Tensor:
+def muestra_real(
+    ruta_csv: Path, raiz_imagenes: Path, *, n: int = 32, lado: int = LADO
+) -> torch.Tensor:
     """Las primeras `n` fotos de un split, con la transformación de evaluación."""
     from pipeline.datos_torch import leer_split, transformaciones_evaluacion
 
-    transformar = transformaciones_evaluacion()
+    transformar = transformaciones_evaluacion(lado)
     lote = []
     for fila in leer_split(ruta_csv)[:n]:
         with Image.open(Path(raiz_imagenes) / fila["archivo"]) as img:
@@ -67,7 +71,7 @@ def verificar_paridad(
     ruta_onnx: Path,
     *,
     tolerancia: float = 1e-4,
-    lado: int = 224,
+    lado: int = LADO,
     entrada: torch.Tensor | None = None,
 ) -> dict:
     """Compara PyTorch y ONNX en lo que usa el sistema: probabilidades y clase.
@@ -123,7 +127,8 @@ def main() -> None:
     parser.add_argument("--pesos", default="modelo/mejor.pth")
     parser.add_argument("--etiquetas", default="modelo/etiquetas.json")
     parser.add_argument("--salida", default="modelo/insectos.onnx")
-    parser.add_argument("--backbone", default=BACKBONE_POR_DEFECTO)
+    parser.add_argument("--backbone", default=None)
+    parser.add_argument("--lado", type=int, default=None)
     parser.add_argument(
         "--muestra", default="datos/splits/val.csv",
         help="split con fotos reales para verificar la paridad",
@@ -131,19 +136,24 @@ def main() -> None:
     parser.add_argument("--imagenes", default="datos/curado")
     args = parser.parse_args()
 
+    pesos = Path(args.pesos)
+    backbone = opcion_de_corrida(pesos, "backbone", pedido=args.backbone, defecto=BACKBONE_POR_DEFECTO)
+    lado = opcion_de_corrida(pesos, "lado", pedido=args.lado, defecto=LADO)
+    print(f"Backbone {backbone} a {lado} px (según la corrida)")
+
     espacio = cargar_espacio(Path(args.etiquetas))
     modelo = ModeloJerarquico(
-        len(espacio.ordenes), len(espacio.familias), backbone=args.backbone, preentrenado=False
+        len(espacio.ordenes), len(espacio.familias), backbone=backbone, preentrenado=False
     )
-    modelo.load_state_dict(torch.load(args.pesos, map_location="cpu"))
+    modelo.load_state_dict(torch.load(pesos, map_location="cpu"))
 
-    exportar_onnx(modelo, Path(args.salida))
+    exportar_onnx(modelo, Path(args.salida), lado=lado)
     entrada = None
     if Path(args.muestra).is_file():
-        entrada = muestra_real(Path(args.muestra), Path(args.imagenes))
+        entrada = muestra_real(Path(args.muestra), Path(args.imagenes), lado=lado)
     else:
         print(f"AVISO: no existe {args.muestra}; la paridad se verifica con ruido, menos fiable.")
-    resultado = verificar_paridad(modelo, Path(args.salida), entrada=entrada)
+    resultado = verificar_paridad(modelo, Path(args.salida), entrada=entrada, lado=lado)
     print(
         f"Paridad torch vs onnx: probabilidades {resultado['diferencia_maxima']:.2e}, "
         f"logits {resultado['diferencia_logits']:.2e}, misma clase: {resultado['misma_clase']}"

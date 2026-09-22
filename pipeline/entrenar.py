@@ -24,7 +24,7 @@ import numpy as np
 import torch
 
 from pipeline import metricas
-from pipeline.datos_torch import cargadores, leer_split, pesos_de_familia
+from pipeline.datos_torch import LADO, cargadores, leer_split, pesos_de_familia
 from pipeline.etiquetas import SIN_FAMILIA_IDX, EspacioEtiquetas, construir_espacio
 from pipeline.inferencia import enmascarar, softmax
 from pipeline.modelo import (
@@ -241,6 +241,7 @@ def entrenar(
     tasa: float = 1e-3,
     lambda_familia: float = 1.0,
     suavizado: float = SUAVIZADO,
+    lado: int = LADO,
     trabajadores: int = 4,
     reanudar: bool = False,
     al_terminar_epoca: Callable[[int], None] | None = None,
@@ -271,6 +272,7 @@ def entrenar(
         "tasa": tasa,
         "lambda_familia": lambda_familia,
         "suavizado": suavizado,
+        "lado": lado,
         "n_train": len(filas_train),
         "n_val": len(filas_val),
     }
@@ -301,7 +303,8 @@ def entrenar(
     print(f"{len(espacio.ordenes)} órdenes, {len(espacio.familias)} familias")
 
     cargador_train, cargador_val = cargadores(
-        filas_train, filas_val, raiz_imagenes, espacio, lote=lote, trabajadores=trabajadores
+        filas_train, filas_val, raiz_imagenes, espacio,
+        lote=lote, trabajadores=trabajadores, lado=lado,
     )
     modelo = fabricar_modelo(len(espacio.ordenes), len(espacio.familias), backbone).to(dispositivo)
     perdida = PerdidaCombinada(
@@ -410,6 +413,10 @@ def construir_parser() -> argparse.ArgumentParser:
     parser.add_argument("--tasa", type=float, default=1e-3)
     parser.add_argument("--lambda-familia", type=float, default=1.0)
     parser.add_argument("--suavizado", type=float, default=SUAVIZADO)
+    parser.add_argument(
+        "--lado", type=int, default=LADO,
+        help="resolución de entrada; exportar y evaluar la toman de config.json",
+    )
     parser.add_argument("--trabajadores", type=int, default=4)
     parser.add_argument(
         "--reanudar",
@@ -432,6 +439,7 @@ def main() -> None:
         tasa=args.tasa,
         lambda_familia=args.lambda_familia,
         suavizado=args.suavizado,
+        lado=args.lado,
         trabajadores=args.trabajadores,
         reanudar=args.reanudar,
     )

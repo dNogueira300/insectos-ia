@@ -8,7 +8,13 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from pipeline.datos_torch import DatasetInsectos, leer_split, transformaciones_evaluacion
+from pipeline.corrida import opcion_de_corrida
+from pipeline.datos_torch import (
+    LADO,
+    DatasetInsectos,
+    leer_split,
+    transformaciones_evaluacion,
+)
 from pipeline.entrenar import evaluar_cargador
 from pipeline.etiquetas import EspacioEtiquetas, cargar_espacio
 from pipeline.modelo import BACKBONE_POR_DEFECTO, ModeloJerarquico
@@ -17,8 +23,10 @@ META_ORDEN = 0.90
 META_FAMILIA = 0.85
 
 
-def evaluar_split(modelo, filas: list[dict], raiz: Path, espacio, dispositivo) -> dict:
-    conjunto = DatasetInsectos(filas, raiz, espacio, transformaciones_evaluacion())
+def evaluar_split(
+    modelo, filas: list[dict], raiz: Path, espacio, dispositivo, *, lado: int = LADO
+) -> dict:
+    conjunto = DatasetInsectos(filas, raiz, espacio, transformaciones_evaluacion(lado))
     cargador = DataLoader(conjunto, batch_size=32, shuffle=False)
     return {**evaluar_cargador(modelo, cargador, espacio, dispositivo), "n": len(filas)}
 
@@ -100,21 +108,30 @@ def main() -> None:
     parser.add_argument("--splits", default="datos/splits")
     parser.add_argument("--curado", default="datos/curado")
     parser.add_argument("--campo", default="datos/campo_crudo")
-    parser.add_argument("--backbone", default=BACKBONE_POR_DEFECTO)
+    parser.add_argument("--backbone", default=None)
+    parser.add_argument("--lado", type=int, default=None)
     parser.add_argument("--salida", default="docs/informe_metricas.md")
     args = parser.parse_args()
 
     dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
+    pesos = Path(args.pesos)
+    backbone = opcion_de_corrida(
+        pesos, "backbone", pedido=args.backbone, defecto=BACKBONE_POR_DEFECTO
+    )
+    lado = opcion_de_corrida(pesos, "lado", pedido=args.lado, defecto=LADO)
+    print(f"Backbone {backbone} a {lado} px (según la corrida)")
+
     espacio = cargar_espacio(Path(args.etiquetas))
     modelo = ModeloJerarquico(
-        len(espacio.ordenes), len(espacio.familias), backbone=args.backbone, preentrenado=False
+        len(espacio.ordenes), len(espacio.familias), backbone=backbone, preentrenado=False
     )
-    modelo.load_state_dict(torch.load(args.pesos, map_location=dispositivo))
+    modelo.load_state_dict(torch.load(pesos, map_location=dispositivo))
     modelo.to(dispositivo)
 
     resultados = {
         "test": evaluar_split(
-            modelo, leer_split(Path(args.splits) / "test.csv"), Path(args.curado), espacio, dispositivo
+            modelo, leer_split(Path(args.splits) / "test.csv"), Path(args.curado),
+            espacio, dispositivo, lado=lado,
         )
     }
 
@@ -122,7 +139,7 @@ def main() -> None:
     filas_campo = leer_split(ruta_campo) if ruta_campo.exists() else []
     if filas_campo:
         resultados["campo"] = evaluar_split(
-            modelo, filas_campo, Path(args.campo), espacio, dispositivo
+            modelo, filas_campo, Path(args.campo), espacio, dispositivo, lado=lado
         )
 
     Path(args.salida).parent.mkdir(parents=True, exist_ok=True)

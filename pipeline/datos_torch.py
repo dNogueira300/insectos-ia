@@ -15,11 +15,21 @@ LADO = 224
 MEDIA = (0.485, 0.456, 0.406)      # estadísticas de ImageNet: el backbone las espera
 DESVIACION = (0.229, 0.224, 0.225)
 
+# El recorte central de evaluación toma 224 de 256 píxeles: 87.5% del lado. Se
+# conserva esa proporción a cualquier resolución, porque el encuadre forma
+# parte de lo que el modelo aprendió.
+PROPORCION_RECORTE = 224 / 256
+
 PESO_MINIMO = 0.2
+
+
+def _lado_redimension(lado: int) -> int:
+    """Lado al que se redimensiona antes del recorte central."""
+    return round(lado / PROPORCION_RECORTE)
 PESO_MAXIMO = 5.0
 
 
-def transformaciones_entrenamiento() -> transforms.Compose:
+def transformaciones_entrenamiento(lado: int = LADO) -> transforms.Compose:
     """Aumentos del modelo v2, más fuertes que los del v1.
 
     El v1 se sobreajustó: la pérdida de entrenamiento bajó a 0.085 mientras el
@@ -37,7 +47,7 @@ def transformaciones_entrenamiento() -> transforms.Compose:
     """
     return transforms.Compose(
         [
-            transforms.RandomResizedCrop(LADO, scale=(0.4, 1.0)),
+            transforms.RandomResizedCrop(lado, scale=(0.4, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.RandAugment(num_ops=2, magnitude=7),
             transforms.ToTensor(),
@@ -47,12 +57,12 @@ def transformaciones_entrenamiento() -> transforms.Compose:
     )
 
 
-def transformaciones_evaluacion() -> transforms.Compose:
+def transformaciones_evaluacion(lado: int = LADO) -> transforms.Compose:
     """Determinista. El Plan 03 debe replicarla exactamente en numpy."""
     return transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(LADO),
+            transforms.Resize(_lado_redimension(lado)),
+            transforms.CenterCrop(lado),
             transforms.ToTensor(),
             transforms.Normalize(MEDIA, DESVIACION),
         ]
@@ -118,9 +128,12 @@ def cargadores(
     *,
     lote: int = 32,
     trabajadores: int = 4,
+    lado: int = LADO,
 ) -> tuple[DataLoader, DataLoader]:
-    entrenamiento = DatasetInsectos(filas_train, raiz, espacio, transformaciones_entrenamiento())
-    validacion = DatasetInsectos(filas_val, raiz, espacio, transformaciones_evaluacion())
+    entrenamiento = DatasetInsectos(
+        filas_train, raiz, espacio, transformaciones_entrenamiento(lado)
+    )
+    validacion = DatasetInsectos(filas_val, raiz, espacio, transformaciones_evaluacion(lado))
     return (
         DataLoader(
             entrenamiento,

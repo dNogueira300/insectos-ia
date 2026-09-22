@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 from PIL import Image
 
@@ -134,3 +135,28 @@ def test_la_transformacion_de_evaluacion_es_determinista(tmp_path: Path):
         [fila("a.jpg", "OrdenA", "FamX")], tmp_path, ESPACIO, transformaciones_evaluacion()
     )
     assert torch.allclose(conjunto[0][0], conjunto[0][0])
+
+
+@pytest.mark.parametrize("lado", [160, 288])
+def test_las_transformaciones_aceptan_otra_resolucion(tmp_path: Path, lado: int):
+    """Las familias que se confunden (hormigas y termitas, saltamontes entre sí)
+    se distinguen por detalles finos que a 224 px casi no existen."""
+    escribir_imagen(tmp_path, "a.jpg", lado=500)
+    for transformacion in (
+        transformaciones_evaluacion(lado=lado),
+        transformaciones_entrenamiento(lado=lado),
+    ):
+        conjunto = DatasetInsectos(
+            [fila("a.jpg", "OrdenA", "FamX")], tmp_path, ESPACIO, transformacion
+        )
+        assert conjunto[0][0].shape == (3, lado, lado)
+
+
+def test_la_evaluacion_recorta_la_misma_proporcion_a_cualquier_resolucion(tmp_path: Path):
+    """El recorte central toma 224 de 256 (87.5%). Si al subir la resolución se
+    dejara fijo el redimensionado, el encuadre cambiaría y el modelo vería
+    fotos distintas de las que aprendió."""
+    from pipeline.datos_torch import _lado_redimension
+
+    assert _lado_redimension(224) == 256
+    assert _lado_redimension(288) == 329
