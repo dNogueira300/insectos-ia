@@ -1,7 +1,7 @@
 # Resumen ejecutivo — Sistema de identificación de insectos amazónicos
 
-**Fecha:** 19 de septiembre de 2026
-**Estado:** la etapa de datos está **cerrada sobre el material real** y el **código del modelo está terminado y probado**. Falta el entrenamiento en Google Colab.
+**Fecha:** 22 de septiembre de 2026
+**Estado:** los datos están cerrados y **el modelo ya está entrenado**. La segunda versión acierta la familia en 83 % de las fotos de prueba, y en 92 % cuando se le permite decir "no estoy seguro". Hay una tercera versión entrenando.
 **Repositorio:** https://github.com/dNogueira300/insectos-ia (todo en la rama `main`)
 
 ---
@@ -20,8 +20,8 @@ Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden
 | -------------------------------- | ---------------------------------------------------------------------------------- |
 | Lista de clases                  | **Cerrada.** 15 órdenes y 38 familias.                                             |
 | Etapa de datos                   | **Cerrada.** 34 360 fotografías listas, repartidas y verificadas.                  |
-| Código del modelo                | **Terminado.** 9 piezas, 316 pruebas automáticas en verde, prueba de punta a punta superada. |
-| Entrenamiento                    | **Siguiente paso.** En Google Colab gratuito, con el cuaderno ya preparado.        |
+| Código del modelo                | **Terminado.** 332 pruebas automáticas en verde.                                   |
+| Entrenamiento                    | **En curso.** Dos versiones entrenadas y evaluadas; la tercera, entrenando.        |
 | Página web de consulta           | Planificada en detalle. Sin empezar.                                               |
 
 ## La lista de clases quedó cerrada
@@ -68,13 +68,42 @@ Cada pieza se verificó contra los datos reales, no solo en pruebas. Estos fuero
 - **Una descarga de 15 horas no sobrevivía a un corte de internet.** Ahora reintenta sola, se puede pausar y retomar por partes, y al retomar no duplica fotos.
 - **La verificación del modelo exportado dio una falsa alarma.** La prueba de punta a punta con datos reales mostró que la comprobación comparaba mal. Se corrigió para medir lo que importa: con fotos reales, el modelo exportado da la misma respuesta que el original en el 100 % de los casos.
 
-## Cómo se va a entrenar
+## El modelo entrenado
 
-En **Google Colab gratuito**, desde una sola cuenta. El cuaderno de Colab ya está listo: basta con subir a Google Drive el paquete de datos (un solo archivo) y ejecutar todas las celdas.
+Se entrena en **Google Colab gratuito**. Colab corta las sesiones sin aviso, así que el entrenamiento guarda su avance en Drive al terminar cada vuelta: si se corta, al volver a ejecutar el cuaderno sigue donde quedó.
 
-- Colab gratuito corta las sesiones sin aviso. El entrenamiento **guarda su avance en Drive al terminar cada vuelta** y, si se corta, continúa donde quedó al volver a ejecutar el cuaderno. Como mucho se pierde una vuelta.
-- El tiempo estimado es de una a dos horas.
-- Al terminar produce tres cosas: el modelo listo para la página web, sus métricas y un informe de evaluación.
+Las mejoras se prueban **de a una**, para saber cuánto aporta cada cambio. Resultados en el examen final (5 165 fotos que el modelo nunca vio, de fotógrafos que tampoco vio):
+
+| Versión | Qué cambió | Acierta el orden | Acierta la familia | La familia está entre sus 3 primeras opciones |
+| ------- | ---------- | ---------------: | -----------------: | --------------------------------------------: |
+| 1 | Primera corrida, sin ajustes | 84 % | 78 % | 86 % |
+| 2 | Evitar que memorice las fotos | **87 %** | **83 %** | **89 %** |
+| 3 | Modelo más grande y fotos con más detalle | _entrenando_ | | |
+
+(Cifras de exactitud. Con la medida más exigente, que promedia todas las familias por igual para que las raras pesen lo mismo que las comunes, la versión 2 da 0.86 en orden y 0.83 en familia.)
+
+**La versión 1 memorizaba.** Casi aprendía de memoria las fotos de entrenamiento, pero no mejoraba con fotos nuevas. La versión 2 le presenta cada foto distinta en cada vuelta (recortada, girada, con otro contraste, con un trozo tapado) y le quita la costumbre de estar completamente seguro. Con eso subió cinco puntos en familia.
+
+**Saber cuándo dudar vale más que acertar un punto más.** El modelo calcula qué tan seguro está de cada respuesta. Si solo responde cuando está suficientemente seguro, y en los demás casos dice "no estoy seguro" y muestra sus tres mejores opciones, pasa esto con la versión 2:
+
+| El sistema responde cuando su seguridad es de al menos… | Responde en | Y acierta en |
+| --------------------------------------------------------: | ----------: | -----------: |
+| (siempre responde) | 100 % | 83 % |
+| 70 % | 83 % | **92 %** |
+| 80 % | 76 % | **94 %** |
+
+Es el argumento más sólido para conversar la meta con la Facultad: un sistema que acierta 92–94 % cuando responde, y que avisa cuando no sabe, es más útil en campo que uno que siempre responde y se equivoca una de cada seis veces.
+
+**Dónde falla todavía.** Las confusiones son las mismas que tendría una persona con poca experiencia:
+
+- **Hormigas con termitas** (_Formicidae_ y _Termitidae_): es la más importante para agronomía.
+- **Termitas entre sí:** _Heterotermitidae_ con _Kalotermitidae_.
+- **Mantis con saltamontes e insectos palo:** todos verdes y alargados.
+- **Saltamontes de antenas largas con los de antenas cortas.**
+
+La versión 3 apunta justo a eso: un modelo más grande que mira las fotos con más detalle, porque esas familias se distinguen por rasgos finos (la cintura de la hormiga, la forma de las antenas).
+
+El detalle por clase está en `docs/desempeno_por_clase_v2.md`.
 
 ## Lo que está esperando a la Facultad
 
@@ -91,7 +120,7 @@ En **Google Colab gratuito**, desde una sola cuenta. El cuaderno de Colab ya est
 
 ## Próximos pasos
 
-1. Subir el paquete de datos a Google Drive y entrenar en Colab.
-2. Revisar el informe de evaluación: dónde acierta y dónde se confunde el modelo.
+1. Terminar y evaluar la versión 3.
+2. Fijar el umbral de "no estoy seguro" con la tabla de arriba.
 3. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
 4. Construir la página web de consulta (tercera etapa).
