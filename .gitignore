@@ -20,8 +20,8 @@ datos/splits/*
 !datos/splits/asignacion_observadores.yaml
 
 # artefactos de modelo
-modelo/*.onnx
-modelo/*.pth
+modelo/**/*.onnx
+modelo/**/*.pth
 
 # sistema
 .DS_Store
