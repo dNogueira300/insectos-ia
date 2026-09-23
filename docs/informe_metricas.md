@@ -4,12 +4,12 @@ Espacio de clases: **15 órdenes**, **38 familias**.
 
 | Métrica | test |
 | --- | ---: |
-| macro-F1 de orden | 0.900 |
-| macro-F1 de familia | 0.874 |
-| Exactitud de orden | 0.907 |
-| Exactitud de familia | 0.874 |
-| Exactitud jerárquica | 0.873 |
-| Top-3 de familia | 0.925 |
+| macro-F1 de orden | 0.935 |
+| macro-F1 de familia | 0.921 |
+| Exactitud de orden | 0.945 |
+| Exactitud de familia | 0.922 |
+| Exactitud jerárquica | 0.921 |
+| Top-3 de familia | 0.958 |
 | Imágenes | 5165 |
 
 ## Criterio de aceptación

@@ -1,7 +1,7 @@
 # Resumen ejecutivo — Sistema de identificación de insectos amazónicos
 
 **Fecha:** 23 de septiembre de 2026
-**Estado:** los datos están cerrados y **el modelo ya está entrenado**. La tercera versión acierta la familia en 87 % de las fotos de prueba, y en 94 % cuando se le permite decir "no estoy seguro".
+**Estado:** los datos están cerrados y **el modelo ya está entrenado**. La cuarta versión acierta la familia en 92 % de las fotos de prueba, y en 95.5 % cuando se le permite decir "no estoy seguro".
 **Repositorio:** https://github.com/dNogueira300/insectos-ia (todo en la rama `main`)
 
 ---
@@ -21,7 +21,7 @@ Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden
 | Lista de clases                  | **Cerrada.** 15 órdenes y 38 familias.                                             |
 | Etapa de datos                   | **Cerrada.** 34 360 fotografías listas, repartidas y verificadas.                  |
 | Código del modelo                | **Terminado.** 332 pruebas automáticas en verde.                                   |
-| Entrenamiento                    | **Tres versiones evaluadas.** La tercera cumple la meta técnica en fotos de catálogo. |
+| Entrenamiento                    | **Cuatro versiones evaluadas.** La cuarta supera la meta técnica en fotos de catálogo. |
 | Página web de consulta           | Planificada en detalle. Sin empezar.                                               |
 
 ## La lista de clases quedó cerrada
@@ -78,34 +78,35 @@ Las mejoras se prueban **de a una**, para saber cuánto aporta cada cambio. Resu
 | ------- | ---------- | ---------------: | -----------------: | --------------------------------------------: |
 | 1 | Primera corrida, sin ajustes | 84 % | 78 % | 86 % |
 | 2 | Evitar que memorice las fotos | 87 % | 83 % | 89 % |
-| 3 | Modelo más grande y fotos con más detalle | **91 %** | **87 %** | **93 %** |
+| 3 | Modelo más grande y fotos con más detalle | 91 % | 87 % | 93 % |
+| 4 | Modelo que ya había visto muchas más clases de seres vivos | **95 %** | **92 %** | **96 %** |
 
-(Cifras de exactitud. Con la medida más exigente, que promedia todas las familias por igual para que las raras pesen lo mismo que las comunes, la versión 3 da 0.90 en orden y 0.87 en familia. Eso cumple la meta técnica del plan, de 0.90 y 0.85, pero solo con fotos de catálogo: falta medirla con fotos de campo.)
+(Cifras de exactitud. Con la medida más exigente, que promedia todas las familias por igual para que las raras pesen lo mismo que las comunes, la versión 4 da 0.94 en orden y 0.92 en familia. Eso supera la meta técnica del plan, de 0.90 y 0.85, pero solo con fotos de catálogo: falta medirla con fotos de campo.)
 
 **La versión 1 memorizaba.** Casi aprendía de memoria las fotos de entrenamiento, pero no mejoraba con fotos nuevas. La versión 2 le presenta cada foto distinta en cada vuelta (recortada, girada, con otro contraste, con un trozo tapado) y le quita la costumbre de estar completamente seguro. Con eso subió cinco puntos en familia.
 
-**Saber cuándo dudar vale más que acertar un punto más.** El modelo calcula qué tan seguro está de cada respuesta. Si solo responde cuando está suficientemente seguro, y en los demás casos dice "no estoy seguro" y muestra sus tres mejores opciones, pasa esto con la versión 3:
+**La versión 4 dio el mayor salto.** Estos modelos no empiezan de cero: parten de uno que ya aprendió a mirar fotos. Las versiones 1 a 3 partían de uno entrenado con 1 000 clases de objetos; la 4 parte de uno entrenado con unas 21 800 clases, entre ellas muchas de insectos. Solo con ese cambio, la familia subió cinco puntos más.
+
+**Saber cuándo dudar vale más que acertar un punto más.** El modelo calcula qué tan seguro está de cada respuesta. Si solo responde cuando está suficientemente seguro, y en los demás casos dice "no estoy seguro" y muestra sus tres mejores opciones, pasa esto con la versión 4:
 
 | El sistema responde cuando su seguridad es de al menos… | Responde en | Y acierta en |
 | --------------------------------------------------------: | ----------: | -----------: |
-| (siempre responde) | 100 % | 87 % |
-| 70 % | 89 % | **94 %** |
-| 80 % | 84 % | **95 %** |
+| (siempre responde) | 100 % | 92 % |
+| 70 % | 94 % | **95.5 %** |
+| 80 % | 92 % | **96 %** |
 
-La versión 3 no solo acierta más: también duda menos. Con la exigencia del 70 %, la versión 2 respondía en el 83 % de las fotos y acertaba el 92 %; la 3 responde en el 89 % y acierta el 94 %.
+**El sistema ya funciona así:** afirma la familia solo cuando su seguridad es de al menos 70 %; si no, dice "no estoy seguro" y muestra sus tres mejores opciones. Con la versión 4, eso pasa en solo 6 de cada 100 fotos, y de lo que afirma se equivoca en menos de una de cada veinte.
 
-**El sistema ya funciona así:** afirma la familia solo cuando su seguridad es de al menos 70 %; si no, dice "no estoy seguro" y muestra sus tres mejores opciones. Antes afirmaba desde el 45 %: con esa exigencia, más o menos una de cada diez respuestas afirmadas era errónea; ahora son una de cada dieciséis.
+Es el argumento más sólido para conversar la meta con la Facultad: un sistema que acierta 95–96 % cuando responde, y que avisa cuando no sabe, es más útil en campo que uno que siempre responde sin avisar cuándo duda.
 
-Es el argumento más sólido para conversar la meta con la Facultad: un sistema que acierta 94–95 % cuando responde, y que avisa cuando no sabe, es más útil en campo que uno que siempre responde y se equivoca una de cada ocho veces.
+**Dónde falla todavía.** Todas las familias débiles mejoraron con la versión 4. Las que quedan más bajas son las mismas que confundiría una persona con poca experiencia:
 
-**Dónde falla todavía.** La versión 3 usa un modelo más grande que mira las fotos con más detalle, porque las familias difíciles se distinguen por rasgos finos: la cintura de la hormiga, la forma de las antenas. Mejoró casi todas las clases débiles, pero las confusiones que quedan son las mismas que tendría una persona con poca experiencia:
+- **Termitas entre sí:** _Termitidae_ (subió de 0.67 a 0.78) y _Heterotermitidae_ (de 0.74 a 0.83) todavía se confunden entre ellas y con _Kalotermitidae_. _Termitidae_ tiene solo 50 fotos de examen y aún conserva algunas fotos de montículos.
+- **Hormigas** (_Formicidae_): subió de 0.72 a 0.82. Es la más importante para agronomía.
+- **Saltamontes de antenas cortas con los de antenas largas:** _Acrididae_ subió de 0.75 a 0.81.
+- **Mantis con insectos palo:** a nivel de orden, las mantis pasaron de 0.85 a 0.87.
 
-- **Hormigas con termitas** (_Formicidae_ y _Termitidae_): es la más importante para agronomía. Hormigas subió de 0.67 a 0.72.
-- **Termitas entre sí:** _Heterotermitidae_ con _Kalotermitidae_. Mejoraron, pero _Termitidae_ bajó de 0.71 a 0.67. Tiene solo 50 fotos de examen y aún conserva algunas fotos de montículos.
-- **Saltamontes de antenas largas con los de antenas cortas.** Subió de 0.66 a 0.75.
-- **Mantis con insectos palo.** Las mantis subieron de 0.75 a 0.85, y ya casi no se confunden con saltamontes.
-
-El detalle por clase está en `docs/desempeno_por_clase_v3.md`.
+El detalle por clase está en `docs/desempeno_por_clase_v4.md`.
 
 ## Lo que está esperando a la Facultad
 

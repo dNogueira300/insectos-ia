@@ -1,0 +1,12 @@
+{
+  "semilla": 42,
+  "backbone": "convnext_tiny.fb_in22k_ft_in1k",
+  "epocas": 25,
+  "lote": 32,
+  "tasa": 0.001,
+  "lambda_familia": 1.0,
+  "suavizado": 0.1,
+  "lado": 288,
+  "n_train": 24032,
+  "n_val": 5163
+}

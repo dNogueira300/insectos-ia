@@ -10,7 +10,7 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | Etapa | Estado |
 | --- | --- |
 | Plan 01 — datos | **Cerrado.** 34 360 fotos, repartidas 24 032 / 5 163 / 5 165 (entrenamiento / validación / prueba). |
-| Plan 02 — modelo | **Código terminado.** Modelo vigente: `v3_b2_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
+| Plan 02 — modelo | **Código terminado.** Modelo vigente: `v4_convnext_t_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
 | Plan 03 — web | Planificado (`docs/2026-07-28-plan-03-prototipo.md`). Sin empezar. |
 
 ### Corridas del modelo (conjunto de prueba, 5 165 fotos de repositorio)
@@ -19,18 +19,21 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | --- | --- | ---: | ---: | ---: |
 | `v1_efficientnet_b0` | Base del plan, 224 px | 0.832 | 0.791 | 0.863 |
 | `v2_antisobreajuste` | Aumentos fuertes, suavizado 0.1, tasa en coseno | 0.864 | 0.832 | 0.891 |
-| `v3_b2_288` | EfficientNet-B2 a 288 px | **0.900** | **0.874** | **0.925** |
+| `v3_b2_288` | EfficientNet-B2 a 288 px | 0.900 | 0.874 | 0.925 |
+| `v4_convnext_t_288` | ConvNeXt-Tiny preentrenado en ImageNet-22k, 288 px | **0.935** | **0.921** | **0.958** |
 
-La meta del plan es ≥0.90 en orden y ≥0.85 en familia. La v3 la alcanza **sobre fotos de repositorio**. Sin conjunto de campo, eso no permite declararla cumplida.
+La meta del plan es ≥0.90 en orden y ≥0.85 en familia. Desde la v3 se alcanza **sobre fotos de repositorio**. Sin conjunto de campo, eso no permite declararla cumplida.
 La ficha de la Facultad pide 99 %, que no es realista; está pendiente renegociarla.
-La v3 responde con 93.6 % de acierto cuando exige confianza ≥0.7, y lo hace en el 89 % de las fotos. Con la v2 eran 91.9 % y 83 %. Ver `docs/desempeno_por_clase_v3.md`.
+La v4 responde con 95.5 % de acierto cuando exige confianza ≥0.7, y lo hace en el 94 % de las fotos (v3: 93.6 % y 89 %). Ver `docs/desempeno_por_clase_v4.md`.
 
-La v3 se detuvo sola en la época 19 de 25; la mejor fue la 14. El F1 de validación quedó plano (0.856–0.857) desde entonces, sin sobreajuste.
-Mejoró todas las clases débiles de la v2 salvo **Termitidae**: bajó de 0.71 a 0.67, sobre solo 50 fotos, y aún quedan montículos en su material.
-Las confusiones que persisten son Formicidae↔Termitidae, las termitas entre sí y Acrididae↔Tettigoniidae.
+La v4 corrió las 25 épocas; la mejor fue la 23 (F1 de familia en validación 0.909, subiendo despacio con la tasa en coseno, sin sobreajuste).
+Mejoró todas las clases débiles. Las más bajas siguen siendo Termitidae (0.78), Acrididae (0.81), Formicidae (0.82) y Heterotermitidae (0.83).
+Lo que decidió el salto fue el preentrenamiento en ImageNet-22k: la v3 se había estancado con la tasa aún alta.
 
 Las mejoras se prueban **una a una**, para medir el aporte de cada cambio. El usuario lo pidió así.
-Las tres mejoras de la lista están hechas: anti-sobreajuste (v2), backbone y resolución (v3) y `UMBRAL_FAMILIA` = 0.7 en `pipeline/inferencia.py`, elegido con la tabla de cobertura de la v3.
+Las mejoras hechas son: anti-sobreajuste (v2), backbone y resolución (v3), `UMBRAL_FAMILIA` = 0.7 en `pipeline/inferencia.py` (elegido con la tabla de la v3) y preentrenamiento 22k (v4).
+El umbral no se reajustó con la v4: elegirlo mirando la tabla de prueba sería ajustar sobre el examen.
+Medido sin reentrenar sobre la v3, en validación: elegir orden y familia a la vez no mejora (+0.2 pt) si se incluyen los 6 órdenes sin familias; el volteo en inferencia da +0.5 pt a costa de duplicar el tiempo.
 Si una corrida nueva cambia esa tabla, revisar el umbral con ella. `desempeno` mide la misma confianza enmascarada que `predecir`.
 
 ## Cuando llegue una corrida nueva
@@ -40,7 +43,7 @@ El usuario descarga la carpeta de la corrida desde Drive a `D:\300\OTROS\XXX\DAN
 1. Copiar a `modelo/<corrida>/` los archivos `config.json`, `etiquetas.json`, `evaluacion.json`, `metricas.json`, `insectos.onnx`, `mejor.pth` y `ultimo.pth`. Los `.onnx` y `.pth` no se versionan.
 2. Copiar `informe_metricas.md` a `docs/informe_metricas.md`.
 3. Revisar el historial de `metricas.json` (tasa, pérdida y F1 por época) para ver si hubo sobreajuste o si faltaron épocas.
-4. Correr `python -m pipeline.desempeno --corrida modelo/<corrida> --salida docs/desempeno_por_clase_<vN>.md`. Toma sola la resolución de `config.json`. En CPU, a 288 px, tarda unos 15 minutos.
+4. El informe por clase lo genera el paso 8 del cuaderno (`desempeno_por_clase.md`); copiarlo a `docs/desempeno_por_clase_<vN>.md`. En la PC local, `python -m pipeline.desempeno` se cortó por falta de memoria con la v4.
 5. Comparar contra la corrida anterior, en especial las clases débiles.
 6. Commit, y actualizar la tabla de corridas de este archivo y `docs/RESUMEN_EJECUTIVO.md`.
 
