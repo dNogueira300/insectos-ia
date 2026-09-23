@@ -5,12 +5,12 @@ Es el Proyecto Formativo INAAM–FISI y de Responsabilidad Social de la UNAP (Fa
 La entomóloga de referencia es la Dra. Aldi Guerra Teixeira.
 Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 
-## Estado actual (2026-09-22)
+## Estado actual (2026-09-23)
 
 | Etapa | Estado |
 | --- | --- |
 | Plan 01 — datos | **Cerrado.** 34 360 fotos, repartidas 24 032 / 5 163 / 5 165 (entrenamiento / validación / prueba). |
-| Plan 02 — modelo | **Código terminado.** Entrenando en Colab gratis (T4), una sola cuenta. |
+| Plan 02 — modelo | **Código terminado.** Modelo vigente: `v3_b2_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
 | Plan 03 — web | Planificado (`docs/2026-07-28-plan-03-prototipo.md`). Sin empezar. |
 
 ### Corridas del modelo (conjunto de prueba, 5 165 fotos de repositorio)
@@ -19,23 +19,28 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | --- | --- | ---: | ---: | ---: |
 | `v1_efficientnet_b0` | Base del plan, 224 px | 0.832 | 0.791 | 0.863 |
 | `v2_antisobreajuste` | Aumentos fuertes, suavizado 0.1, tasa en coseno | 0.864 | 0.832 | 0.891 |
-| `v3_b2_288` | EfficientNet-B2 a 288 px | **pendiente** | | |
+| `v3_b2_288` | EfficientNet-B2 a 288 px | **0.900** | **0.874** | **0.925** |
 
-La meta del plan es ≥0.90 en orden y ≥0.85 en familia. La ficha de la Facultad pide 99 %, que no es realista; está pendiente renegociarla.
-La v2 responde con 91.9 % de acierto cuando exige confianza ≥0.7 (lo hace en el 83 % de las fotos). Ver `docs/desempeno_por_clase_v2.md`.
+La meta del plan es ≥0.90 en orden y ≥0.85 en familia. La v3 la alcanza **sobre fotos de repositorio**. Sin conjunto de campo, eso no permite declararla cumplida.
+La ficha de la Facultad pide 99 %, que no es realista; está pendiente renegociarla.
+La v3 responde con 93.6 % de acierto cuando exige confianza ≥0.7, y lo hace en el 89 % de las fotos. Con la v2 eran 91.9 % y 83 %. Ver `docs/desempeno_por_clase_v3.md`.
+
+La v3 se detuvo sola en la época 19 de 25; la mejor fue la 14. El F1 de validación quedó plano (0.856–0.857) desde entonces, sin sobreajuste.
+Mejoró todas las clases débiles de la v2 salvo **Termitidae**: bajó de 0.71 a 0.67, sobre solo 50 fotos, y aún quedan montículos en su material.
+Las confusiones que persisten son Formicidae↔Termitidae, las termitas entre sí y Acrididae↔Tettigoniidae.
 
 Las mejoras se prueban **una a una**, para medir el aporte de cada cambio. El usuario lo pidió así.
-El paso 3 pendiente es subir `UMBRAL_FAMILIA` de 0.45 a ~0.7 en `pipeline/inferencia.py`, apoyado en la tabla de cobertura.
+El paso 3 pendiente es subir `UMBRAL_FAMILIA` de 0.45 a ~0.7 en `pipeline/inferencia.py`, apoyado en la tabla de cobertura de la v3.
 
-## Cuando lleguen los resultados de la v3
+## Cuando llegue una corrida nueva
 
-El usuario descarga la carpeta de la corrida desde Drive a `D:\300\OTROS\XXX\DAN\IA\agro\entrenamiento\corridas\v3_b2_288`. Luego:
+El usuario descarga la carpeta de la corrida desde Drive a `D:\300\OTROS\XXX\DAN\IA\agro\entrenamiento\corridas\<corrida>`. Luego:
 
-1. Copiar a `modelo/v3_b2_288/` los archivos `config.json`, `etiquetas.json`, `evaluacion.json`, `metricas.json`, `insectos.onnx`, `mejor.pth` y `ultimo.pth`. Los `.onnx` y `.pth` no se versionan.
+1. Copiar a `modelo/<corrida>/` los archivos `config.json`, `etiquetas.json`, `evaluacion.json`, `metricas.json`, `insectos.onnx`, `mejor.pth` y `ultimo.pth`. Los `.onnx` y `.pth` no se versionan.
 2. Copiar `informe_metricas.md` a `docs/informe_metricas.md`.
 3. Revisar el historial de `metricas.json` (tasa, pérdida y F1 por época) para ver si hubo sobreajuste o si faltaron épocas.
-4. Correr `python -m pipeline.desempeno --corrida modelo/v3_b2_288 --salida docs/desempeno_por_clase_v3.md`. Toma sola la resolución de 288 de `config.json`.
-5. Comparar contra la v2, en especial las clases débiles: Mantodea, Acrididae, Formicidae, Heterotermitidae y Kalotermitidae.
+4. Correr `python -m pipeline.desempeno --corrida modelo/<corrida> --salida docs/desempeno_por_clase_<vN>.md`. Toma sola la resolución de `config.json`. En CPU, a 288 px, tarda unos 15 minutos.
+5. Comparar contra la corrida anterior, en especial las clases débiles.
 6. Commit, y actualizar la tabla de corridas de este archivo y `docs/RESUMEN_EJECUTIVO.md`.
 
 ## Cómo se trabaja aquí (convenciones del proyecto)
