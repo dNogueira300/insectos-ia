@@ -76,6 +76,14 @@ def crear_app(servicio, repositorio) -> FastAPI:
     def resumen() -> dict:
         return {"por_orden": repositorio.resumen_por_orden()}
 
+    # Sirve el frontend construido, si existe. En desarrollo se usa Vite (5173)
+    # y este bloque simplemente no se activa.
+    dist = RAIZ / "frontend" / "dist"
+    if dist.exists():
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+
     return app
 
 

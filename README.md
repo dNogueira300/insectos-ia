@@ -61,3 +61,39 @@ Pasos complementarios:
 - `bd/`: base de datos biológica.
 - `datos/`: imágenes y manifiestos. **No se versiona.**
 - `docs/`: diseño, planes, reportes generados y resumen ejecutivo.
+
+## Ejecutar el prototipo
+
+Doble clic en `iniciar.bat`, o a mano:
+
+```powershell
+.venv\Scripts\python -m uvicorn backend.app:app_produccion --factory --port 8000
+```
+
+Abrir http://127.0.0.1:8000
+
+### Desarrollo del frontend
+
+```powershell
+cd frontend
+npm install
+npm run dev      # http://localhost:5173, con recarga en caliente
+npm run prueba   # pruebas del frontend
+```
+
+### Artefactos que el prototipo necesita
+
+| Archivo | Lo produce |
+| --- | --- |
+| `modelo/v4_convnext_t_288/insectos.onnx` | Cuaderno de Colab, paso 7 (Plan 02); no se versiona |
+| `modelo/v4_convnext_t_288/etiquetas.json` | Cuaderno de Colab, paso 6 (Plan 02) |
+| `bd/bd_insectos.sqlite` | `python -m pipeline.bd` (Plan 01) |
+
+Sin la base de datos el sistema predice igual, pero no muestra ficha biológica.
+
+## Pruebas
+
+```powershell
+.venv\Scripts\python -m pytest        # backend y pipeline
+cd frontend && npm run prueba          # frontend
+```
