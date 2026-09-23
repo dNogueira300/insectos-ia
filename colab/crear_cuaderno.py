@@ -176,6 +176,23 @@ print(open(f"{DESTINO}/informe_metricas.md", encoding="utf-8").read())
 ''')
 
 md("""
+## 8. Desempeño por clase
+
+F1 y confusión principal de cada orden y familia, y la tabla de cobertura contra confianza
+con la que se elige el umbral. Se corre aquí porque en una PC con poca memoria el proceso
+se corta. Si el modelo ya estaba entrenado y exportado, basta con ejecutar las celdas 1 a 5
+y esta.
+""")
+py('''
+!pip install -q onnxruntime
+%cd /content/insectos-ia
+!python -m pipeline.desempeno --corrida "{DESTINO}" \\
+    --split /content/datos/splits/test.csv --imagenes /content/datos/curado \\
+    --salida "{DESTINO}/desempeno_por_clase.md"
+print(open(f"{DESTINO}/desempeno_por_clase.md", encoding="utf-8").read())
+''')
+
+md("""
 ## Qué entregar al terminar
 
 Descarga desde `<CARPETA_CORRIDAS>/<CORRIDA>/` estos archivos:
@@ -184,6 +201,7 @@ Descarga desde `<CARPETA_CORRIDAS>/<CORRIDA>/` estos archivos:
 - `etiquetas.json`
 - `metricas.json`
 - `informe_metricas.md`
+- `desempeno_por_clase.md`
 """)
 
 cuaderno = {
