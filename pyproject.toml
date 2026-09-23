@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3"]
+dev = ["pytest>=8.3", "httpx>=0.28"]
 # Filtro de contenido (pipeline/filtro_contenido.py). torch se instala con el
 # índice de CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
 filtro = ["torch>=2.5", "open_clip_torch>=3.0"]
