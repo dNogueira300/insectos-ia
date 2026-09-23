@@ -26,3 +26,6 @@ modelo/**/*.pth
 # sistema
 .DS_Store
 Thumbs.db
+
+# Se genera desde bd/bd_insectos.xlsx con python -m pipeline.bd
+bd/bd_insectos.sqlite
