@@ -47,8 +47,10 @@ py('''
 # Nombre de la corrida: cámbialo solo si quieres empezar un entrenamiento NUEVO
 # desde cero (por ejemplo, para probar otro backbone). Para continuar una
 # corrida cortada, deja el mismo nombre.
-CORRIDA = "v3_b2_288"
-BACKBONE = "efficientnet_b2"
+CORRIDA = "v4_convnext_t_288"
+# Preentrenado en ImageNet-22k (14 M de fotos y ~21 800 clases, entre ellas
+# muchas de insectos) y afinado en 1k. La v3 (efficientnet_b2) solo vio 1k.
+BACKBONE = "convnext_tiny.fb_in22k_ft_in1k"
 # Resolución de entrada en píxeles. Más resolución distingue mejor detalles
 # finos (antenas, cintura de hormiga, mandíbulas), pero cada época tarda más.
 # Exportar y evaluar la leen solas de la corrida: no hay que repetirla.
