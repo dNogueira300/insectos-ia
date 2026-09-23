@@ -30,7 +30,8 @@ Mejoró todas las clases débiles de la v2 salvo **Termitidae**: bajó de 0.71 a
 Las confusiones que persisten son Formicidae↔Termitidae, las termitas entre sí y Acrididae↔Tettigoniidae.
 
 Las mejoras se prueban **una a una**, para medir el aporte de cada cambio. El usuario lo pidió así.
-El paso 3 pendiente es subir `UMBRAL_FAMILIA` de 0.45 a ~0.7 en `pipeline/inferencia.py`, apoyado en la tabla de cobertura de la v3.
+Las tres mejoras de la lista están hechas: anti-sobreajuste (v2), backbone y resolución (v3) y `UMBRAL_FAMILIA` = 0.7 en `pipeline/inferencia.py`, elegido con la tabla de cobertura de la v3.
+Si una corrida nueva cambia esa tabla, revisar el umbral con ella. `desempeno` mide la misma confianza enmascarada que `predecir`.
 
 ## Cuando llegue una corrida nueva
 

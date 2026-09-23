@@ -71,6 +71,26 @@ def test_familia_certera_cuando_supera_el_umbral():
     assert prediccion.familia == "FamA1"
 
 
+def test_por_omision_una_familia_al_60_por_ciento_es_incierta():
+    """Con la v3, exigir 0.7 responde en el 89 % de las fotos y acierta el 93.6 %.
+
+    A 0.6 el acierto cae al 92 %: esa respuesta debe mostrarse como duda.
+    """
+    prediccion = predecir(
+        np.array([5.0, 0.0]), np.array([np.log(1.5), 0.0, 0.0]), ESPACIO
+    )
+    assert prediccion.confianza_familia == pytest.approx(0.6)
+    assert prediccion.familia_incierta is True
+
+
+def test_por_omision_una_familia_al_75_por_ciento_se_afirma():
+    prediccion = predecir(
+        np.array([5.0, 0.0]), np.array([np.log(3.0), 0.0, 0.0]), ESPACIO
+    )
+    assert prediccion.confianza_familia == pytest.approx(0.75)
+    assert prediccion.familia_incierta is False
+
+
 def test_top_familias_solo_incluye_las_del_orden():
     prediccion = predecir(np.array([5.0, 0.0]), np.array([1.0, 2.0, 9.0]), ESPACIO)
     nombres = [n for n, _ in prediccion.top_familias]

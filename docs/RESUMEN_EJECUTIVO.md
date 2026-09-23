@@ -94,6 +94,8 @@ Las mejoras se prueban **de a una**, para saber cuánto aporta cada cambio. Resu
 
 La versión 3 no solo acierta más: también duda menos. Con la exigencia del 70 %, la versión 2 respondía en el 83 % de las fotos y acertaba el 92 %; la 3 responde en el 89 % y acierta el 94 %.
 
+**El sistema ya funciona así:** afirma la familia solo cuando su seguridad es de al menos 70 %; si no, dice "no estoy seguro" y muestra sus tres mejores opciones. Antes afirmaba desde el 45 %: con esa exigencia, más o menos una de cada diez respuestas afirmadas era errónea; ahora son una de cada dieciséis.
+
 Es el argumento más sólido para conversar la meta con la Facultad: un sistema que acierta 94–95 % cuando responde, y que avisa cuando no sabe, es más útil en campo que uno que siempre responde y se equivoca una de cada ocho veces.
 
 **Dónde falla todavía.** La versión 3 usa un modelo más grande que mira las fotos con más detalle, porque las familias difíciles se distinguen por rasgos finos: la cintura de la hormiga, la forma de las antenas. Mejoró casi todas las clases débiles, pero las confusiones que quedan son las mismas que tendría una persona con poca experiencia:
@@ -120,7 +122,5 @@ El detalle por clase está en `docs/desempeno_por_clase_v3.md`.
 
 ## Próximos pasos
 
-1. Terminar y evaluar la versión 3.
-2. Fijar el umbral de "no estoy seguro" con la tabla de arriba.
-3. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
-4. Construir la página web de consulta (tercera etapa).
+1. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
+2. Construir la página web de consulta (tercera etapa).

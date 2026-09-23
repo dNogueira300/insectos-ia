@@ -796,7 +796,7 @@ class ServicioFalso:
             "modelo": "insectos.onnx",
             "n_ordenes": 2,
             "n_familias": 1,
-            "umbral_familia": 0.45,
+            "umbral_familia": 0.7,
         }
 
 

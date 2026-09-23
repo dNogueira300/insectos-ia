@@ -12,8 +12,10 @@ import numpy as np
 from pipeline.etiquetas import EspacioEtiquetas
 
 # Por debajo de esta confianza el sistema declara la familia incierta y
-# muestra el top-3 en vez de afirmar una respuesta.
-UMBRAL_FAMILIA = 0.45
+# muestra el top-3 en vez de afirmar una respuesta. Sale de la tabla de
+# cobertura de la v3 (docs/desempeno_por_clase_v3.md): a 0.7 responde en el
+# 89 % de las fotos de prueba y acierta el 93.6 %; a 0.5 acierta el 90.1 %.
+UMBRAL_FAMILIA = 0.7
 
 
 @dataclass(frozen=True)
