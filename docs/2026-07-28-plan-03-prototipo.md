@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12, FastAPI, uvicorn, onnxruntime, numpy, Pillow, pytest + httpx. Node 24, React 19, Vite, Vitest + Testing Library.
 
-**Depende de:** Planes 01 y 02 completos. Consume `modelo/insectos.onnx`, `modelo/etiquetas.json`, `bd/bd_insectos.sqlite` y `pipeline/inferencia.py`.
+**Depende de:** Planes 01 y 02 completos. Consume `modelo/<corrida>/insectos.onnx`, `modelo/<corrida>/etiquetas.json`, `bd/bd_insectos.sqlite` y `pipeline/inferencia.py`.
 
 ## Global Constraints
 
@@ -19,6 +19,16 @@ Aplican las de los planes anteriores, más:
 - **Ninguna prueba del backend carga el modelo real.** Se usa un ONNX diminuto generado en el momento, o un servicio falso.
 - **El frontend nunca decide taxonomía.** No replica umbrales ni la matriz de pertenencia: solo muestra lo que el backend responde. Si el backend dice `familia_incierta: true`, el frontend lo comunica.
 - **Toda respuesta de la API usa nombres en español** (`orden`, `familia`, `confianza_orden`, …), consistentes con `pipeline.inferencia.Prediccion`.
+
+## Adenda 2026-09-23: el modelo vigente es la v4 (288 px)
+
+El plan se escribió pensando en un modelo a 224 px guardado en `modelo/insectos.onnx`. El Plan 02 terminó con cuatro corridas, y la vigente es `v4_convnext_t_288`: ConvNeXt-Tiny a **288 px**, guardada en `modelo/v4_convnext_t_288/`. Cambios respecto de la versión original:
+
+- **La resolución sale del ONNX, no de una constante.** El exportador fija alto y ancho y deja libre solo el lote (`imagen: [lote, 3, 288, 288]`). El servicio lee `lado` de ahí y prepara la foto a ese tamaño. Con otra corrida no hay que tocar código, y el backend no puede preprocesar a un tamaño distinto del de entrenamiento.
+- **El lado corto se calcula como en el pipeline:** `round(lado / PROPORCION_RECORTE)`, con `PROPORCION_RECORTE = 224/256`. Da 256 para 224 y 329 para 288. Una prueba verifica que la proporción coincide con `pipeline.datos_torch`, y la paridad se prueba a 224 y a 288.
+- **El modelo se busca en `modelo/<corrida>/`.** `app_produccion` usa `CORRIDA_VIGENTE = "v4_convnext_t_288"`, y la variable de entorno `MODELO_DIR` puede apuntar a otra carpeta. `iniciar.bat` fija la misma carpeta.
+- **`/salud` informa también `lado`**, para ver desde la interfaz con qué resolución se está sirviendo.
+- **Umbral:** `UMBRAL_FAMILIA` ya vale 0.7. El servicio lo importa de `pipeline.inferencia`, sin copiarlo.
 
 ## Estructura de archivos
 
@@ -65,11 +75,12 @@ insectos-ia/
 **Interfaces:**
 - Consumes: nada
 - Produces:
-  - `LADO: int = 224`, `LADO_CORTO: int = 256`, `MEDIA`, `DESVIACION`
-  - `redimensionar_lado_corto(img: Image.Image, corto: int = LADO_CORTO) -> Image.Image`
+  - `LADO: int = 224`, `PROPORCION_RECORTE: float = 224 / 256`, `MEDIA`, `DESVIACION`
+  - `lado_redimension(lado: int) -> int` — lado corto antes del recorte: 256 para 224, 329 para 288
+  - `redimensionar_lado_corto(img: Image.Image, corto: int) -> Image.Image`
   - `recortar_centro(img: Image.Image, lado: int = LADO) -> Image.Image`
-  - `preparar(img: Image.Image) -> np.ndarray` — devuelve `(1, 3, 224, 224)` float32
-  - `desde_bytes(datos: bytes) -> np.ndarray`
+  - `preparar(img: Image.Image, lado: int = LADO) -> np.ndarray` — devuelve `(1, 3, lado, lado)` float32
+  - `desde_bytes(datos: bytes, lado: int = LADO) -> np.ndarray`
 
 **El error clásico que esta tarea previene.** Si el preprocesamiento del backend difiere del de evaluación aunque sea un poco —otro método de interpolación, redondeo distinto en el recorte, normalización omitida— el modelo desplegado da resultados peores que los del informe y nadie entiende por qué. La prueba de paridad compara píxel a píxel contra `transformaciones_evaluacion()` del Plan 02. Como ambas rutas pasan por Pillow, la coincidencia debe ser prácticamente exacta.
 
@@ -86,7 +97,9 @@ from PIL import Image
 
 from backend.preproceso import (
     LADO,
+    PROPORCION_RECORTE,
     desde_bytes,
+    lado_redimension,
     preparar,
     recortar_centro,
     redimensionar_lado_corto,
@@ -121,10 +134,19 @@ def test_recortar_centro_da_el_lado_pedido():
     assert recortar_centro(imagen(400, 300), 224).size == (224, 224)
 
 
+def test_lado_redimension_da_256_para_224_y_329_para_288():
+    assert lado_redimension(224) == 256
+    assert lado_redimension(288) == 329
+
+
 def test_preparar_devuelve_la_forma_del_modelo():
     tensor = preparar(imagen())
     assert tensor.shape == (1, 3, LADO, LADO)
     assert tensor.dtype == np.float32
+
+
+def test_preparar_acepta_otra_resolucion():
+    assert preparar(imagen(), lado=288).shape == (1, 3, 288, 288)
 
 
 def test_preparar_normaliza_fuera_del_rango_cero_uno():
@@ -143,31 +165,46 @@ def test_desde_bytes_acepta_un_jpeg():
     assert desde_bytes(buffer.getvalue()).shape == (1, 3, LADO, LADO)
 
 
+def test_desde_bytes_respeta_la_resolucion_pedida():
+    buffer = io.BytesIO()
+    imagen().save(buffer, "JPEG")
+    assert desde_bytes(buffer.getvalue(), lado=288).shape == (1, 3, 288, 288)
+
+
 def test_desde_bytes_rechaza_contenido_invalido():
     with pytest.raises(ValueError):
         desde_bytes(b"esto no es una imagen")
 
 
-def test_paridad_con_la_transformacion_de_evaluacion():
+def test_la_proporcion_de_recorte_es_la_del_pipeline():
+    pytest.importorskip("torch")
+    from pipeline import datos_torch
+
+    assert PROPORCION_RECORTE == datos_torch.PROPORCION_RECORTE
+
+
+@pytest.mark.parametrize("lado", [224, 288])
+def test_paridad_con_la_transformacion_de_evaluacion(lado):
     """El backend debe preprocesar exactamente igual que la evaluación."""
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     from pipeline.datos_torch import transformaciones_evaluacion
 
     entrada = imagen(500, 380, semilla=7)
-    del_backend = preparar(entrada)[0]
-    del_pipeline = transformaciones_evaluacion()(entrada).numpy()
+    del_backend = preparar(entrada, lado=lado)[0]
+    del_pipeline = transformaciones_evaluacion(lado)(entrada).numpy()
 
     assert del_backend.shape == del_pipeline.shape
     assert np.abs(del_backend - del_pipeline).max() < 1e-5
 
 
-def test_paridad_tambien_en_imagen_vertical():
-    torch = pytest.importorskip("torch")
+@pytest.mark.parametrize("lado", [224, 288])
+def test_paridad_tambien_en_imagen_vertical(lado):
+    pytest.importorskip("torch")
     from pipeline.datos_torch import transformaciones_evaluacion
 
     entrada = imagen(280, 640, semilla=9)
     diferencia = np.abs(
-        preparar(entrada)[0] - transformaciones_evaluacion()(entrada).numpy()
+        preparar(entrada, lado=lado)[0] - transformaciones_evaluacion(lado)(entrada).numpy()
     ).max()
     assert diferencia < 1e-5
 
@@ -214,10 +251,11 @@ Esperado: FAIL con `ModuleNotFoundError: No module named 'backend'`.
 ```python
 """Preprocesamiento de imágenes para inferencia.
 
-Replica exactamente `transformaciones_evaluacion()` del pipeline de
-entrenamiento: Resize(256) sobre el lado corto, CenterCrop(224), escala a
-[0,1] y normalización con las estadísticas de ImageNet. Usa Pillow, igual
-que torchvision, para que la coincidencia sea exacta y no aproximada.
+Replica exactamente `transformaciones_evaluacion(lado)` del pipeline de
+entrenamiento: redimensiona el lado corto a `lado / PROPORCION_RECORTE`,
+recorta el centro a `lado`, escala a [0,1] y normaliza con las estadísticas
+de ImageNet. Usa Pillow, igual que torchvision, para que la coincidencia sea
+exacta y no aproximada. El `lado` lo decide el modelo (ver `servicio.py`).
 """
 from __future__ import annotations
 
@@ -227,12 +265,18 @@ import numpy as np
 from PIL import Image
 
 LADO = 224
-LADO_CORTO = 256
+# La misma proporción que `pipeline.datos_torch`: 224 → 256, 288 → 329.
+PROPORCION_RECORTE = 224 / 256
 MEDIA = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(3, 1, 1)
 DESVIACION = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(3, 1, 1)
 
 
-def redimensionar_lado_corto(img: Image.Image, corto: int = LADO_CORTO) -> Image.Image:
+def lado_redimension(lado: int) -> int:
+    """Lado corto al que se redimensiona antes del recorte central."""
+    return round(lado / PROPORCION_RECORTE)
+
+
+def redimensionar_lado_corto(img: Image.Image, corto: int) -> Image.Image:
     """Lleva el lado corto a `corto` conservando la proporción.
 
     Reproduce el cálculo de torchvision.transforms.Resize con un entero:
@@ -255,19 +299,21 @@ def recortar_centro(img: Image.Image, lado: int = LADO) -> Image.Image:
     return img.crop((izquierda, arriba, izquierda + lado, arriba + lado))
 
 
-def preparar(img: Image.Image) -> np.ndarray:
-    """Imagen PIL → tensor (1, 3, 224, 224) listo para onnxruntime."""
-    img = recortar_centro(redimensionar_lado_corto(img.convert("RGB")))
+def preparar(img: Image.Image, lado: int = LADO) -> np.ndarray:
+    """Imagen PIL → tensor (1, 3, lado, lado) listo para onnxruntime."""
+    img = recortar_centro(
+        redimensionar_lado_corto(img.convert("RGB"), lado_redimension(lado)), lado
+    )
     arreglo = np.asarray(img, dtype=np.float32) / 255.0   # alto, ancho, canal
     arreglo = arreglo.transpose(2, 0, 1)                  # canal, alto, ancho
     arreglo = (arreglo - MEDIA) / DESVIACION
     return arreglo[np.newaxis, ...].astype(np.float32)
 
 
-def desde_bytes(datos: bytes) -> np.ndarray:
+def desde_bytes(datos: bytes, lado: int = LADO) -> np.ndarray:
     try:
         with Image.open(io.BytesIO(datos)) as img:
-            return preparar(img)
+            return preparar(img, lado)
     except Exception as error:
         raise ValueError("el archivo no es una imagen válida") from error
 ```
@@ -278,7 +324,7 @@ def desde_bytes(datos: bytes) -> np.ndarray:
 .venv\Scripts\python -m pytest tests/test_preproceso.py -v
 ```
 
-Esperado: PASS, 12 pruebas. Si las de paridad fallan por más de `1e-5`, el problema está en el cálculo del redimensionado — comparar `redimensionar_lado_corto(img).size` contra `transforms.Resize(256)(img).size` antes de tocar nada más.
+Esperado: PASS, 18 pruebas. Si las de paridad fallan por más de `1e-5`, el problema está en el cálculo del redimensionado — comparar `redimensionar_lado_corto(img, lado_redimension(lado)).size` contra `transforms.Resize(lado_redimension(lado))(img).size` antes de tocar nada más.
 
 - [ ] **Step 6: Commit**
 
@@ -298,7 +344,7 @@ git commit -m "feat: preprocesamiento del backend con paridad verificada contra 
 **Interfaces:**
 - Consumes: `backend.preproceso.desde_bytes`; `pipeline.inferencia.predecir`, `Prediccion`, `UMBRAL_FAMILIA`; `pipeline.etiquetas.cargar_espacio`, `EspacioEtiquetas`
 - Produces:
-  - `class ServicioInsectos` — `__init__(self, ruta_onnx: Path, ruta_etiquetas: Path, *, umbral: float = UMBRAL_FAMILIA)`, `predecir_bytes(self, datos: bytes) -> Prediccion`, `clases(self) -> dict`, `version(self) -> dict`
+  - `class ServicioInsectos` — `__init__(self, ruta_onnx: Path, ruta_etiquetas: Path, *, umbral: float = UMBRAL_FAMILIA)`, atributo `lado: int` leído de la entrada del ONNX, `predecir_bytes(self, datos: bytes) -> Prediccion`, `clases(self) -> dict`, `version(self) -> dict` (incluye `lado`)
   - `class ErrorImagen(ValueError)`
 
 - [ ] **Step 1: Escribir las pruebas que fallan**
@@ -323,9 +369,11 @@ ESPACIO = EspacioEtiquetas(
 )
 
 
-@pytest.fixture
-def modelo_falso(tmp_path: Path) -> tuple[Path, Path]:
-    """Exporta un ONNX diminuto con dos salidas, sin entrenar nada."""
+def exportar_diminuto(carpeta: Path, lado: int) -> tuple[Path, Path]:
+    """Exporta un ONNX diminuto con dos salidas, sin entrenar nada.
+
+    Como el exportador real, fija alto y ancho y deja libre solo el lote.
+    """
     torch = pytest.importorskip("torch")
 
     class Diminuto(torch.nn.Module):
@@ -338,19 +386,24 @@ def modelo_falso(tmp_path: Path) -> tuple[Path, Path]:
             rasgos = x.mean(dim=(2, 3))
             return self.orden(rasgos), self.familia(rasgos)
 
-    ruta_onnx = tmp_path / "m.onnx"
+    ruta_onnx = carpeta / f"m{lado}.onnx"
     torch.onnx.export(
         Diminuto(),
-        torch.randn(1, 3, 224, 224),
+        torch.randn(1, 3, lado, lado),
         str(ruta_onnx),
         input_names=["imagen"],
         output_names=["logits_orden", "logits_familia"],
         dynamic_axes={"imagen": {0: "lote"}},
         opset_version=17,
     )
-    ruta_etiquetas = tmp_path / "etiquetas.json"
+    ruta_etiquetas = carpeta / "etiquetas.json"
     ESPACIO.guardar(ruta_etiquetas)
     return ruta_onnx, ruta_etiquetas
+
+
+@pytest.fixture
+def modelo_falso(tmp_path: Path) -> tuple[Path, Path]:
+    return exportar_diminuto(tmp_path, 224)
 
 
 def bytes_imagen(lado=300):
@@ -409,6 +462,21 @@ def test_version_reporta_los_artefactos_cargados(modelo_falso):
     assert version["n_ordenes"] == 2
     assert version["n_familias"] == 3
     assert "umbral_familia" in version
+
+
+def test_el_servicio_toma_la_resolucion_del_modelo(tmp_path):
+    """La v4 se entrenó a 288: el backend debe prepararle las fotos a 288.
+
+    onnxruntime rechaza una entrada de otro tamaño, así que un servicio que
+    preparara siempre a 224 fallaría aquí.
+    """
+    servicio = ServicioInsectos(*exportar_diminuto(tmp_path, 288))
+    assert servicio.lado == 288
+    assert servicio.predecir_bytes(bytes_imagen()).orden in ESPACIO.ordenes
+
+
+def test_version_incluye_la_resolucion(modelo_falso):
+    assert ServicioInsectos(*modelo_falso).version()["lado"] == 224
 
 
 def test_el_modelo_se_carga_una_sola_vez(modelo_falso):
@@ -475,11 +543,16 @@ class ServicioInsectos:
         self.sesion = ort.InferenceSession(
             str(self.ruta_onnx), providers=["CPUExecutionProvider"]
         )
-        self.nombre_entrada = self.sesion.get_inputs()[0].name
+        entrada = self.sesion.get_inputs()[0]
+        self.nombre_entrada = entrada.name
+        # El exportador deja libre solo el lote: alto y ancho vienen fijos en el
+        # ONNX. Leerlos de ahí impide preparar la foto a otro tamaño que el de
+        # entrenamiento (la v4 usa 288, no 224).
+        self.lado = int(entrada.shape[2])
 
     def predecir_bytes(self, datos: bytes) -> Prediccion:
         try:
-            tensor = desde_bytes(datos)
+            tensor = desde_bytes(datos, lado=self.lado)
         except ValueError as error:
             raise ErrorImagen(str(error)) from error
 
@@ -501,6 +574,7 @@ class ServicioInsectos:
             "n_ordenes": len(self.espacio.ordenes),
             "n_familias": len(self.espacio.familias),
             "umbral_familia": self.umbral,
+            "lado": self.lado,
         }
 ```
 
@@ -510,7 +584,7 @@ class ServicioInsectos:
 .venv\Scripts\python -m pytest tests/test_servicio.py -v
 ```
 
-Esperado: PASS, 10 pruebas.
+Esperado: PASS, 12 pruebas.
 
 - [ ] **Step 5: Commit**
 
@@ -735,7 +809,7 @@ git commit -m "feat: repositorio de fichas biologicas tolerante a base ausente"
 
 | Endpoint | Respuesta |
 | --- | --- |
-| `GET /salud` | `{"estado": "ok", "modelo": ..., "n_ordenes": ..., "n_familias": ..., "umbral_familia": ..., "bd_disponible": bool}` |
+| `GET /salud` | `{"estado": "ok", "modelo": ..., "n_ordenes": ..., "n_familias": ..., "umbral_familia": ..., "lado": ..., "bd_disponible": bool}` |
 | `GET /clases` | `{"ordenes": [...], "familias": [...], "matriz": [[...]]}` |
 | `POST /predecir` | `{"orden", "confianza_orden", "familia", "confianza_familia", "familia_incierta", "top_familias": [{"familia", "confianza"}], "fichas": [...]}` |
 | `GET /taxon/{orden}` | `{"orden", "familia", "fichas": [...]}` — familia opcional por query |
@@ -797,6 +871,7 @@ class ServicioFalso:
             "n_ordenes": 2,
             "n_familias": 1,
             "umbral_familia": 0.7,
+            "lado": 288,
         }
 
 
@@ -935,6 +1010,9 @@ from backend.fichas import RepositorioFichas
 from backend.servicio import ErrorImagen, ServicioInsectos
 
 RAIZ = Path(__file__).resolve().parent.parent
+# Corrida que sirve el prototipo. Al registrar una mejor, cambiarla aquí y en
+# iniciar.bat; MODELO_DIR permite apuntar a otra sin tocar código.
+CORRIDA_VIGENTE = "v4_convnext_t_288"
 ORIGENES = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
@@ -1005,13 +1083,11 @@ def app_produccion() -> FastAPI:
 
     Se usa con `uvicorn backend.app:app_produccion --factory`. Si esto se
     construyera a nivel de módulo, importar `backend.app` para probarlo
-    fallaría mientras no exista `modelo/insectos.onnx`.
+    fallaría mientras no exista el ONNX de la corrida.
     """
+    carpeta = Path(os.environ.get("MODELO_DIR", RAIZ / "modelo" / CORRIDA_VIGENTE))
     return crear_app(
-        ServicioInsectos(
-            Path(os.environ.get("MODELO_ONNX", RAIZ / "modelo" / "insectos.onnx")),
-            Path(os.environ.get("MODELO_ETIQUETAS", RAIZ / "modelo" / "etiquetas.json")),
-        ),
+        ServicioInsectos(carpeta / "insectos.onnx", carpeta / "etiquetas.json"),
         RepositorioFichas(
             Path(os.environ.get("BD_SQLITE", RAIZ / "bd" / "bd_insectos.sqlite"))
         ),
@@ -1024,11 +1100,11 @@ def app_produccion() -> FastAPI:
 .venv\Scripts\python -m pytest tests/test_app.py -v
 ```
 
-Esperado: PASS, 13 pruebas. Estas pruebas corren sin que exista `modelo/insectos.onnx`: usan `crear_app` con dobles y nunca invocan `app_produccion()`.
+Esperado: PASS, 13 pruebas. Estas pruebas corren sin que exista el ONNX de la corrida: usan `crear_app` con dobles y nunca invocan `app_produccion()`.
 
 - [ ] **Step 6: Levantar el servidor y probarlo a mano**
 
-Requiere que el Plan 02 ya haya producido `modelo/insectos.onnx`.
+Requiere `modelo/v4_convnext_t_288/insectos.onnx` y `etiquetas.json`, copiados de la corrida (ver CLAUDE.md).
 
 ```powershell
 .venv\Scripts\python -m uvicorn backend.app:app_produccion --factory --reload --port 8000
@@ -1876,10 +1952,13 @@ if not exist ".venv\Scripts\python.exe" (
     .venv\Scripts\python -m pip install -r backend\requirements.txt
 )
 
-if not exist "modelo\insectos.onnx" (
+REM Corrida que sirve el prototipo: la misma que CORRIDA_VIGENTE en backend\app.py.
+set "MODELO_DIR=modelo\v4_convnext_t_288"
+
+if not exist "%MODELO_DIR%\insectos.onnx" (
     echo.
-    echo ERROR: falta modelo\insectos.onnx
-    echo Ejecuta primero:  .venv\Scripts\python -m pipeline.exportar
+    echo ERROR: falta %MODELO_DIR%\insectos.onnx
+    echo Copia ahi insectos.onnx y etiquetas.json de la corrida ^(ver CLAUDE.md^).
     echo.
     pause
     exit /b 1
@@ -1892,7 +1971,7 @@ start "" http://127.0.0.1:8000
 
 - [ ] **Step 5: Probar el arranque de un clic**
 
-Cerrar todas las terminales, doble clic en `iniciar.bat`. Esperado: se abre el navegador, carga la interfaz, se puede subir una foto y obtener resultado. Probar también **renombrando temporalmente** `modelo/insectos.onnx` para confirmar que el mensaje de error es claro y no un rastro de excepción de Python.
+Cerrar todas las terminales, doble clic en `iniciar.bat`. Esperado: se abre el navegador, carga la interfaz, se puede subir una foto y obtener resultado. Probar también **renombrando temporalmente** `modelo/v4_convnext_t_288/insectos.onnx` para confirmar que el mensaje de error es claro y no un rastro de excepción de Python.
 
 - [ ] **Step 6: Ampliar `README.md`**
 
@@ -1922,8 +2001,8 @@ npm run prueba   # pruebas del frontend
 
 | Archivo | Lo produce |
 | --- | --- |
-| `modelo/insectos.onnx` | `python -m pipeline.exportar` (Plan 02) |
-| `modelo/etiquetas.json` | `python -m pipeline.entrenar` (Plan 02) |
+| `modelo/v4_convnext_t_288/insectos.onnx` | Cuaderno de Colab, paso 7 (Plan 02); no se versiona |
+| `modelo/v4_convnext_t_288/etiquetas.json` | Cuaderno de Colab, paso 6 (Plan 02) |
 | `bd/bd_insectos.sqlite` | `python -m pipeline.bd` (Plan 01) |
 
 Sin la base de datos el sistema predice igual, pero no muestra ficha biológica.
