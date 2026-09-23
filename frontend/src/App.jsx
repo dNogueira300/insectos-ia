@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { obtenerSalud, predecir } from './api.js'
+import Explorador from './componentes/Explorador.jsx'
+import Ficha from './componentes/Ficha.jsx'
 import Resultado from './componentes/Resultado.jsx'
 import SubirFoto from './componentes/SubirFoto.jsx'
 import './estilos.css'
@@ -39,6 +41,9 @@ export default function App() {
       {error && <p className="error">{error}</p>}
 
       <Resultado prediccion={prediccion} />
+      {prediccion && <Ficha fichas={prediccion.fichas} />}
+
+      <Explorador />
 
       {salud && (
         <footer className="pie">
