@@ -11,7 +11,7 @@ from __future__ import annotations
 import io
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 LADO = 224
 # La misma proporción que `pipeline.datos_torch`: 224 → 256, 288 → 329.
@@ -66,5 +66,15 @@ def desde_bytes(datos: bytes, lado: int = LADO) -> np.ndarray:
             # navegador la aplica al mostrarlas; el modelo tiene que recibirlas
             # igual de derechas (en entrenamiento no vio giros de 90°).
             return preparar(ImageOps.exif_transpose(img), lado)
+    except Image.DecompressionBombError as error:
+        # Pillow corta antes de decodificar imágenes de cientos de megapíxeles.
+        raise ValueError(
+            "la imagen es demasiado grande: redúcela a una foto de menos de 50 megapíxeles"
+        ) from error
+    except UnidentifiedImageError as error:
+        raise ValueError(
+            "no se reconoce el formato de la imagen: usa una foto JPG o PNG "
+            "(las fotos HEIC del iPhone no se admiten)"
+        ) from error
     except Exception as error:
-        raise ValueError("el archivo no es una imagen válida") from error
+        raise ValueError("el archivo no es una imagen válida o está dañado") from error

@@ -184,3 +184,62 @@ def test_con_familia_segura_las_fichas_son_de_la_familia():
     repositorio = RepositorioFalso()
     cliente(repositorio=repositorio).post("/predecir", files=archivo_jpg())
     assert repositorio.consultado == ("Coleoptera", "Curculionidae")
+
+
+def test_una_prediccion_en_curso_no_bloquea_al_servidor():
+    """Mientras el modelo trabaja en una foto, el servidor sigue atendiendo."""
+    import threading
+
+    from fastapi.testclient import TestClient
+
+    entro, soltar = threading.Event(), threading.Event()
+
+    class ServicioLento(ServicioFalso):
+        def predecir_bytes(self, datos):
+            entro.set()
+            soltar.wait(timeout=10)
+            return self.prediccion
+
+    respuestas = {}
+    with TestClient(crear_app(ServicioLento(), RepositorioFalso())) as c:
+        hilo_prediccion = threading.Thread(
+            target=lambda: c.post("/predecir", files=archivo_jpg())
+        )
+        hilo_prediccion.start()
+        assert entro.wait(timeout=5)
+
+        hilo_salud = threading.Thread(target=lambda: respuestas.update(salud=c.get("/salud")))
+        hilo_salud.start()
+        hilo_salud.join(timeout=3)
+        atendio = "salud" in respuestas
+
+        soltar.set()
+        hilo_prediccion.join(timeout=5)
+        hilo_salud.join(timeout=5)
+
+    assert atendio, "/salud esperó a que terminara la predicción"
+
+
+def test_foto_demasiado_pesada_da_413_en_espanol(monkeypatch):
+    import backend.app as modulo
+
+    monkeypatch.setattr(modulo, "MAXIMO_BYTES", 1000)
+    grande = {"archivo": ("enorme.jpg", io.BytesIO(b"x" * 1001), "image/jpeg")}
+    respuesta = cliente().post("/predecir", files=grande)
+    assert respuesta.status_code == 413
+    assert "MB" in respuesta.json()["detail"]
+
+
+def test_el_backend_entero_no_carga_torch():
+    """Restricción del despliegue: nada del backend, ni lo que importa de
+    pipeline, arrastra PyTorch. Se mira en un proceso limpio."""
+    import subprocess
+    import sys
+
+    codigo = (
+        "import sys, backend.app, backend.servicio, backend.fichas, backend.preproceso;"
+        "cargados = sorted(m for m in sys.modules if m.split('.')[0] in ('torch', 'torchvision', 'timm'));"
+        "print(cargados); sys.exit(1 if cargados else 0)"
+    )
+    resultado = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True)
+    assert resultado.returncode == 0, resultado.stdout + resultado.stderr

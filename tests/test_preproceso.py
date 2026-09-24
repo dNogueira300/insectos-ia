@@ -156,3 +156,17 @@ def test_desde_bytes_aplica_la_orientacion_exif():
         esperado = preparar(ImageOps.exif_transpose(img), lado=288)
     obtenido = desde_bytes(buffer.getvalue(), lado=288)
     assert np.abs(obtenido - esperado).max() < 1e-6
+
+
+def test_formato_no_reconocido_sugiere_jpg_o_png():
+    """Las fotos HEIC del iPhone, por ejemplo, Pillow no las abre."""
+    with pytest.raises(ValueError, match="JPG o PNG"):
+        desde_bytes(b"\x00\x00\x00\x18ftypheic esto no lo abre Pillow")
+
+
+def test_imagen_de_demasiados_megapixeles_tiene_mensaje_propio(monkeypatch):
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 1000)
+    buffer = io.BytesIO()
+    imagen(100, 100).save(buffer, "PNG")  # 10 000 píxeles: más del doble del tope
+    with pytest.raises(ValueError, match="demasiado grande"):
+        desde_bytes(buffer.getvalue())

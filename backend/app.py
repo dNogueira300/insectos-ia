@@ -14,6 +14,9 @@ RAIZ = Path(__file__).resolve().parent.parent
 # Corrida que sirve el prototipo. Al registrar una mejor, cambiarla aquí y en
 # iniciar.bat; MODELO_DIR permite apuntar a otra sin tocar código.
 CORRIDA_VIGENTE = "v4_convnext_t_288"
+# Tope de peso de una foto. Las de teléfono rondan 2–8 MB; más que esto es
+# otra cosa, y se rechaza sin cargarla entera en memoria.
+MAXIMO_BYTES = 20 * 1024 * 1024
 ORIGENES = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
@@ -44,8 +47,15 @@ def crear_app(servicio, repositorio) -> FastAPI:
         return servicio.clases()
 
     @app.post("/predecir")
-    async def predecir(archivo: UploadFile = File(...)) -> dict:
-        datos = await archivo.read()
+    def predecir(archivo: UploadFile = File(...)) -> dict:
+        # `def` y no `async def`: FastAPI lo corre en un hilo aparte, así la
+        # inferencia (CPU, varios cientos de ms) no frena al resto del servidor.
+        datos = archivo.file.read(MAXIMO_BYTES + 1)
+        if len(datos) > MAXIMO_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"la foto pesa más de {MAXIMO_BYTES // (1024 * 1024)} MB: usa una más liviana",
+            )
         try:
             prediccion = servicio.predecir_bytes(datos)
         except ErrorImagen as error:

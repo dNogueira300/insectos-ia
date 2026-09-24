@@ -14,10 +14,17 @@ export default function Explorador() {
   }, [])
 
   useEffect(() => {
+    setFichas([])
     if (!orden) return
+    // Si el usuario cambia de orden antes de que llegue la respuesta, esa
+    // respuesta ya no corresponde a lo que está viendo: se descarta.
+    let vigente = true
     obtenerTaxon(orden)
-      .then((datos) => setFichas(datos.fichas))
-      .catch(() => setFichas([]))
+      .then((datos) => vigente && setFichas(datos.fichas))
+      .catch(() => vigente && setFichas([]))
+    return () => {
+      vigente = false
+    }
   }, [orden])
 
   if (ordenes.length === 0) return null
