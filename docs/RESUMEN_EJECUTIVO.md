@@ -22,7 +22,7 @@ Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden
 | Etapa de datos                   | **Cerrada.** 34 360 fotografías listas, repartidas y verificadas.                  |
 | Código del modelo                | **Terminado.** 332 pruebas automáticas en verde.                                   |
 | Entrenamiento                    | **Cuatro versiones evaluadas.** La cuarta supera la meta técnica en fotos de catálogo. |
-| Página web de consulta           | Planificada en detalle. Sin empezar.                                               |
+| Página web de consulta           | **Prototipo funcionando.** Se sube una foto y muestra orden, familia y ficha.     |
 
 ## La lista de clases quedó cerrada
 
@@ -124,4 +124,5 @@ El detalle por clase está en `docs/desempeno_por_clase_v4.md`.
 ## Próximos pasos
 
 1. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
-2. Construir la página web de consulta (tercera etapa).
+2. Mostrar el prototipo y completar la base de datos biológica: hoy tiene 5 fichas de ejemplo.
+3. Con fotos de campo, medir el sistema en condiciones reales.

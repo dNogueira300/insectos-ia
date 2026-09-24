@@ -11,7 +11,7 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | --- | --- |
 | Plan 01 — datos | **Cerrado.** 34 360 fotos, repartidas 24 032 / 5 163 / 5 165 (entrenamiento / validación / prueba). |
 | Plan 02 — modelo | **Código terminado.** Modelo vigente: `v4_convnext_t_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
-| Plan 03 — web | Planificado (`docs/2026-07-28-plan-03-prototipo.md`). Sin empezar. |
+| Plan 03 — web | **Prototipo funcionando** (2026-09-23). Backend FastAPI en `backend/`, React + Vite en `frontend/`. Se arranca con `iniciar.bat` (http://127.0.0.1:8000). |
 
 ### Corridas del modelo (conjunto de prueba, 5 165 fotos de repositorio)
 
@@ -46,6 +46,7 @@ El usuario descarga la carpeta de la corrida desde Drive a `D:\300\OTROS\XXX\DAN
 4. El informe por clase lo genera el paso 8 del cuaderno (`desempeno_por_clase.md`); copiarlo a `docs/desempeno_por_clase_<vN>.md`. En la PC local, `python -m pipeline.desempeno` se cortó por falta de memoria con la v4.
 5. Comparar contra la corrida anterior, en especial las clases débiles.
 6. Commit, y actualizar la tabla de corridas de este archivo y `docs/RESUMEN_EJECUTIVO.md`.
+7. Si la corrida nueva pasa a ser la vigente, cambiar `CORRIDA_VIGENTE` en `backend/app.py` y `MODELO_DIR` en `iniciar.bat`. El prototipo lee la resolución del propio ONNX.
 
 ## Cómo se trabaja aquí (convenciones del proyecto)
 
