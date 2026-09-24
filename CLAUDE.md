@@ -5,13 +5,30 @@ Es el Proyecto Formativo INAAM–FISI y de Responsabilidad Social de la UNAP (Fa
 La entomóloga de referencia es la Dra. Aldi Guerra Teixeira.
 Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 
-## Estado actual (2026-09-23)
+## Estado actual (2026-09-24)
 
 | Etapa | Estado |
 | --- | --- |
 | Plan 01 — datos | **Cerrado.** 34 360 fotos, repartidas 24 032 / 5 163 / 5 165 (entrenamiento / validación / prueba). |
 | Plan 02 — modelo | **Código terminado.** Modelo vigente: `v4_convnext_t_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
 | Plan 03 — web | **Prototipo funcionando** (2026-09-23). Backend FastAPI en `backend/`, React + Vite en `frontend/`. Se arranca con `iniciar.bat` (http://127.0.0.1:8000). |
+| Rediseño del frontend (INSECTIA) | **Plan listo, sin empezar.** Ejecutar en modo nativo, ver abajo. |
+
+### Siguiente paso: ejecutar el rediseño del frontend
+
+- **Especificación aprobada:** `docs/superpowers/specs/2026-09-24-frontend-insectia-design.md`.
+- **Plan aprobado:** `docs/superpowers/plans/2026-09-24-frontend-insectia.md`. Tiene 9 tareas, cada una con sus pruebas y su código.
+- **Contexto de diseño:** `PRODUCT.md` (usuarios, marca, paleta y lo que no se debe inventar).
+- **Modo de ejecución elegido por el usuario: nativo.** Usar la skill `superpowers:executing-plans`: implementar las tareas en la sesión y hacer una sola revisión independiente de todo al final.
+- **Recursos del usuario** (fuera del repositorio):
+  - `../imagenes_web/imagen_1.png`: la hoja de marca, fuente del logo;
+  - `logo_1.png` y `favicon.png`, que **no se usan** porque su transparencia está dañada.
+- **Referencia visual:** el prototipo de Stitch `projects/16595468791669318138`, por el MCP `stitch`. Es una guía, no una copia: varias de sus cifras y funciones son falsas para este producto.
+- **Guía de diseño:** skill `impeccable` v4.3.1, en `C:/Users/DANIEL/.claude/skills/impeccable/`. Construir directamente desde el código: no hay generación de imágenes.
+- **Pasos que requieren al usuario:**
+  - la tarea 3 genera `datos/catalogo_contactos.jpg` con las 44 fotos del catálogo, para que las revise;
+  - la verificación en navegador (tarea 8) necesita la extensión de Chrome conectada.
+- **Memoria de la PC:** es limitada. Correr la suite de Python con el servidor apagado, y la tarea 3 cerrando otros programas.
 
 ### Corridas del modelo (conjunto de prueba, 5 165 fotos de repositorio)
 
