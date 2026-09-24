@@ -61,7 +61,11 @@ def crear_app(servicio, repositorio) -> FastAPI:
                 {"familia": nombre, "confianza": valor}
                 for nombre, valor in prediccion.top_familias
             ],
-            "fichas": repositorio.por_taxon(prediccion.orden, prediccion.familia),
+            # Con familia incierta, `familia` trae la primera candidata: mostrar su
+            # ficha la presentaría como confirmada. Se muestran las del orden.
+            "fichas": repositorio.por_taxon(
+                prediccion.orden, "" if prediccion.familia_incierta else prediccion.familia
+            ),
         }
 
     @app.get("/taxon/{orden}")

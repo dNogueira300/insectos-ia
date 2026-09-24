@@ -55,6 +55,7 @@ class RepositorioFalso:
         return self.hay_base
 
     def por_taxon(self, orden, familia=""):
+        self.consultado = (orden, familia)
         return self.fichas
 
     def resumen_por_orden(self):
@@ -159,3 +160,27 @@ def test_cors_permite_al_frontend_de_desarrollo():
 
 def test_salud_informa_la_resolucion_del_modelo():
     assert cliente().get("/salud").json()["lado"] == 288
+
+
+def test_con_familia_incierta_las_fichas_son_del_orden():
+    """Si la familia es incierta no se muestra la ficha de la candidata como si
+    estuviera confirmada: se buscan las fichas del orden."""
+    incierta = Prediccion(
+        orden="Coleoptera",
+        confianza_orden=0.88,
+        familia="Curculionidae",
+        confianza_familia=0.31,
+        familia_incierta=True,
+        top_familias=(("Curculionidae", 0.31), ("Chrysomelidae", 0.29)),
+    )
+    repositorio = RepositorioFalso()
+    cliente(servicio=ServicioFalso(incierta), repositorio=repositorio).post(
+        "/predecir", files=archivo_jpg()
+    )
+    assert repositorio.consultado == ("Coleoptera", "")
+
+
+def test_con_familia_segura_las_fichas_son_de_la_familia():
+    repositorio = RepositorioFalso()
+    cliente(repositorio=repositorio).post("/predecir", files=archivo_jpg())
+    assert repositorio.consultado == ("Coleoptera", "Curculionidae")

@@ -1,5 +1,12 @@
 // Cliente HTTP del backend. Es el único lugar del frontend que sabe de rutas.
-export const BASE_API = import.meta.env.VITE_API ?? 'http://127.0.0.1:8000'
+// En producción la página la sirve el mismo backend: rutas relativas, así
+// funciona igual abierta como localhost, 127.0.0.1 o desde otro equipo. Solo en
+// desarrollo (Vite en 5173) hay que apuntar al backend del puerto 8000.
+export function resolverBaseApi(entorno) {
+  return entorno.VITE_API ?? (entorno.DEV ? 'http://127.0.0.1:8000' : '')
+}
+
+export const BASE_API = resolverBaseApi(import.meta.env)
 
 export class ErrorApi extends Error {
   constructor(mensaje, estado) {

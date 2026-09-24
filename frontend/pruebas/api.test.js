@@ -64,3 +64,21 @@ describe('cliente de la API', () => {
     expect(global.fetch.mock.calls[0][0]).not.toContain('familia=')
   })
 })
+
+describe('dirección del backend', () => {
+  it('en producción usa rutas relativas: la página la sirve el mismo backend', async () => {
+    // Abrirla como localhost:8000 o desde un teléfono no debe apuntar a 127.0.0.1.
+    const { resolverBaseApi } = await import('../src/api.js')
+    expect(resolverBaseApi({ DEV: false })).toBe('')
+  })
+
+  it('en desarrollo apunta al backend del puerto 8000', async () => {
+    const { resolverBaseApi } = await import('../src/api.js')
+    expect(resolverBaseApi({ DEV: true })).toBe('http://127.0.0.1:8000')
+  })
+
+  it('VITE_API tiene prioridad', async () => {
+    const { resolverBaseApi } = await import('../src/api.js')
+    expect(resolverBaseApi({ DEV: false, VITE_API: 'http://otro:9000' })).toBe('http://otro:9000')
+  })
+})

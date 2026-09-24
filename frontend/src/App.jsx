@@ -41,7 +41,17 @@ export default function App() {
       {error && <p className="error">{error}</p>}
 
       <Resultado prediccion={prediccion} />
-      {prediccion && <Ficha fichas={prediccion.fichas} />}
+      {prediccion && (
+        <Ficha
+          fichas={prediccion.fichas}
+          // Con familia incierta el backend manda los registros del orden.
+          titulo={
+            prediccion.familia_incierta
+              ? `Registros del orden ${prediccion.orden} en la base`
+              : undefined
+          }
+        />
+      )}
 
       <Explorador />
 

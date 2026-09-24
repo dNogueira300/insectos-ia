@@ -11,7 +11,7 @@ from __future__ import annotations
 import io
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 LADO = 224
 # La misma proporción que `pipeline.datos_torch`: 224 → 256, 288 → 329.
@@ -62,6 +62,9 @@ def preparar(img: Image.Image, lado: int = LADO) -> np.ndarray:
 def desde_bytes(datos: bytes, lado: int = LADO) -> np.ndarray:
     try:
         with Image.open(io.BytesIO(datos)) as img:
-            return preparar(img, lado)
+            # Las fotos de teléfono traen la rotación como marca EXIF. El
+            # navegador la aplica al mostrarlas; el modelo tiene que recibirlas
+            # igual de derechas (en entrenamiento no vio giros de 90°).
+            return preparar(ImageOps.exif_transpose(img), lado)
     except Exception as error:
         raise ValueError("el archivo no es una imagen válida") from error

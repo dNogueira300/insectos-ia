@@ -11,7 +11,7 @@ const CAMPOS = [
   ['Verificado_por', 'Verificado por'],
 ]
 
-export default function Ficha({ fichas }) {
+export default function Ficha({ fichas, titulo = 'Información biológica' }) {
   if (!fichas || fichas.length === 0) {
     return (
       <section className="ficha">
@@ -24,7 +24,7 @@ export default function Ficha({ fichas }) {
 
   return (
     <section className="ficha">
-      <h2>Información biológica</h2>
+      <h2>{titulo}</h2>
       {fichas.map((registro) => (
         <table
           key={registro.ID}

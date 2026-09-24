@@ -62,3 +62,18 @@ describe('Ficha', () => {
     expect(container.querySelector('.plaga')).not.toBeNull()
   })
 })
+
+describe('Ficha con otro título', () => {
+  it('acepta un título que aclara de qué taxón son los registros', () => {
+    // Con familia incierta se muestran los registros del orden: el título tiene
+    // que decirlo para que no se lean como la ficha de la familia candidata.
+    render(
+      <Ficha
+        fichas={[{ ID: 'INS-0003', Nombre_comun: 'libélula' }]}
+        titulo="Registros del orden Odonata en la base"
+      />,
+    )
+    expect(screen.getByText('Registros del orden Odonata en la base')).toBeInTheDocument()
+    expect(screen.queryByText('Información biológica')).not.toBeInTheDocument()
+  })
+})

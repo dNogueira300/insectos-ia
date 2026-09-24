@@ -137,3 +137,22 @@ def test_el_backend_no_importa_torch():
         elif isinstance(nodo, ast.ImportFrom) and nodo.module:
             importados.add(nodo.module.split(".")[0])
     assert not importados & {"torch", "torchvision"}
+
+
+def test_desde_bytes_aplica_la_orientacion_exif():
+    """Los teléfonos guardan la foto vertical como píxeles apaisados y una
+    marca EXIF de rotación. El navegador la muestra derecha; el modelo debe
+    recibirla igual, porque en el entrenamiento no vio giros de 90°."""
+    from PIL import ImageOps
+
+    derecha = imagen(300, 500, semilla=5)  # como la ve el usuario
+    guardada = derecha.transpose(Image.Transpose.ROTATE_90)  # como la guarda la cámara
+    exif = Image.Exif()
+    exif[0x0112] = 6  # Orientation: girar 90° en sentido horario al mostrar
+    buffer = io.BytesIO()
+    guardada.save(buffer, "JPEG", exif=exif, quality=95)
+
+    with Image.open(io.BytesIO(buffer.getvalue())) as img:
+        esperado = preparar(ImageOps.exif_transpose(img), lado=288)
+    obtenido = desde_bytes(buffer.getvalue(), lado=288)
+    assert np.abs(obtenido - esperado).max() < 1e-6
