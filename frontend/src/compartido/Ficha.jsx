@@ -1,7 +1,8 @@
 import { clasificarImportancia } from './importancia.js'
 
 // Campos visibles y su etiqueta, en el orden que le sirve a agronomía. Los de
-// control interno (ID, Archivo_imagen, Fuente, Observaciones) no se muestran.
+// control interno (ID, Archivo_imagen, Fuente, Observaciones) no se muestran, ni
+// Verificado_por: la interfaz no lleva nombres de personas.
 const CAMPOS = [
   ['Nombre_comun', 'Nombre común'],
   // Las fichas describen especies registradas en la base; el sistema identifica
@@ -13,7 +14,6 @@ const CAMPOS = [
   ['Hospedero', 'Hospedero'],
   ['Localidad', 'Localidad'],
   ['Estado_biologico', 'Estado biológico'],
-  ['Verificado_por', 'Verificado por'],
 ]
 
 export default function Ficha({

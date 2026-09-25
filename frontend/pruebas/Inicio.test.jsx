@@ -2,7 +2,10 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../src/compartido/datos.js', () => ({ cargarCatalogo: vi.fn(), cargarDemostracion: vi.fn() }))
-vi.mock('../src/compartido/api.js', () => ({ obtenerTaxon: vi.fn() }))
+vi.mock('../src/compartido/api.js', () => ({
+  obtenerTaxon: vi.fn(),
+  obtenerResumen: vi.fn(() => Promise.resolve({ por_orden: [] })),
+}))
 
 import { cargarCatalogo, cargarDemostracion } from '../src/compartido/datos.js'
 import Inicio from '../src/paginas/inicio/Inicio.jsx'

@@ -92,3 +92,4 @@
 .ejemplos__nota { margin-top: var(--espacio-3); font-size: 0.8125rem; color: var(--texto-suave); }
 /* En estado vacío los ejemplos van en la columna del resultado, bajo el aviso. */
 .identificar__resultado > .ejemplos { margin-top: var(--espacio-5); }
+.identificar__resultado:focus { outline: none; }

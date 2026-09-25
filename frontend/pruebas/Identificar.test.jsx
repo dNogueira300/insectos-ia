@@ -157,4 +157,15 @@ describe('Identificar', () => {
     expect(columna).not.toHaveTextContent('Probar con un ejemplo')
     expect(screen.getByText('Probar con un ejemplo')).toBeInTheDocument()
   })
+
+  it('si el botón elegido desaparece, el foco pasa al resultado y no se pierde', async () => {
+    predecir.mockResolvedValue(AFIRMADA)
+    archivoDesdeRuta.mockResolvedValue(foto())
+    const { container } = await montar()
+    const boton = screen.getByRole('button', { name: /Apidae/ })
+    boton.focus()
+    fireEvent.click(boton)
+    await screen.findByText('abeja melífera')
+    expect(container.querySelector('.identificar__resultado')).toHaveFocus()
+  })
 })

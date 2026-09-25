@@ -1,7 +1,7 @@
 import Credito from '../../compartido/Credito.jsx'
 import { porcentaje } from '../../compartido/BarraConfianza.jsx'
 
-export default function TarjetaClase({ clase, alAbrir }) {
+export default function TarjetaClase({ clase, alAbrir, sinFichas = false }) {
   const { id, tipo, nombre, nombre_comun, orden, provisional, f1, foto } = clase
   return (
     <article id={id} className="tarjeta">
@@ -22,7 +22,9 @@ export default function TarjetaClase({ clase, alAbrir }) {
         {tipo === 'orden' && <p className="tarjeta__nota">Se identifica solo hasta orden.</p>}
         {f1 != null && (
           <div className="tarjeta__f1">
-            <span>Qué tan bien la distingue (F1)</span>
+            <span>
+              <span className="tarjeta__f1-largo">Qué tan bien la distingue </span>(F1)
+            </span>
             <strong>{porcentaje(f1)}</strong>
             <div className="barra__pista" aria-hidden="true">
               <div className="barra__relleno" style={{ '--valor': f1 }} />
@@ -30,9 +32,13 @@ export default function TarjetaClase({ clase, alAbrir }) {
           </div>
         )}
         <Credito foto={foto} />
-        <button type="button" className="boton boton--secundario boton--chico" onClick={alAbrir}>
-          Ver fichas
-        </button>
+        {sinFichas ? (
+          <p className="tarjeta__nota">Sin fichas en la base todavía.</p>
+        ) : (
+          <button type="button" className="boton boton--secundario boton--chico" onClick={alAbrir}>
+            Ver fichas
+          </button>
+        )}
       </div>
     </article>
   )

@@ -51,6 +51,10 @@ export function predecir(archivo) {
   return pedir('/predecir', { method: 'POST', body: cuerpo })
 }
 
+export function obtenerResumen() {
+  return pedir('/resumen')
+}
+
 export function obtenerTaxon(orden, familia = '') {
   const consulta = familia ? `?familia=${encodeURIComponent(familia)}` : ''
   return pedir(`/taxon/${encodeURIComponent(orden)}${consulta}`)

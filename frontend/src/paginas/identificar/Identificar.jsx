@@ -33,6 +33,11 @@ export default function Identificar() {
   useEffect(() => {
     if (estado !== 'resultado' && estado !== 'error') return
     const columna = columnaResultado.current
+    // El botón de ejemplo o el selector de archivo se desmontan al cambiar de
+    // estado: sin esto el foco cae al documento y el teclado pierde el lugar.
+    if (!document.activeElement || document.activeElement === document.body) {
+      columna.focus({ preventScroll: true })
+    }
     const arriba = columna.getBoundingClientRect().top
     if (arriba >= 0 && arriba < window.innerHeight * 0.6) return
     const reducir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -99,7 +104,7 @@ export default function Identificar() {
             )}
           </div>
 
-          <div className="identificar__resultado" ref={columnaResultado}>
+          <div className="identificar__resultado" ref={columnaResultado} tabIndex={-1}>
             {estado === 'vacio' && (
               <p className="identificar__espera">
                 Aquí aparecerán el orden, la familia y la ficha biológica de la base.

@@ -72,4 +72,10 @@ describe('Ficha', () => {
     expect(screen.getByText('Especie del registro')).toBeInTheDocument()
     expect(screen.queryByText('Nombre científico')).not.toBeInTheDocument()
   })
+
+  it('no muestra quién verificó la ficha: la interfaz no lleva nombres de personas', () => {
+    render(<Ficha fichas={[{ ...REGISTRO, Verificado_por: 'Una Persona' }]} />)
+    expect(screen.queryByText('Una Persona')).not.toBeInTheDocument()
+    expect(screen.queryByText('Verificado por')).not.toBeInTheDocument()
+  })
 })

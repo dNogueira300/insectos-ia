@@ -121,8 +121,10 @@
 @media (max-width: 639px) {
   .catalogo__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espacio-3); }
   .tarjeta__cuerpo { gap: var(--espacio-1); padding: var(--espacio-3); }
-  .tarjeta__nombre { font-size: 1rem; }
-  .tarjeta__comun, .tarjeta__orden, .tarjeta__nota, .tarjeta__f1 { font-size: 0.8125rem; }
+  .tarjeta__nombre { font-size: 1.0625rem; }
+  .tarjeta__comun { font-size: 1rem; }
+  .tarjeta__orden, .tarjeta__nota, .tarjeta__f1 { font-size: 0.9375rem; }
+  .tarjeta__f1-largo { display: none; }
   .tarjeta .boton { align-self: stretch; }
 }
 
@@ -148,3 +150,6 @@
 }
 .panel__encabezado { display: flex; align-items: center; justify-content: space-between; gap: var(--espacio-3); }
 .panel__encabezado h2 { margin: 0; }
+
+/* El enlace del crédito sobre la franja petróleo: el color de enlace no se lee ahí. */
+.portada .credito a { color: var(--verde-lima); }

@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../src/compartido/api.js', () => ({ obtenerTaxon: vi.fn() }))
+vi.mock('../src/compartido/api.js', () => ({ obtenerTaxon: vi.fn(), obtenerResumen: vi.fn() }))
 
-import { obtenerTaxon } from '../src/compartido/api.js'
+import { obtenerResumen, obtenerTaxon } from '../src/compartido/api.js'
 import Catalogo from '../src/paginas/inicio/Catalogo.jsx'
 
 const foto = { archivo: '/catalogo/fotos/x.webp', ancho: 640, alto: 480, credito: '', licencia: 'cc-by', url_origen: '' }
@@ -27,7 +27,13 @@ const CATALOGO = {
 }
 
 describe('Catalogo', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    // Por defecto la base tiene fichas en los dos órdenes del catálogo de prueba.
+    obtenerResumen.mockResolvedValue({ por_orden: [
+      { orden: 'Coleoptera', registros: 2 }, { orden: 'Mantodea', registros: 1 },
+    ] })
+  })
 
   it('agrupa por orden y muestra cada clase con su F1 y el crédito de la foto', () => {
     render(<Catalogo catalogo={CATALOGO} error="" />)
@@ -103,5 +109,31 @@ describe('Catalogo', () => {
     expect(fireEvent.keyDown(cerrar, { key: 'Tab' })).toBe(false)
     expect(fireEvent.keyDown(cerrar, { key: 'Tab', shiftKey: true })).toBe(false)
     expect(cerrar).toHaveFocus()
+  })
+
+  it('sin registros del orden en la base, la tarjeta lo dice en vez de abrir un panel vacío', async () => {
+    obtenerResumen.mockResolvedValue({ por_orden: [{ orden: 'Coleoptera', registros: 2 }] })
+    render(<Catalogo catalogo={CATALOGO} error="" />)
+    const mantis = document.getElementById('orden-Mantodea')
+    expect(await within(mantis).findByText('Sin fichas en la base todavía.')).toBeInTheDocument()
+    expect(within(mantis).queryByRole('button', { name: 'Ver fichas' })).toBeNull()
+    const gorgojos = document.getElementById('familia-Curculionidae')
+    expect(within(gorgojos).getByRole('button', { name: 'Ver fichas' })).toBeInTheDocument()
+  })
+
+  it('si el resumen no llega, todas las tarjetas conservan "Ver fichas"', async () => {
+    obtenerResumen.mockRejectedValue(new Error('sin conexión'))
+    render(<Catalogo catalogo={CATALOGO} error="" />)
+    await Promise.resolve()
+    expect(screen.getAllByRole('button', { name: 'Ver fichas' })).toHaveLength(3)
+  })
+
+  it('cada orden con familias tiene su ancla, para el enlace del resultado incierto', () => {
+    render(<Catalogo catalogo={CATALOGO} error="" />)
+    const coleoptera = document.getElementById('orden-Coleoptera')
+    expect(coleoptera).not.toBeNull()
+    expect(coleoptera).toContainElement(document.getElementById('familia-Curculionidae'))
+    // Los órdenes sin familias ya tienen ancla en su tarjeta: no se repite el id.
+    expect(document.querySelectorAll('[id="orden-Mantodea"]')).toHaveLength(1)
   })
 })

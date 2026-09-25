@@ -48,4 +48,9 @@ describe('contraste de los tokens de color', () => {
   it.each(PARES)('%s sobre %s llega a 4.5:1', (texto, fondo) => {
     expect(contraste(token(texto), token(fondo))).toBeGreaterThanOrEqual(4.5)
   })
+
+  it('el enlace del crédito en la franja petróleo usa Verde Lima, no el color de enlace', () => {
+    const inicio = readFileSync(new URL('../src/paginas/inicio/inicio.css', import.meta.url), 'utf8')
+    expect(inicio).toMatch(/\.portada \.credito a\s*\{[^}]*color:\s*var\(--verde-lima\)/)
+  })
 })

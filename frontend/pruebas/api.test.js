@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ErrorApi, obtenerClases, obtenerSalud, obtenerTaxon, predecir } from '../src/compartido/api.js'
+import { ErrorApi, obtenerClases, obtenerResumen, obtenerSalud, obtenerTaxon, predecir } from '../src/compartido/api.js'
 
 function respuesta(cuerpo, ok = true, estado = 200) {
   return Promise.resolve({ ok, status: estado, json: () => Promise.resolve(cuerpo) })
@@ -80,5 +80,12 @@ describe('dirección del backend', () => {
   it('VITE_API tiene prioridad', async () => {
     const { resolverBaseApi } = await import('../src/compartido/api.js')
     expect(resolverBaseApi({ DEV: false, VITE_API: 'http://otro:9000' })).toBe('http://otro:9000')
+  })
+
+  it('pide el resumen de registros por orden', async () => {
+    const pedido = vi.spyOn(globalThis, 'fetch').mockReturnValue(respuesta({ por_orden: [{ orden: 'Coleoptera', registros: 2 }] }))
+    const resumen = await obtenerResumen()
+    expect(pedido.mock.calls[0][0]).toMatch(/\/resumen$/)
+    expect(resumen.por_orden[0].registros).toBe(2)
   })
 })
