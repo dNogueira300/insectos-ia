@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import Resultado from '../src/componentes/Resultado.jsx'
+import Resultado from '../src/compartido/Resultado.jsx'
 
 const CERTERO = {
   orden: 'Coleoptera',
@@ -14,8 +14,8 @@ const CERTERO = {
   ],
   fichas: [],
 }
-
 const INCIERTO = { ...CERTERO, confianza_familia: 0.31, familia_incierta: true }
+const SIN_FAMILIAS = { ...CERTERO, orden: 'Mantodea', familia: '', familia_incierta: true, top_familias: [] }
 
 describe('Resultado', () => {
   it('no muestra nada sin predicción', () => {
@@ -23,58 +23,49 @@ describe('Resultado', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('muestra el orden y su confianza en porcentaje', () => {
+  it('muestra la ruta orden → familia y ambas confianzas', () => {
     render(<Resultado prediccion={CERTERO} />)
-    expect(screen.getByText(/Coleoptera/)).toBeInTheDocument()
-    expect(screen.getByText(/94\s*%/)).toBeInTheDocument()
-  })
-
-  it('muestra la familia cuando hay certeza', () => {
-    render(<Resultado prediccion={CERTERO} />)
-    expect(screen.getByText('Curculionidae')).toBeInTheDocument()
-    expect(screen.getByText(/81\s*%/)).toBeInTheDocument()
-  })
-
-  it('avisa cuando la familia es incierta', () => {
-    render(<Resultado prediccion={INCIERTO} />)
-    expect(screen.getByText(/incierta|no se puede determinar/i)).toBeInTheDocument()
-  })
-
-  it('con familia incierta muestra las candidatas', () => {
-    render(<Resultado prediccion={INCIERTO} />)
-    expect(screen.getByText('Chrysomelidae')).toBeInTheDocument()
-  })
-
-  it('el orden se sigue mostrando aunque la familia sea incierta', () => {
-    render(<Resultado prediccion={INCIERTO} />)
-    // Texto exacto: el orden también aparece dentro de la frase de candidatas.
     expect(screen.getByText('Coleoptera')).toBeInTheDocument()
+    expect(screen.getByText('Curculionidae')).toBeInTheDocument()
+    expect(screen.getByText('94 %')).toBeInTheDocument()
+    expect(screen.getByText('81 %')).toBeInTheDocument()
+    expect(screen.getByText('Afirmada')).toBeInTheDocument()
   })
 
-  it('maneja un orden sin familias entrenadas', () => {
-    render(
-      <Resultado
-        prediccion={{ ...CERTERO, familia: '', familia_incierta: true, top_familias: [] }}
-      />,
-    )
-    expect(screen.getByText(/Coleoptera/)).toBeInTheDocument()
-    expect(screen.queryByText('Curculionidae')).not.toBeInTheDocument()
+  it('enlaza la familia afirmada con su tarjeta del catálogo', () => {
+    render(<Resultado prediccion={CERTERO} />)
+    expect(screen.getByRole('link', { name: 'Ver esta familia en el catálogo' })).toHaveAttribute('href', '/#familia-Curculionidae')
   })
 
-  it('un orden sin familias en el sistema no se presenta como duda', () => {
-    // Seis órdenes (Mantodea, Phasmida, …) no se clasifican por familia: decir
-    // "no se puede determinar" sugeriría que el modelo dudó.
-    render(
-      <Resultado
-        prediccion={{ ...CERTERO, familia: '', familia_incierta: true, top_familias: [] }}
-      />,
-    )
+  it('con familia incierta no la afirma y muestra las candidatas', () => {
+    render(<Resultado prediccion={INCIERTO} />)
+    expect(screen.getByText(/no se puede determinar la familia/i)).toBeInTheDocument()
+    expect(screen.getByText('Chrysomelidae')).toBeInTheDocument()
+    expect(screen.queryByText('Afirmada')).not.toBeInTheDocument()
+  })
+
+  it('con familia incierta sigue mostrando el orden y enlaza al orden', () => {
+    render(<Resultado prediccion={INCIERTO} />)
+    expect(screen.getByText('Coleoptera')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver este orden en el catálogo' })).toHaveAttribute('href', '/#orden-Coleoptera')
+  })
+
+  it('un orden sin familias no se presenta como duda', () => {
+    render(<Resultado prediccion={SIN_FAMILIAS} />)
     expect(screen.getByText(/no se clasifica por familia/i)).toBeInTheDocument()
     expect(screen.queryByText(/no se puede determinar/i)).not.toBeInTheDocument()
   })
 
-  it('marca visualmente el estado incierto', () => {
-    const { container } = render(<Resultado prediccion={INCIERTO} />)
-    expect(container.querySelector('.incierto')).not.toBeNull()
+  it('muestra el chip de plaga solo si la ficha lo dice y la familia está afirmada', () => {
+    const conFicha = { ...CERTERO, fichas: [{ ID: '1', Importancia_economica: 'Plaga' }] }
+    const { rerender, container } = render(<Resultado prediccion={conFicha} />)
+    expect(container.querySelector('.chip--plaga')).not.toBeNull()
+    rerender(<Resultado prediccion={{ ...conFicha, familia_incierta: true }} />)
+    expect(container.querySelector('.chip--plaga')).toBeNull()
+  })
+
+  it('en la portada va sin enlace', () => {
+    render(<Resultado prediccion={CERTERO} conEnlace={false} />)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 })

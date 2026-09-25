@@ -248,3 +248,75 @@ a { color: var(--verde-amazonico); text-underline-offset: 0.15em; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Barra de confianza */
+.barra { display: grid; gap: var(--espacio-1); }
+.barra__encabezado { display: flex; justify-content: space-between; gap: var(--espacio-3); font-weight: 700; }
+.barra__valor { font-variant-numeric: tabular-nums; }
+.barra__pista { height: 10px; overflow: hidden; border-radius: var(--radio-pastilla); background: var(--pista); }
+.barra__relleno {
+  height: 100%;
+  background: var(--petroleo);
+  transform-origin: left;
+  transform: scaleX(var(--valor));
+  animation: llenar 600ms var(--curva-salida);
+}
+.barra--afirmada .barra__relleno { background: var(--verde-selva); }
+.barra--incierta .barra__relleno,
+.barra--candidata .barra__relleno { background: var(--amarillo); }
+.barra__etiqueta { font-size: 0.875rem; font-weight: 700; }
+.barra--afirmada .barra__etiqueta { color: var(--verde-amazonico); }
+.barra--incierta .barra__etiqueta { color: var(--ambar-texto); }
+.barra--candidata .barra__titulo { font-family: var(--fuente-texto); font-style: italic; font-weight: 400; }
+
+/* Resultado */
+.resultado {
+  display: grid;
+  gap: var(--espacio-4);
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  color: var(--gris);
+  animation: aparecer 320ms var(--curva-salida);
+}
+.resultado__ruta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--espacio-2);
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 1.375rem;
+  color: var(--petroleo);
+}
+.resultado__ruta strong { overflow-wrap: anywhere; }
+.resultado__nivel { font-family: var(--fuente-texto); font-size: 0.875rem; font-weight: 700; color: var(--texto-suave); }
+.resultado__flecha { color: var(--verde-amazonico); }
+.resultado__nota { margin: 0; color: var(--texto-suave); }
+.resultado__incierto { display: grid; gap: var(--espacio-3); padding: var(--espacio-4); border-radius: var(--radio); background: var(--ambar-fondo); }
+.resultado__aviso { margin: 0; }
+.resultado__candidatas { display: grid; gap: var(--espacio-3); margin: 0; padding: 0; list-style: none; }
+.resultado__enlace { font-weight: 700; }
+
+/* Ficha biológica */
+.ficha { margin-top: var(--espacio-5); }
+.ficha__titulo { font-size: 1.25rem; }
+.ficha__registro {
+  display: grid;
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-3);
+  padding: var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+.ficha__datos { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: var(--espacio-2) var(--espacio-4); margin: 0; }
+.ficha__dato { display: contents; }
+.ficha__datos dt { font-weight: 700; color: var(--texto-suave); }
+.ficha__datos dd { margin: 0; }
+@media (max-width: 480px) {
+  .ficha__datos { grid-template-columns: 1fr; gap: 0; }
+  .ficha__datos dd { margin-bottom: var(--espacio-2); }
+}

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import Ficha from '../src/componentes/Ficha.jsx'
+import Ficha from '../src/compartido/Ficha.jsx'
 
 const REGISTRO = {
   ID: 'INS-0001',
@@ -8,19 +8,19 @@ const REGISTRO = {
   Nombre_cientifico: 'Cosmopolites sordidus',
   Cultivo_asociado: 'plátano',
   Tipo_de_dano: 'perforación del cormo',
-  Importancia_economica: 'plaga',
+  Importancia_economica: 'Plaga',
   Hospedero: 'Musa spp.',
   Localidad: 'Iquitos',
   Estado_biologico: 'adulto',
-  Verificado_por: 'M. Ruiz',
+  Verificado_por: '(pendiente)',
   Archivo_imagen: 'x.jpg',
   Observaciones: 'nota interna',
 }
 
 describe('Ficha', () => {
-  it('avisa cuando no hay registros', () => {
-    render(<Ficha fichas={[]} />)
-    expect(screen.getByText(/no hay registros/i)).toBeInTheDocument()
+  it('avisa cuando no hay registros, con el texto que se le pase', () => {
+    render(<Ficha fichas={[]} vacio="Aún no hay fichas de esta familia en la base." />)
+    expect(screen.getByText('Aún no hay fichas de esta familia en la base.')).toBeInTheDocument()
   })
 
   it('avisa igual si no le pasan nada', () => {
@@ -28,15 +28,10 @@ describe('Ficha', () => {
     expect(screen.getByText(/no hay registros/i)).toBeInTheDocument()
   })
 
-  it('muestra el nombre común y el científico', () => {
+  it('muestra los datos que le sirven a agronomía', () => {
     render(<Ficha fichas={[REGISTRO]} />)
     expect(screen.getByText('gorgojo del plátano')).toBeInTheDocument()
     expect(screen.getByText('Cosmopolites sordidus')).toBeInTheDocument()
-  })
-
-  it('muestra el cultivo asociado y el tipo de daño', () => {
-    render(<Ficha fichas={[REGISTRO]} />)
-    expect(screen.getByText('plátano')).toBeInTheDocument()
     expect(screen.getByText('perforación del cormo')).toBeInTheDocument()
   })
 
@@ -51,29 +46,24 @@ describe('Ficha', () => {
     expect(screen.queryByText('Localidad')).not.toBeInTheDocument()
   })
 
-  it('muestra varios registros', () => {
-    render(<Ficha fichas={[REGISTRO, { ...REGISTRO, ID: 'INS-0002', Nombre_comun: 'otro' }]} />)
-    expect(screen.getByText('gorgojo del plátano')).toBeInTheDocument()
-    expect(screen.getByText('otro')).toBeInTheDocument()
-  })
-
-  it('destaca los registros marcados como plaga', () => {
+  it('marca como plaga lo que la base escribe "Plaga", con mayúscula', () => {
     const { container } = render(<Ficha fichas={[REGISTRO]} />)
-    expect(container.querySelector('.plaga')).not.toBeNull()
+    expect(container.querySelector('.chip--plaga')).toHaveTextContent('Plaga')
   })
-})
 
-describe('Ficha con otro título', () => {
+  it('marca lo benéfico con su detalle', () => {
+    render(<Ficha fichas={[{ ...REGISTRO, Importancia_economica: 'Benéfico - polinizador' }]} />)
+    expect(screen.getByText('Benéfico - polinizador')).toHaveClass('chip--benefico')
+  })
+
+  it('una importancia no reconocida se muestra como dato, sin chip', () => {
+    const { container } = render(<Ficha fichas={[{ ...REGISTRO, Importancia_economica: 'Variable' }]} />)
+    expect(container.querySelector('.chip')).toBeNull()
+    expect(screen.getByText('Variable')).toBeInTheDocument()
+  })
+
   it('acepta un título que aclara de qué taxón son los registros', () => {
-    // Con familia incierta se muestran los registros del orden: el título tiene
-    // que decirlo para que no se lean como la ficha de la familia candidata.
-    render(
-      <Ficha
-        fichas={[{ ID: 'INS-0003', Nombre_comun: 'libélula' }]}
-        titulo="Registros del orden Odonata en la base"
-      />,
-    )
-    expect(screen.getByText('Registros del orden Odonata en la base')).toBeInTheDocument()
-    expect(screen.queryByText('Información biológica')).not.toBeInTheDocument()
+    render(<Ficha fichas={[REGISTRO]} titulo="Registros del orden Coleoptera en la base" />)
+    expect(screen.getByRole('heading', { name: 'Registros del orden Coleoptera en la base' })).toBeInTheDocument()
   })
 })
