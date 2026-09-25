@@ -243,3 +243,21 @@ def test_el_backend_entero_no_carga_torch():
     )
     resultado = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True)
     assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+
+
+def test_la_pagina_de_identificacion_se_sirve_con_y_sin_barra(tmp_path, monkeypatch):
+    """Vite genera frontend/dist/identificar/index.html: /identificar/ debe servirlo,
+    y /identificar (escrito a mano) debe llegar ahí en vez de dar 404."""
+    import backend.app as modulo
+
+    pagina = tmp_path / "frontend" / "dist" / "identificar"
+    pagina.mkdir(parents=True)
+    (pagina / "index.html").write_text("<p>pagina de identificacion</p>", encoding="utf-8")
+    (tmp_path / "frontend" / "dist" / "index.html").write_text("<p>inicio</p>", encoding="utf-8")
+    monkeypatch.setattr(modulo, "RAIZ", tmp_path)
+
+    c = cliente()
+    assert "identificacion" in c.get("/identificar/").text
+    sin_barra = c.get("/identificar")
+    assert sin_barra.status_code == 200 and "identificacion" in sin_barra.text
+    assert c.get("/salud").json()["estado"] == "ok"   # la API sigue por encima
