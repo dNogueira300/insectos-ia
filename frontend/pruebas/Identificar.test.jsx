@@ -113,4 +113,35 @@ describe('Identificar', () => {
     expect(screen.queryByText('Probar con un ejemplo')).not.toBeInTheDocument()
     expect(screen.getByText('Elegir foto')).toBeInTheDocument()
   })
+
+  it('lleva la vista al resultado o al error: en el celular quedan debajo de los ejemplos', async () => {
+    const desplazar = vi.fn()
+    Element.prototype.scrollIntoView = desplazar
+    // Como en el celular: la columna del resultado empieza por debajo de la pantalla.
+    const medir = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ top: 1500 })
+    predecir.mockResolvedValueOnce(AFIRMADA).mockRejectedValueOnce(new Error('formato no válido'))
+    const { container } = await montar()
+    const entrada = () => container.querySelector('input[type="file"]')
+    fireEvent.change(entrada(), { target: { files: [foto()] } })
+    await screen.findByText('abeja melífera')
+    expect(desplazar).toHaveBeenCalledTimes(1)
+    expect(desplazar.mock.contexts[0]).toBe(container.querySelector('.identificar__resultado'))
+    fireEvent.click(screen.getByRole('button', { name: 'Identificar otra foto' }))
+    fireEvent.change(entrada(), { target: { files: [foto()] } })
+    await screen.findByText('formato no válido')
+    expect(desplazar).toHaveBeenCalledTimes(2)
+    delete Element.prototype.scrollIntoView
+    medir.mockRestore()
+  })
+
+  it('no desplaza si el resultado ya está a la vista, como en la computadora', async () => {
+    const desplazar = vi.fn()
+    Element.prototype.scrollIntoView = desplazar
+    predecir.mockResolvedValue(AFIRMADA)
+    const { container } = await montar()
+    fireEvent.change(container.querySelector('input[type="file"]'), { target: { files: [foto()] } })
+    await screen.findByText('abeja melífera')
+    expect(desplazar).not.toHaveBeenCalled()
+    delete Element.prototype.scrollIntoView
+  })
 })

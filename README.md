@@ -91,6 +91,17 @@ npm run prueba   # pruebas del frontend
 
 Sin la base de datos el sistema predice igual, pero no muestra ficha biológica.
 
+### Contenido de la web
+
+El catálogo, las fotos y la demostración se generan desde los datos y la corrida vigente:
+
+```powershell
+.venv\Scripts\python -m pipeline.marca_web --hoja ..\imagenes_web\imagen_1.png
+.venv\Scripts\python -m pipeline.catalogo_web --desempeno docs\desempeno_por_clase_v4.md
+```
+
+Las fotos elegidas a mano van en `frontend/catalogo_preferencias.yaml`; la hoja de contactos queda en `datos/catalogo_contactos.jpg`.
+
 ## Pruebas
 
 ```powershell

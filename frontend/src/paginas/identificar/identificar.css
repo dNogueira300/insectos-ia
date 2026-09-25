@@ -8,6 +8,8 @@
 }
 .identificar__foto { display: grid; gap: var(--espacio-5); }
 .identificar__resultado > .boton { margin-top: var(--espacio-4); }
+/* Al desplazarse hasta el resultado, que no quede bajo la cabecera fija. */
+.identificar__resultado { scroll-margin-top: 80px; }
 .identificar__espera {
   max-width: none;
   margin: 0;

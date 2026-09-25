@@ -19,6 +19,9 @@ export default function Identificar() {
   const ultimoIntento = useRef(null)
   // URL creada con createObjectURL: se libera al reemplazarla o al salir.
   const urlPropia = useRef(null)
+  // En el celular el resultado queda debajo de la foto, los consejos y los
+  // ejemplos: sin esto, quien toca "Elegir foto" no ve la respuesta.
+  const columnaResultado = useRef(null)
 
   useEffect(() => {
     cargarDemostracion()
@@ -26,6 +29,15 @@ export default function Identificar() {
       .catch(() => setEjemplos([]))
     return () => urlPropia.current && URL.revokeObjectURL(urlPropia.current)
   }, [])
+
+  useEffect(() => {
+    if (estado !== 'resultado' && estado !== 'error') return
+    const columna = columnaResultado.current
+    const arriba = columna.getBoundingClientRect().top
+    if (arriba >= 0 && arriba < window.innerHeight * 0.6) return
+    const reducir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    columna.scrollIntoView({ block: 'start', behavior: reducir ? 'auto' : 'smooth' })
+  }, [estado])
 
   function mostrarFoto(url, esPropia) {
     if (urlPropia.current) URL.revokeObjectURL(urlPropia.current)
@@ -85,7 +97,7 @@ export default function Identificar() {
             <Ejemplos ejemplos={ejemplos} alElegir={alElegirEjemplo} ocupado={ocupado} />
           </div>
 
-          <div className="identificar__resultado">
+          <div className="identificar__resultado" ref={columnaResultado}>
             {estado === 'vacio' && (
               <p className="identificar__espera">
                 Aquí aparecerán el orden, la familia y la ficha biológica de la base.

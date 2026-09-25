@@ -63,7 +63,7 @@ El usuario descarga la carpeta de la corrida desde Drive a `D:\300\OTROS\XXX\DAN
 4. El informe por clase lo genera el paso 8 del cuaderno (`desempeno_por_clase.md`); copiarlo a `docs/desempeno_por_clase_<vN>.md`. En la PC local, `python -m pipeline.desempeno` se cortó por falta de memoria con la v4.
 5. Comparar contra la corrida anterior, en especial las clases débiles.
 6. Commit, y actualizar la tabla de corridas de este archivo y `docs/RESUMEN_EJECUTIVO.md`.
-7. Si la corrida nueva pasa a ser la vigente, cambiar `CORRIDA_VIGENTE` en `backend/app.py` y `MODELO_DIR` en `iniciar.bat`. El prototipo lee la resolución del propio ONNX.
+7. Si la corrida nueva pasa a ser la vigente, cambiar `CORRIDA_VIGENTE` en `backend/app.py` y `MODELO_DIR` en `iniciar.bat`, y regenerar el contenido de la web: `python -m pipeline.catalogo_web --desempeno docs/desempeno_por_clase_<vN>.md`. El prototipo lee la resolución del propio ONNX.
 
 ## Cómo se trabaja aquí (convenciones del proyecto)
 
