@@ -1,3 +1,4 @@
+import Credito from '../../compartido/Credito.jsx'
 import { porcentaje } from '../../compartido/BarraConfianza.jsx'
 
 export default function TarjetaClase({ clase, alAbrir }) {
@@ -28,9 +29,7 @@ export default function TarjetaClase({ clase, alAbrir }) {
             </div>
           </div>
         )}
-        <p className="credito">
-          Foto: {foto.credito} · {foto.licencia.toUpperCase()}
-        </p>
+        <Credito foto={foto} />
         <button type="button" className="boton boton--secundario boton--chico" onClick={alAbrir}>
           Ver fichas
         </button>

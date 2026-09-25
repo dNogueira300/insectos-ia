@@ -6,6 +6,7 @@ from PIL import Image
 from pipeline.catalogo_web import (
     clases_del_catalogo,
     credito,
+    url_origen,
     elegir_demostracion,
     elegir_foto,
     leer_desempeno,
@@ -188,3 +189,28 @@ def test_elegir_demostracion_rechaza_una_principal_fijada_que_el_modelo_no_acier
     with pytest.raises(ValueError, match="principal"):
         elegir_demostracion(entradas, lambda f: respuestas[f["archivo"]],
                             fijadas={"principal": "a1.jpg"}, cantidad_afirmados=1)
+
+
+def test_credito_deja_solo_el_nombre_del_autor():
+    """El texto de iNaturalist viene en inglés y repite la licencia, que ya va aparte."""
+    assert credito(fila("a.jpg", "OrdA", atribucion="(c) Zack Abbey, some rights reserved (CC BY)")) \
+        == "Zack Abbey"
+    # Nombres con coma: se corta en la última ", ... rights reserved".
+    assert credito(fila("a.jpg", "OrdA", atribucion="(c) Kim, Hyun-tae, some rights reserved (CC BY)")) \
+        == "Kim, Hyun-tae"
+
+
+def test_credito_de_una_foto_cc0_nombra_al_observador():
+    """CC0 no exige crédito, pero la web promete el de cada autor: se usa el observador."""
+    f = fila("a.jpg", "OrdA", licencia="cc0", atribucion="no rights reserved")
+    f["observador"] = "erikpaterson"
+    assert credito(f) == "erikpaterson"
+    sin_observador = fila("a.jpg", "OrdA", licencia="cc0", atribucion="no rights reserved")
+    assert credito(sin_observador) == "Autor no registrado"
+
+
+def test_url_de_origen_es_la_pagina_de_la_observacion():
+    f = fila("a.jpg", "OrdA")
+    f["obs_id"] = "68641"
+    assert url_origen(f) == "https://www.inaturalist.org/observations/68641"
+    assert url_origen(fila("a.jpg", "OrdA")) == ""

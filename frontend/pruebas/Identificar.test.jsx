@@ -55,7 +55,8 @@ describe('Identificar', () => {
     // "Apidae" también es el rótulo del botón de ejemplo: se busca por la ficha.
     expect(await screen.findByText('abeja melífera')).toBeInTheDocument()
     expect(screen.getByText('Afirmada')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Información biológica' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Registros de la base para la familia Apidae' })).toBeInTheDocument()
+    expect(screen.getByText(/identifica hasta familia/)).toBeInTheDocument()
     expect(container.querySelector('details.consejos')).not.toHaveAttribute('open')
   })
 
@@ -143,5 +144,17 @@ describe('Identificar', () => {
     await screen.findByText('abeja melífera')
     expect(desplazar).not.toHaveBeenCalled()
     delete Element.prototype.scrollIntoView
+  })
+
+  it('en estado vacío los ejemplos ocupan la columna del resultado, con la familia real rotulada', async () => {
+    predecir.mockResolvedValue(AFIRMADA)
+    const { container } = await montar()
+    const columna = container.querySelector('.identificar__resultado')
+    expect(columna).toHaveTextContent('Probar con un ejemplo')
+    expect(screen.getByText('Familia real: Apidae')).toBeInTheDocument()
+    fireEvent.change(container.querySelector('input[type="file"]'), { target: { files: [foto()] } })
+    await screen.findByText('abeja melífera')
+    expect(columna).not.toHaveTextContent('Probar con un ejemplo')
+    expect(screen.getByText('Probar con un ejemplo')).toBeInTheDocument()
   })
 })

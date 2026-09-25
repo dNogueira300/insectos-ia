@@ -14,26 +14,22 @@ export default function Desempeno({ metricas }) {
             Medido con fotos de catálogo. La evaluación con fotos de campo está pendiente.
           </p>
         </div>
-        <dl className="desempeno__datos">
-          <div>
-            <dt>Acierta la familia</dt>
-            <dd className="desempeno__cifra">{pct(metricas.exactitud_familia)}</dd>
-            <dd className="desempeno__detalle">de las fotos de prueba.</dd>
-          </div>
-          <div>
-            <dt>Cuando se anima a responder</dt>
-            <dd className="desempeno__cifra">{pct(metricas.acierta_cuando_responde, 1)}</dd>
-            <dd className="desempeno__detalle">
-              de acierto. Responde en el {pct(metricas.responde)} de los casos; en el resto dice
-              que no está seguro.
-            </dd>
-          </div>
-          <div>
-            <dt>Entre sus tres primeras opciones</dt>
-            <dd className="desempeno__cifra">{pct(metricas.top3_familia)}</dd>
-            <dd className="desempeno__detalle">de las veces está la familia correcta.</dd>
-          </div>
-        </dl>
+        {/* Frases con la cifra dentro: sin la plantilla de cifra grande con rótulo. */}
+        <ul className="desempeno__datos">
+          <li>
+            Acierta la familia en el <strong>{pct(metricas.exactitud_familia)}</strong> de las fotos
+            de prueba.
+          </li>
+          <li>
+            Cuando se anima a responder, acierta el{' '}
+            <strong>{pct(metricas.acierta_cuando_responde, 1)}</strong>: responde en el{' '}
+            {pct(metricas.responde)} de los casos, y en el resto dice que no está seguro.
+          </li>
+          <li>
+            La familia correcta está entre sus tres primeras opciones el{' '}
+            <strong>{pct(metricas.top3_familia)}</strong> de las veces.
+          </li>
+        </ul>
       </div>
     </section>
   )

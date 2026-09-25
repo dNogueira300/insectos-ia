@@ -1,3 +1,11 @@
+import { textoLicencia } from '../../compartido/Credito.jsx'
+
+// Se rotula la respuesta real para que un resultado incierto o distinto se lea
+// como lo que es: una demostración, no un error escondido.
+function rotulo({ real }) {
+  return real.familia ? `Familia real: ${real.familia}` : `Orden real: ${real.orden}`
+}
+
 export default function Ejemplos({ ejemplos, alElegir, ocupado }) {
   if (!ejemplos?.length) return null
   return (
@@ -15,14 +23,14 @@ export default function Ejemplos({ ejemplos, alElegir, ocupado }) {
               onClick={() => alElegir(ejemplo)}
             >
               <img src={ejemplo.archivo} alt="" loading="lazy" />
-              <span className="cientifico">{ejemplo.real.familia || ejemplo.real.orden}</span>
+              <span className="ejemplos__rotulo">{rotulo(ejemplo)}</span>
             </button>
           </li>
         ))}
       </ul>
       <p className="ejemplos__nota">
         Fotos que el modelo no vio al entrenar. Créditos:{' '}
-        {ejemplos.map((e) => `${e.credito} (${e.licencia.toUpperCase()})`).join('; ')}.
+        {ejemplos.map((e) => `${e.credito} (${textoLicencia(e.licencia)})`).join('; ')}.
       </p>
     </section>
   )

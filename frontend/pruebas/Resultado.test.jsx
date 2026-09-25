@@ -56,12 +56,10 @@ describe('Resultado', () => {
     expect(screen.queryByText(/no se puede determinar/i)).not.toBeInTheDocument()
   })
 
-  it('muestra el chip de plaga solo si la ficha lo dice y la familia está afirmada', () => {
+  it('no pone chip de importancia: una ficha describe una especie, no a toda la familia', () => {
     const conFicha = { ...CERTERO, fichas: [{ ID: '1', Importancia_economica: 'Plaga' }] }
-    const { rerender, container } = render(<Resultado prediccion={conFicha} />)
-    expect(container.querySelector('.chip--plaga')).not.toBeNull()
-    rerender(<Resultado prediccion={{ ...conFicha, familia_incierta: true }} />)
-    expect(container.querySelector('.chip--plaga')).toBeNull()
+    const { container } = render(<Resultado prediccion={conFicha} />)
+    expect(container.querySelector('.chip')).toBeNull()
   })
 
   it('en la portada va sin enlace', () => {

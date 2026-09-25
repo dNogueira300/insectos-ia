@@ -50,11 +50,19 @@ describe('ZonaFoto', () => {
     window.matchMedia = vi.fn(() => ({ matches: true }))
     const { container } = render(<ZonaFoto alSeleccionar={vi.fn()} ocupado={false} vistaPrevia={null} />)
     expect(screen.getByText('Tomar foto')).toBeInTheDocument()
-    expect(entradas(container)[1]).toHaveAttribute('capture', 'environment')
+    expect(entradas(container)[0]).toHaveAttribute('capture', 'environment')
   })
 
   it('en computadora no muestra la cámara', () => {
     render(<ZonaFoto alSeleccionar={vi.fn()} ocupado={false} vistaPrevia={null} />)
     expect(screen.queryByText('Tomar foto')).not.toBeInTheDocument()
+  })
+
+  it('en pantallas táctiles invita a tomar la foto y "Tomar foto" es la acción principal', () => {
+    window.matchMedia = vi.fn(() => ({ matches: true }))
+    render(<ZonaFoto alSeleccionar={() => {}} ocupado={false} vistaPrevia={null} />)
+    expect(screen.getByText('Toma una foto o elígela de tu galería.')).toBeInTheDocument()
+    expect(screen.getByText('Tomar foto').closest('label')).toHaveClass('boton--principal')
+    expect(screen.getByText('Elegir foto').closest('label')).toHaveClass('boton--secundario')
   })
 })

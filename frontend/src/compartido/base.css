@@ -320,3 +320,10 @@ a { color: var(--verde-amazonico); text-underline-offset: 0.15em; }
   .ficha__datos { grid-template-columns: 1fr; gap: 0; }
   .ficha__datos dd { margin-bottom: var(--espacio-2); }
 }
+
+/* Superficies del navegador con los colores de la marca */
+::selection { background: var(--verde-lima); color: var(--petroleo); }
+:root { caret-color: var(--verde-amazonico); accent-color: var(--verde-amazonico); }
+
+/* Ruta del resultado: se corta entre niveles, nunca dentro de "Familia X". */
+.resultado__paso { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: var(--espacio-2); }

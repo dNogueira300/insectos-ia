@@ -39,8 +39,29 @@ def rango_licencia(licencia: str) -> int:
     return RANGO_LICENCIA.get((licencia or "").strip().lower(), len(RANGO_LICENCIA))
 
 
+# "(c) Nombre, some rights reserved (CC BY)": el nombre puede tener comas.
+_ATRIBUCION = re.compile(r"^\(c\)\s*(.+),\s*(?:some|all) rights reserved", re.IGNORECASE)
+
+
 def credito(fila: dict) -> str:
-    return (fila.get("atribucion") or "").strip() or "Autor no registrado"
+    """El nombre del autor, sin el texto en inglés ni la licencia, que va aparte.
+
+    Las fotos CC0 dicen solo "no rights reserved": se nombra al observador, que
+    es quien la publicó, porque la web promete el crédito de cada autor.
+    """
+    atribucion = (fila.get("atribucion") or "").strip()
+    hallado = _ATRIBUCION.match(atribucion)
+    if hallado:
+        return hallado.group(1).strip()
+    if atribucion and "no rights reserved" not in atribucion.lower():
+        return atribucion
+    return (fila.get("observador") or "").strip() or "Autor no registrado"
+
+
+def url_origen(fila: dict) -> str:
+    """La página de la observación en iNaturalist, donde está el autor y la licencia."""
+    obs_id = (fila.get("obs_id") or "").strip()
+    return f"https://www.inaturalist.org/observations/{obs_id}" if obs_id else ""
 
 
 def leer_desempeno(texto: str) -> dict:
@@ -239,7 +260,7 @@ def _leer_csv(ruta: Path) -> list[dict]:
 def _ejemplo(fila: dict, prediccion: dict, archivo_publico: str) -> dict:
     return {
         "archivo": archivo_publico, "credito": credito(fila), "licencia": fila["licencia"],
-        "url_origen": fila.get("url", ""),
+        "url_origen": url_origen(fila),
         "real": {"orden": fila["orden"], "familia": fila["familia"]},
         "prediccion": prediccion,
     }
@@ -286,7 +307,7 @@ def main() -> None:
         ancho, alto = optimizar_foto(curado / fila["archivo"], destino)
         clase["foto"] = {
             "archivo": f"/catalogo/fotos/{clase['id']}.webp", "ancho": ancho, "alto": alto,
-            "credito": credito(fila), "licencia": fila["licencia"], "url_origen": fila.get("url", ""),
+            "credito": credito(fila), "licencia": fila["licencia"], "url_origen": url_origen(fila),
         }
         print(f"{clase['id']}: {fila['archivo']} ({fila['licencia']})")
 

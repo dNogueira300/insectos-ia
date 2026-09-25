@@ -4,7 +4,9 @@ import { clasificarImportancia } from './importancia.js'
 // control interno (ID, Archivo_imagen, Fuente, Observaciones) no se muestran.
 const CAMPOS = [
   ['Nombre_comun', 'Nombre común'],
-  ['Nombre_cientifico', 'Nombre científico'],
+  // Las fichas describen especies registradas en la base; el sistema identifica
+  // solo hasta familia, así que no se rotula como si fuera la identificación.
+  ['Nombre_cientifico', 'Especie del registro'],
   ['Cultivo_asociado', 'Cultivo asociado'],
   ['Tipo_de_dano', 'Tipo de daño'],
   ['Importancia_economica', 'Importancia económica'],
@@ -17,6 +19,7 @@ const CAMPOS = [
 export default function Ficha({
   fichas,
   titulo = 'Información biológica',
+  nota,
   vacio = 'No hay registros en la base de datos biológica para este taxón todavía.',
 }) {
   if (!fichas || fichas.length === 0) {
@@ -30,6 +33,7 @@ export default function Ficha({
   return (
     <section className="ficha">
       <h2 className="ficha__titulo">{titulo}</h2>
+      {nota && <p className="ayuda">{nota}</p>}
       {fichas.map((registro) => {
         const tipo = clasificarImportancia(registro.Importancia_economica)
         // Si hay chip, la importancia ya se lee ahí: no se repite en la lista.

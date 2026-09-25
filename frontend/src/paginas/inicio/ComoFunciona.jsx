@@ -1,4 +1,19 @@
+import Credito from '../../compartido/Credito.jsx'
 import Resultado from '../../compartido/Resultado.jsx'
+
+const POSICIONES = ['primera', 'segunda', 'tercera']
+
+// Qué habría pasado si el sistema afirmaba su primera candidata. Se calcula con
+// la respuesta real de la foto de prueba; nunca se escribe a mano.
+function leccion({ real, prediccion }) {
+  const candidatas = prediccion.top_familias.map((t) => t.familia)
+  const posicion = candidatas.indexOf(real.familia)
+  if (!real.familia || posicion < 0) return null
+  if (posicion === 0) {
+    return `La familia correcta era ${real.familia}, su primera candidata, pero con menos del 70 % de seguridad no la afirmó.`
+  }
+  return `La familia correcta era ${real.familia}, su ${POSICIONES[posicion]} candidata: afirmar ${candidatas[0]} habría sido un error.`
+}
 
 export default function ComoFunciona({ demostracion }) {
   const incierto = demostracion?.incierto
@@ -31,9 +46,8 @@ export default function ComoFunciona({ demostracion }) {
           <figcaption className="como__leyenda">
             <p className="como__rotulo">Un caso real en que el sistema prefiere no afirmar la familia</p>
             <Resultado prediccion={incierto.prediccion} conEnlace={false} />
-            <p className="credito">
-              Foto: {incierto.credito} · {incierto.licencia.toUpperCase()}
-            </p>
+            {leccion(incierto) && <p className="como__leccion">{leccion(incierto)}</p>}
+            <Credito foto={incierto} />
           </figcaption>
         </figure>
       )}

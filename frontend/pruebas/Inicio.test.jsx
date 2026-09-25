@@ -41,7 +41,7 @@ describe('Inicio', () => {
   it('la demostración es un resultado real rotulado, con el crédito de la foto', async () => {
     render(<Inicio />)
     expect(await screen.findByText('Resultado real del modelo con esta foto')).toBeInTheDocument()
-    expect(screen.getByText(/\(c\) Ana · CC-BY/)).toBeInTheDocument()
+    expect(screen.getByText(/\(c\) Ana/).closest('.credito')).toHaveTextContent('Foto: (c) Ana · CC BY')
   })
 
   it('cómo funciona muestra un caso real en que no afirma la familia', async () => {
@@ -52,9 +52,12 @@ describe('Inicio', () => {
 
   it('las cifras salen del catálogo y aclaran que son de fotos de catálogo', async () => {
     render(<Inicio />)
-    expect(await screen.findByText('92 %')).toBeInTheDocument()
-    expect(screen.getByText('95.5 %')).toBeInTheDocument()
-    expect(screen.getByText('96 %')).toBeInTheDocument()
+    const bloque = (await screen.findByRole('heading', { name: 'Qué tan bien funciona' })).closest('section')
+    // Frases con la cifra dentro, no la plantilla de cifra grande con rótulo.
+    expect(bloque).toHaveTextContent('Acierta la familia en el 92 % de las fotos de prueba.')
+    expect(bloque).toHaveTextContent('acierta el 95.5 %')
+    expect(bloque).toHaveTextContent('responde en el 94 % de los casos')
+    expect(bloque).toHaveTextContent('entre sus tres primeras opciones el 96 %')
     expect(screen.getByText(/evaluación con fotos de campo está pendiente/i)).toBeInTheDocument()
   })
 
@@ -64,5 +67,19 @@ describe('Inicio', () => {
     render(<Inicio />)
     expect(await screen.findByRole('alert')).toHaveTextContent('No se encontró')
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+  })
+
+  it('el caso incierto dice, con los datos, que afirmar habría sido un error', async () => {
+    const incierto = {
+      ...DEMO.incierto,
+      real: { orden: 'Diptera', familia: 'Tephritidae' },
+      prediccion: { ...PRED('Anthomyiidae', 0.65, true), orden: 'Diptera',
+        top_familias: [{ familia: 'Anthomyiidae', confianza: 0.65 }, { familia: 'Tephritidae', confianza: 0.28 }] },
+    }
+    cargarDemostracion.mockResolvedValue({ ...DEMO, incierto })
+    render(<Inicio />)
+    expect(await screen.findByText(/La familia correcta era/)).toHaveTextContent(
+      'La familia correcta era Tephritidae, su segunda candidata: afirmar Anthomyiidae habría sido un error.',
+    )
   })
 })

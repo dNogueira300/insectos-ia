@@ -66,4 +66,10 @@ describe('Ficha', () => {
     render(<Ficha fichas={[REGISTRO]} titulo="Registros del orden Coleoptera en la base" />)
     expect(screen.getByRole('heading', { name: 'Registros del orden Coleoptera en la base' })).toBeInTheDocument()
   })
+
+  it('rotula el nombre científico como la especie del registro, no como la identificación', () => {
+    render(<Ficha fichas={[REGISTRO]} />)
+    expect(screen.getByText('Especie del registro')).toBeInTheDocument()
+    expect(screen.queryByText('Nombre científico')).not.toBeInTheDocument()
+  })
 })

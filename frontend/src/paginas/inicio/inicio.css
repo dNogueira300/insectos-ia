@@ -16,6 +16,8 @@
 @media (min-width: 960px) {
   .como { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: start; }
   .como > h2 { grid-column: 1 / -1; }
+  /* El caso incierto es alto: los pasos lo acompañan al bajar. */
+  .como__pasos { position: sticky; top: 96px; }
 }
 .como__pasos { display: grid; gap: var(--espacio-5); margin: 0; padding: 0; list-style: none; counter-reset: paso; }
 .como__pasos li { display: grid; grid-template-columns: 3rem 1fr; column-gap: var(--espacio-4); counter-increment: paso; }
@@ -38,25 +40,22 @@
 .como__ejemplo { display: grid; gap: var(--espacio-3); margin: 0; }
 .como__leyenda { display: grid; gap: var(--espacio-2); }
 .como__rotulo { margin: 0; font-weight: 700; color: var(--ambar-texto); }
+.como__leccion { margin: 0; font-weight: 700; color: var(--petroleo); }
 
 /* Qué tan bien funciona: texto y datos, sin cifras gigantes */
 .desempeno { padding-block: var(--espacio-8); border-block: 1px solid var(--borde); background: var(--superficie); }
 .desempeno__rejilla { display: grid; gap: var(--espacio-6); }
 @media (min-width: 960px) { .desempeno__rejilla { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; } }
 .desempeno__aviso { display: inline-block; padding: var(--espacio-3) var(--espacio-4); border-radius: var(--radio); background: var(--ambar-fondo); color: var(--ambar-texto); font-weight: 700; }
-.desempeno__datos { display: grid; gap: var(--espacio-4); margin: 0; }
-.desempeno__datos > div {
-  display: grid;
-  grid-template-columns: 7.5rem 1fr;
-  column-gap: var(--espacio-4);
-  align-items: baseline;
+.desempeno__datos { display: grid; gap: var(--espacio-4); margin: 0; padding: 0; list-style: none; }
+.desempeno__datos li {
+  max-width: 60ch;
   padding-bottom: var(--espacio-4);
   border-bottom: 1px solid var(--borde);
+  font-size: 1.125rem;
+  line-height: 1.55;
 }
-.desempeno__datos dt { grid-column: 1 / -1; margin-bottom: var(--espacio-1); font-weight: 700; color: var(--petroleo); }
-.desempeno__datos dd { margin: 0; }
-.desempeno__cifra { font-family: var(--fuente-titulo); font-size: 2rem; font-weight: 700; color: var(--verde-amazonico); font-variant-numeric: tabular-nums; }
-.desempeno__detalle { color: var(--texto-suave); }
+.desempeno__datos strong { color: var(--verde-amazonico); font-variant-numeric: tabular-nums; }
 
 /* Catálogo */
 .catalogo { padding-block: var(--espacio-8); }
@@ -116,6 +115,16 @@
 .tarjeta__f1 strong { font-variant-numeric: tabular-nums; }
 .tarjeta .credito { margin-top: auto; }
 .tarjeta .boton { align-self: flex-start; }
+
+/* En el celular, dos columnas de tarjetas compactas: en una sola, las 44
+   clases suman más de 20 000 px. */
+@media (max-width: 639px) {
+  .catalogo__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espacio-3); }
+  .tarjeta__cuerpo { gap: var(--espacio-1); padding: var(--espacio-3); }
+  .tarjeta__nombre { font-size: 1rem; }
+  .tarjeta__comun, .tarjeta__orden, .tarjeta__nota, .tarjeta__f1 { font-size: 0.8125rem; }
+  .tarjeta .boton { align-self: stretch; }
+}
 
 /* Panel de fichas */
 .panel__fondo {

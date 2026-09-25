@@ -34,7 +34,7 @@ describe('Catalogo', () => {
     const tarjeta = document.getElementById('familia-Curculionidae')
     expect(within(tarjeta).getByText('gorgojos')).toBeInTheDocument()
     expect(within(tarjeta).getByText('92 %')).toBeInTheDocument()
-    expect(within(tarjeta).getByText(/\(c\) Ana · CC-BY/)).toBeInTheDocument()
+    expect(within(tarjeta).getByText(/\(c\) Ana · CC BY/)).toBeInTheDocument()
   })
 
   it('marca las familias provisionales', () => {
@@ -90,5 +90,18 @@ describe('Catalogo', () => {
   it('si el catálogo no carga, lo explica', () => {
     render(<Catalogo catalogo={null} error="No se encontró el contenido del catálogo." />)
     expect(screen.getByRole('alert')).toHaveTextContent('No se encontró')
+  })
+
+  it('con el panel abierto, Tab no se escapa a la página de atrás', async () => {
+    obtenerTaxon.mockResolvedValue({ fichas: [{ ID: '1', Nombre_comun: 'gorgojo del plátano' }] })
+    render(<Catalogo catalogo={CATALOGO} error="" />)
+    fireEvent.click(within(document.getElementById('familia-Curculionidae')).getByRole('button', { name: 'Ver fichas' }))
+    await screen.findByText('gorgojo del plátano')
+    const cerrar = screen.getByRole('button', { name: 'Cerrar' })
+    expect(cerrar).toHaveFocus()
+    // fireEvent devuelve false cuando el panel cancela el Tab para retener el foco.
+    expect(fireEvent.keyDown(cerrar, { key: 'Tab' })).toBe(false)
+    expect(fireEvent.keyDown(cerrar, { key: 'Tab', shiftKey: true })).toBe(false)
+    expect(cerrar).toHaveFocus()
   })
 })

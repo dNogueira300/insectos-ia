@@ -87,5 +87,8 @@
 }
 .ejemplos__boton:hover { border-color: var(--verde-amazonico); }
 .ejemplos__boton:disabled { opacity: 0.55; cursor: not-allowed; }
+.ejemplos__rotulo { font-size: 0.875rem; }
 .ejemplos__boton img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
 .ejemplos__nota { margin-top: var(--espacio-3); font-size: 0.8125rem; color: var(--texto-suave); }
+/* En estado vacío los ejemplos van en la columna del resultado, bajo el aviso. */
+.identificar__resultado > .ejemplos { margin-top: var(--espacio-5); }

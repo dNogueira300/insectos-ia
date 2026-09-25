@@ -40,7 +40,11 @@ export default function ZonaFoto({ alSeleccionar, ocupado, vistaPrevia }) {
         {vistaPrevia ? (
           <img className="zona__foto" src={vistaPrevia} alt="Foto elegida" />
         ) : (
-          <p className="zona__vacio">Arrastra una foto aquí o elígela desde tu equipo.</p>
+          <p className="zona__vacio">
+            {tactil
+              ? 'Toma una foto o elígela de tu galería.'
+              : 'Arrastra una foto aquí o elígela desde tu equipo.'}
+          </p>
         )}
         {ocupado && (
           <div className="zona__ocupado" role="status">
@@ -50,19 +54,10 @@ export default function ZonaFoto({ alSeleccionar, ocupado, vistaPrevia }) {
         )}
       </div>
 
+      {/* En el celular, en campo, lo natural es tomar la foto: va primero. */}
       <div className="zona__acciones" key={clave}>
-        <label className="boton boton--principal">
-          Elegir foto
-          <input
-            className="visualmente-oculto"
-            type="file"
-            accept={TIPOS}
-            disabled={ocupado}
-            onChange={(evento) => entregar(evento.target.files?.[0])}
-          />
-        </label>
         {tactil && (
-          <label className="boton boton--secundario">
+          <label className="boton boton--principal">
             Tomar foto
             <input
               className="visualmente-oculto"
@@ -74,6 +69,16 @@ export default function ZonaFoto({ alSeleccionar, ocupado, vistaPrevia }) {
             />
           </label>
         )}
+        <label className={`boton ${tactil ? 'boton--secundario' : 'boton--principal'}`}>
+          Elegir foto
+          <input
+            className="visualmente-oculto"
+            type="file"
+            accept={TIPOS}
+            disabled={ocupado}
+            onChange={(evento) => entregar(evento.target.files?.[0])}
+          />
+        </label>
       </div>
     </div>
   )

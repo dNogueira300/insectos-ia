@@ -1,3 +1,4 @@
+import Credito from '../../compartido/Credito.jsx'
 import Resultado from '../../compartido/Resultado.jsx'
 
 export default function Portada({ demostracion, nFamilias }) {
@@ -32,9 +33,7 @@ export default function Portada({ demostracion, nFamilias }) {
             <figcaption className="portada__leyenda">
               <p className="portada__rotulo">Resultado real del modelo con esta foto</p>
               <Resultado prediccion={principal.prediccion} conEnlace={false} />
-              <p className="credito">
-                Foto: {principal.credito} · {principal.licencia.toUpperCase()}
-              </p>
+              <Credito foto={principal} />
             </figcaption>
           </figure>
         )}

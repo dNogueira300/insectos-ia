@@ -1,5 +1,4 @@
 import BarraConfianza from './BarraConfianza.jsx'
-import { clasificarImportancia } from './importancia.js'
 
 export default function Resultado({ prediccion, conEnlace = true }) {
   if (!prediccion) return null
@@ -11,36 +10,29 @@ export default function Resultado({ prediccion, conEnlace = true }) {
     confianza_familia,
     familia_incierta,
     top_familias,
-    fichas = [],
   } = prediccion
   // El backend devuelve familia vacía cuando el orden no tiene familias en el
   // sistema: no es una duda del modelo y no se muestra como tal.
   const sinFamilias = !familia && top_familias.length === 0
   const afirmada = !sinFamilias && !familia_incierta
-  // Chip solo si la familia está afirmada y su ficha dice la importancia.
-  const importancia = afirmada
-    ? fichas.map((f) => f.Importancia_economica).find((t) => clasificarImportancia(t))
-    : undefined
 
   return (
     <section className="resultado" aria-live="polite">
       <p className="resultado__ruta">
-        <span className="resultado__nivel">Orden</span>
-        <strong>{orden}</strong>
+        <span className="resultado__paso">
+          <span className="resultado__nivel">Orden</span>
+          <strong>{orden}</strong>
+        </span>
         {afirmada && (
-          <>
+          <span className="resultado__paso">
             <span className="resultado__flecha" aria-hidden="true">
               →
             </span>
             <span className="resultado__nivel">Familia</span>
             <strong>{familia}</strong>
-          </>
+          </span>
         )}
       </p>
-
-      {importancia && (
-        <span className={`chip chip--${clasificarImportancia(importancia)}`}>{importancia}</span>
-      )}
 
       <BarraConfianza titulo="Seguridad en el orden" valor={confianza_orden} />
 

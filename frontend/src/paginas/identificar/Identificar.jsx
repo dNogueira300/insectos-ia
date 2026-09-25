@@ -94,7 +94,9 @@ export default function Identificar() {
           <div className="identificar__foto">
             <ZonaFoto alSeleccionar={alElegirArchivo} ocupado={ocupado} vistaPrevia={vistaPrevia} />
             <Consejos abierto={estado === 'vacio'} />
-            <Ejemplos ejemplos={ejemplos} alElegir={alElegirEjemplo} ocupado={ocupado} />
+            {estado !== 'vacio' && (
+              <Ejemplos ejemplos={ejemplos} alElegir={alElegirEjemplo} ocupado={ocupado} />
+            )}
           </div>
 
           <div className="identificar__resultado" ref={columnaResultado}>
@@ -102,6 +104,11 @@ export default function Identificar() {
               <p className="identificar__espera">
                 Aquí aparecerán el orden, la familia y la ficha biológica de la base.
               </p>
+            )}
+            {/* Sin resultado todavía, los ejemplos llenan esta columna: en la
+                computadora quedan a la vista sin bajar. */}
+            {estado === 'vacio' && (
+              <Ejemplos ejemplos={ejemplos} alElegir={alElegirEjemplo} ocupado={ocupado} />
             )}
             {estado === 'error' && (
               <div className="aviso aviso--error" role="alert">
@@ -121,8 +128,11 @@ export default function Identificar() {
                 <Ficha
                   fichas={prediccion.fichas}
                   titulo={
-                    deOrden ? `Registros del orden ${prediccion.orden} en la base` : 'Información biológica'
+                    deOrden
+                      ? `Registros del orden ${prediccion.orden} en la base`
+                      : `Registros de la base para la familia ${prediccion.familia}`
                   }
+                  nota="El sistema identifica hasta familia; estas fichas describen especies de ese grupo registradas en la base."
                   vacio="Aún no hay fichas de este insecto en la base de datos biológica."
                 />
                 <button type="button" className="boton boton--secundario" onClick={reiniciar}>

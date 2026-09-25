@@ -1,9 +1,9 @@
 {
   "principal": {
     "archivo": "/catalogo/demo/1494634.webp",
-    "credito": "no rights reserved",
+    "credito": "loarie",
     "licencia": "cc0",
-    "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1851503/medium.jpg",
+    "url_origen": "https://www.inaturalist.org/observations/1494634",
     "real": {
       "orden": "Coleoptera",
       "familia": "Curculionidae"
@@ -32,9 +32,9 @@
   },
   "incierto": {
     "archivo": "/catalogo/demo/10565732.webp",
-    "credito": "(c) portioid, some rights reserved (CC BY)",
+    "credito": "portioid",
     "licencia": "cc-by",
-    "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/14720883/medium.jpg",
+    "url_origen": "https://www.inaturalist.org/observations/10565732",
     "real": {
       "orden": "Diptera",
       "familia": "Tephritidae"
@@ -64,9 +64,9 @@
   "ejemplos": [
     {
       "archivo": "/catalogo/demo/1494634.webp",
-      "credito": "no rights reserved",
+      "credito": "loarie",
       "licencia": "cc0",
-      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1851503/medium.jpg",
+      "url_origen": "https://www.inaturalist.org/observations/1494634",
       "real": {
         "orden": "Coleoptera",
         "familia": "Curculionidae"
@@ -95,9 +95,9 @@
     },
     {
       "archivo": "/catalogo/demo/109397.webp",
-      "credito": "no rights reserved",
+      "credito": "loarie",
       "licencia": "cc0",
-      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/156381/medium.jpg",
+      "url_origen": "https://www.inaturalist.org/observations/109397",
       "real": {
         "orden": "Lepidoptera",
         "familia": "Pieridae"
@@ -126,9 +126,9 @@
     },
     {
       "archivo": "/catalogo/demo/2780351.webp",
-      "credito": "no rights reserved",
+      "credito": "loarie",
       "licencia": "cc0",
-      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/3151215/medium.jpg",
+      "url_origen": "https://www.inaturalist.org/observations/2780351",
       "real": {
         "orden": "Hymenoptera",
         "familia": "Formicidae"
@@ -157,9 +157,9 @@
     },
     {
       "archivo": "/catalogo/demo/10565732.webp",
-      "credito": "(c) portioid, some rights reserved (CC BY)",
+      "credito": "portioid",
       "licencia": "cc-by",
-      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/14720883/medium.jpg",
+      "url_origen": "https://www.inaturalist.org/observations/10565732",
       "real": {
         "orden": "Diptera",
         "familia": "Tephritidae"
