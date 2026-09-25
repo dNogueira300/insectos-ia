@@ -1,0 +1,17 @@
+# Fotos elegidas a mano para la web. Se usan al correr:
+#   python -m pipeline.catalogo_web --desempeno docs/desempeno_por_clase_v4.md
+#
+# catalogo: id de la clase (familia-<Nombre> u orden-<Nombre>) -> archivo de
+#   datos/splits/train.csv (columna "archivo").
+# demostracion: "principal" e "incierto" -> archivo de datos/splits/test.csv.
+#   Solo se aceptan fotos de prueba: el modelo no las vio al entrenar.
+catalogo:
+  familia-Scarabaeidae: Coleoptera/Scarabaeidae/123776.jpg   # la automática tenía texto de museo encima
+  orden-Dermaptera: Dermaptera/_sin_familia/58325288.jpg     # la automática tenía texto de museo encima
+  familia-Formicidae: Hymenoptera/Formicidae/311963.jpg      # la automática: hormiga diminuta en el cuadro
+  familia-Drosophilidae: Diptera/Drosophilidae/3957220.jpg   # la automática: mosca diminuta y borrosa
+  familia-Acrididae: Orthoptera/Acrididae/404953.jpg         # la automática: camuflada, no se distingue
+  familia-Gryllidae: Orthoptera/Gryllidae/960002.jpg         # la automática: pequeña y camuflada
+  familia-Blaberidae: Blattodea/Blaberidae/8187837.jpg       # la automática: dominaba un milpiés
+demostracion:
+  incierto: Diptera/Tephritidae/10565732.jpg   # la automática tenía marca de agua y el insecto era pequeño

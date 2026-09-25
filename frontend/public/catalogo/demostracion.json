@@ -1,0 +1,190 @@
+{
+  "principal": {
+    "archivo": "/catalogo/demo/1494634.webp",
+    "credito": "no rights reserved",
+    "licencia": "cc0",
+    "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1851503/medium.jpg",
+    "real": {
+      "orden": "Coleoptera",
+      "familia": "Curculionidae"
+    },
+    "prediccion": {
+      "orden": "Coleoptera",
+      "confianza_orden": 0.954130683110459,
+      "familia": "Curculionidae",
+      "confianza_familia": 0.9725026761628146,
+      "familia_incierta": false,
+      "top_familias": [
+        {
+          "familia": "Curculionidae",
+          "confianza": 0.9725026761628146
+        },
+        {
+          "familia": "Chrysomelidae",
+          "confianza": 0.013587139702020514
+        },
+        {
+          "familia": "Coccinellidae",
+          "confianza": 0.004904916176771357
+        }
+      ]
+    }
+  },
+  "incierto": {
+    "archivo": "/catalogo/demo/10565732.webp",
+    "credito": "(c) portioid, some rights reserved (CC BY)",
+    "licencia": "cc-by",
+    "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/14720883/medium.jpg",
+    "real": {
+      "orden": "Diptera",
+      "familia": "Tephritidae"
+    },
+    "prediccion": {
+      "orden": "Diptera",
+      "confianza_orden": 0.8972650553166558,
+      "familia": "Anthomyiidae",
+      "confianza_familia": 0.6532987253723115,
+      "familia_incierta": true,
+      "top_familias": [
+        {
+          "familia": "Anthomyiidae",
+          "confianza": 0.6532987253723115
+        },
+        {
+          "familia": "Tephritidae",
+          "confianza": 0.282237960764044
+        },
+        {
+          "familia": "Drosophilidae",
+          "confianza": 0.04805997080461295
+        }
+      ]
+    }
+  },
+  "ejemplos": [
+    {
+      "archivo": "/catalogo/demo/1494634.webp",
+      "credito": "no rights reserved",
+      "licencia": "cc0",
+      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1851503/medium.jpg",
+      "real": {
+        "orden": "Coleoptera",
+        "familia": "Curculionidae"
+      },
+      "prediccion": {
+        "orden": "Coleoptera",
+        "confianza_orden": 0.954130683110459,
+        "familia": "Curculionidae",
+        "confianza_familia": 0.9725026761628146,
+        "familia_incierta": false,
+        "top_familias": [
+          {
+            "familia": "Curculionidae",
+            "confianza": 0.9725026761628146
+          },
+          {
+            "familia": "Chrysomelidae",
+            "confianza": 0.013587139702020514
+          },
+          {
+            "familia": "Coccinellidae",
+            "confianza": 0.004904916176771357
+          }
+        ]
+      }
+    },
+    {
+      "archivo": "/catalogo/demo/109397.webp",
+      "credito": "no rights reserved",
+      "licencia": "cc0",
+      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/156381/medium.jpg",
+      "real": {
+        "orden": "Lepidoptera",
+        "familia": "Pieridae"
+      },
+      "prediccion": {
+        "orden": "Lepidoptera",
+        "confianza_orden": 0.8988745885506555,
+        "familia": "Pieridae",
+        "confianza_familia": 0.9878416257470567,
+        "familia_incierta": false,
+        "top_familias": [
+          {
+            "familia": "Pieridae",
+            "confianza": 0.9878416257470567
+          },
+          {
+            "familia": "Pyralidae",
+            "confianza": 0.0032829988327862537
+          },
+          {
+            "familia": "Sphingidae",
+            "confianza": 0.0030328728443633816
+          }
+        ]
+      }
+    },
+    {
+      "archivo": "/catalogo/demo/2780351.webp",
+      "credito": "no rights reserved",
+      "licencia": "cc0",
+      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/3151215/medium.jpg",
+      "real": {
+        "orden": "Hymenoptera",
+        "familia": "Formicidae"
+      },
+      "prediccion": {
+        "orden": "Hymenoptera",
+        "confianza_orden": 0.883510608888647,
+        "familia": "Formicidae",
+        "confianza_familia": 0.987275537526623,
+        "familia_incierta": false,
+        "top_familias": [
+          {
+            "familia": "Formicidae",
+            "confianza": 0.987275537526623
+          },
+          {
+            "familia": "Chalcididae",
+            "confianza": 0.003729856315325349
+          },
+          {
+            "familia": "Apidae",
+            "confianza": 0.0035125142485827178
+          }
+        ]
+      }
+    },
+    {
+      "archivo": "/catalogo/demo/10565732.webp",
+      "credito": "(c) portioid, some rights reserved (CC BY)",
+      "licencia": "cc-by",
+      "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/14720883/medium.jpg",
+      "real": {
+        "orden": "Diptera",
+        "familia": "Tephritidae"
+      },
+      "prediccion": {
+        "orden": "Diptera",
+        "confianza_orden": 0.8972650553166558,
+        "familia": "Anthomyiidae",
+        "confianza_familia": 0.6532987253723115,
+        "familia_incierta": true,
+        "top_familias": [
+          {
+            "familia": "Anthomyiidae",
+            "confianza": 0.6532987253723115
+          },
+          {
+            "familia": "Tephritidae",
+            "confianza": 0.282237960764044
+          },
+          {
+            "familia": "Drosophilidae",
+            "confianza": 0.04805997080461295
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,884 @@
+{
+  "corrida": "v4_convnext_t_288",
+  "metricas": {
+    "n_prueba": 5165,
+    "exactitud_familia": 0.921595598349381,
+    "top3_familia": 0.9580467675378267,
+    "f1_orden": 0.9353301723981038,
+    "f1_familia": 0.9209652465087728,
+    "umbral": 0.7,
+    "responde": 0.94,
+    "acierta_cuando_responde": 0.955
+  },
+  "ordenes": [
+    {
+      "nombre": "Coleoptera",
+      "nombre_comun": "escarabajos",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Lepidoptera",
+      "nombre_comun": "mariposas y polillas",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Hymenoptera",
+      "nombre_comun": "abejas, avispas y hormigas",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Diptera",
+      "nombre_comun": "moscas y zancudos",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Hemiptera",
+      "nombre_comun": "chinches, pulgones y cigarras",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Orthoptera",
+      "nombre_comun": "saltamontes y grillos",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Odonata",
+      "nombre_comun": "libélulas y caballitos del diablo",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Blattodea",
+      "nombre_comun": "cucarachas",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Isoptera",
+      "nombre_comun": "termitas",
+      "tiene_familias": true
+    },
+    {
+      "nombre": "Mantodea",
+      "nombre_comun": "mantis",
+      "tiene_familias": false
+    },
+    {
+      "nombre": "Thysanoptera",
+      "nombre_comun": "trips",
+      "tiene_familias": false
+    },
+    {
+      "nombre": "Neuroptera",
+      "nombre_comun": "crisopas y hormigas león",
+      "tiene_familias": false
+    },
+    {
+      "nombre": "Dermaptera",
+      "nombre_comun": "tijeretas",
+      "tiene_familias": false
+    },
+    {
+      "nombre": "Phasmida",
+      "nombre_comun": "insectos palo",
+      "tiene_familias": false
+    },
+    {
+      "nombre": "Psocodea",
+      "nombre_comun": "psócidos y piojos",
+      "tiene_familias": false
+    }
+  ],
+  "clases": [
+    {
+      "id": "familia-Curculionidae",
+      "tipo": "familia",
+      "nombre": "Curculionidae",
+      "nombre_comun": "gorgojos",
+      "orden": "Coleoptera",
+      "provisional": false,
+      "f1": 0.92,
+      "fotos_entrenamiento": 326,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Curculionidae.webp",
+        "ancho": 375,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/3498257/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Cerambycidae",
+      "tipo": "familia",
+      "nombre": "Cerambycidae",
+      "nombre_comun": "longicornios",
+      "orden": "Coleoptera",
+      "provisional": false,
+      "f1": 0.92,
+      "fotos_entrenamiento": 407,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Cerambycidae.webp",
+        "ancho": 496,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/3839667/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Scarabaeidae",
+      "tipo": "familia",
+      "nombre": "Scarabaeidae",
+      "nombre_comun": "escarabajos peloteros y afines",
+      "orden": "Coleoptera",
+      "provisional": false,
+      "f1": 0.89,
+      "fotos_entrenamiento": 413,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Scarabaeidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "(c) Zack Abbey, some rights reserved (CC BY)",
+        "licencia": "cc-by",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/175937/medium.JPG"
+      }
+    },
+    {
+      "id": "familia-Chrysomelidae",
+      "tipo": "familia",
+      "nombre": "Chrysomelidae",
+      "nombre_comun": "crisomélidos",
+      "orden": "Coleoptera",
+      "provisional": false,
+      "f1": 0.89,
+      "fotos_entrenamiento": 414,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Chrysomelidae.webp",
+        "ancho": 375,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1967472/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Carabidae",
+      "tipo": "familia",
+      "nombre": "Carabidae",
+      "nombre_comun": "carábidos",
+      "orden": "Coleoptera",
+      "provisional": false,
+      "f1": 0.93,
+      "fotos_entrenamiento": 369,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Carabidae.webp",
+        "ancho": 375,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/561905/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Coccinellidae",
+      "tipo": "familia",
+      "nombre": "Coccinellidae",
+      "nombre_comun": "mariquitas",
+      "orden": "Coleoptera",
+      "provisional": true,
+      "f1": 0.95,
+      "fotos_entrenamiento": 405,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Coccinellidae.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/238863/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Pieridae",
+      "tipo": "familia",
+      "nombre": "Pieridae",
+      "nombre_comun": "piéridos",
+      "orden": "Lepidoptera",
+      "provisional": false,
+      "f1": 0.97,
+      "fotos_entrenamiento": 360,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Pieridae.webp",
+        "ancho": 500,
+        "alto": 454,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/139135/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Papilionidae",
+      "tipo": "familia",
+      "nombre": "Papilionidae",
+      "nombre_comun": "papiliónidos",
+      "orden": "Lepidoptera",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 373,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Papilionidae.webp",
+        "ancho": 398,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/149812/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Sphingidae",
+      "tipo": "familia",
+      "nombre": "Sphingidae",
+      "nombre_comun": "esfíngidos",
+      "orden": "Lepidoptera",
+      "provisional": false,
+      "f1": 0.97,
+      "fotos_entrenamiento": 397,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Sphingidae.webp",
+        "ancho": 375,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/469002/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Pyralidae",
+      "tipo": "familia",
+      "nombre": "Pyralidae",
+      "nombre_comun": "pirálidos",
+      "orden": "Lepidoptera",
+      "provisional": false,
+      "f1": 0.92,
+      "fotos_entrenamiento": 332,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Pyralidae.webp",
+        "ancho": 500,
+        "alto": 401,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/988365/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Noctuidae",
+      "tipo": "familia",
+      "nombre": "Noctuidae",
+      "nombre_comun": "nóctuidos",
+      "orden": "Lepidoptera",
+      "provisional": false,
+      "f1": 0.92,
+      "fotos_entrenamiento": 278,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Noctuidae.webp",
+        "ancho": 500,
+        "alto": 495,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/139138/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Formicidae",
+      "tipo": "familia",
+      "nombre": "Formicidae",
+      "nombre_comun": "hormigas",
+      "orden": "Hymenoptera",
+      "provisional": false,
+      "f1": 0.82,
+      "fotos_entrenamiento": 379,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Formicidae.webp",
+        "ancho": 500,
+        "alto": 333,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/387061/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Apidae",
+      "tipo": "familia",
+      "nombre": "Apidae",
+      "nombre_comun": "abejas",
+      "orden": "Hymenoptera",
+      "provisional": false,
+      "f1": 0.88,
+      "fotos_entrenamiento": 371,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Apidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/190804/medium.JPG"
+      }
+    },
+    {
+      "id": "familia-Vespidae",
+      "tipo": "familia",
+      "nombre": "Vespidae",
+      "nombre_comun": "avispas sociales",
+      "orden": "Hymenoptera",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 401,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Vespidae.webp",
+        "ancho": 500,
+        "alto": 264,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/411738/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Ichneumonidae",
+      "tipo": "familia",
+      "nombre": "Ichneumonidae",
+      "nombre_comun": "icneumónidos",
+      "orden": "Hymenoptera",
+      "provisional": false,
+      "f1": 0.96,
+      "fotos_entrenamiento": 419,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Ichneumonidae.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/9305099/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Chalcididae",
+      "tipo": "familia",
+      "nombre": "Chalcididae",
+      "nombre_comun": "calcídidos",
+      "orden": "Hymenoptera",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 183,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Chalcididae.webp",
+        "ancho": 444,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/65011430/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Culicidae",
+      "tipo": "familia",
+      "nombre": "Culicidae",
+      "nombre_comun": "zancudos",
+      "orden": "Diptera",
+      "provisional": false,
+      "f1": 0.97,
+      "fotos_entrenamiento": 360,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Culicidae.webp",
+        "ancho": 464,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/19205709/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Tephritidae",
+      "tipo": "familia",
+      "nombre": "Tephritidae",
+      "nombre_comun": "moscas de la fruta",
+      "orden": "Diptera",
+      "provisional": false,
+      "f1": 0.93,
+      "fotos_entrenamiento": 411,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Tephritidae.webp",
+        "ancho": 493,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/19033583/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Drosophilidae",
+      "tipo": "familia",
+      "nombre": "Drosophilidae",
+      "nombre_comun": "moscas del vinagre",
+      "orden": "Diptera",
+      "provisional": false,
+      "f1": 0.96,
+      "fotos_entrenamiento": 363,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Drosophilidae.webp",
+        "ancho": 500,
+        "alto": 401,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/4664177/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Anthomyiidae",
+      "tipo": "familia",
+      "nombre": "Anthomyiidae",
+      "nombre_comun": "antomíidos",
+      "orden": "Diptera",
+      "provisional": false,
+      "f1": 0.96,
+      "fotos_entrenamiento": 416,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Anthomyiidae.webp",
+        "ancho": 500,
+        "alto": 475,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/87544980/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Pentatomidae",
+      "tipo": "familia",
+      "nombre": "Pentatomidae",
+      "nombre_comun": "chinches hediondas",
+      "orden": "Hemiptera",
+      "provisional": true,
+      "f1": 0.94,
+      "fotos_entrenamiento": 417,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Pentatomidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/603766/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Coreidae",
+      "tipo": "familia",
+      "nombre": "Coreidae",
+      "nombre_comun": "coreidos",
+      "orden": "Hemiptera",
+      "provisional": true,
+      "f1": 0.94,
+      "fotos_entrenamiento": 381,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Coreidae.webp",
+        "ancho": 500,
+        "alto": 281,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/2099388/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Reduviidae",
+      "tipo": "familia",
+      "nombre": "Reduviidae",
+      "nombre_comun": "chinches asesinas",
+      "orden": "Hemiptera",
+      "provisional": true,
+      "f1": 0.86,
+      "fotos_entrenamiento": 397,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Reduviidae.webp",
+        "ancho": 474,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/3611472/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Cicadellidae",
+      "tipo": "familia",
+      "nombre": "Cicadellidae",
+      "nombre_comun": "chicharritas",
+      "orden": "Hemiptera",
+      "provisional": true,
+      "f1": 0.95,
+      "fotos_entrenamiento": 380,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Cicadellidae.webp",
+        "ancho": 500,
+        "alto": 412,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/2181213/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Aphididae",
+      "tipo": "familia",
+      "nombre": "Aphididae",
+      "nombre_comun": "pulgones",
+      "orden": "Hemiptera",
+      "provisional": true,
+      "f1": 0.94,
+      "fotos_entrenamiento": 399,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Aphididae.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/68096110/medium.jpeg"
+      }
+    },
+    {
+      "id": "familia-Tettigoniidae",
+      "tipo": "familia",
+      "nombre": "Tettigoniidae",
+      "nombre_comun": "saltamontes de antenas largas",
+      "orden": "Orthoptera",
+      "provisional": false,
+      "f1": 0.88,
+      "fotos_entrenamiento": 401,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Tettigoniidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/2994289/medium.JPG"
+      }
+    },
+    {
+      "id": "familia-Gryllidae",
+      "tipo": "familia",
+      "nombre": "Gryllidae",
+      "nombre_comun": "grillos",
+      "orden": "Orthoptera",
+      "provisional": false,
+      "f1": 0.93,
+      "fotos_entrenamiento": 405,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Gryllidae.webp",
+        "ancho": 500,
+        "alto": 333,
+        "credito": "(c) Jon Sullivan, some rights reserved (CC BY)",
+        "licencia": "cc-by",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1186825/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Acrididae",
+      "tipo": "familia",
+      "nombre": "Acrididae",
+      "nombre_comun": "langostas y saltamontes",
+      "orden": "Orthoptera",
+      "provisional": false,
+      "f1": 0.81,
+      "fotos_entrenamiento": 410,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Acrididae.webp",
+        "ancho": 500,
+        "alto": 309,
+        "credito": "(c) Jon Mortin, some rights reserved (CC BY)",
+        "licencia": "cc-by",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/506822/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Calopterygidae",
+      "tipo": "familia",
+      "nombre": "Calopterygidae",
+      "nombre_comun": "caballitos de alas coloreadas",
+      "orden": "Odonata",
+      "provisional": false,
+      "f1": 0.98,
+      "fotos_entrenamiento": 383,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Calopterygidae.webp",
+        "ancho": 375,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/8989060/medium.jpeg"
+      }
+    },
+    {
+      "id": "familia-Coenagrionidae",
+      "tipo": "familia",
+      "nombre": "Coenagrionidae",
+      "nombre_comun": "caballitos del diablo",
+      "orden": "Odonata",
+      "provisional": false,
+      "f1": 0.95,
+      "fotos_entrenamiento": 173,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Coenagrionidae.webp",
+        "ancho": 500,
+        "alto": 473,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/120419/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Gomphidae",
+      "tipo": "familia",
+      "nombre": "Gomphidae",
+      "nombre_comun": "gónfidos",
+      "orden": "Odonata",
+      "provisional": false,
+      "f1": 0.96,
+      "fotos_entrenamiento": 225,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Gomphidae.webp",
+        "ancho": 500,
+        "alto": 400,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/1081387/medium.JPG"
+      }
+    },
+    {
+      "id": "familia-Aeshnidae",
+      "tipo": "familia",
+      "nombre": "Aeshnidae",
+      "nombre_comun": "ésnidos",
+      "orden": "Odonata",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 267,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Aeshnidae.webp",
+        "ancho": 500,
+        "alto": 400,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/4776714/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Libellulidae",
+      "tipo": "familia",
+      "nombre": "Libellulidae",
+      "nombre_comun": "libélulas",
+      "orden": "Odonata",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 178,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Libellulidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/220937/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Blaberidae",
+      "tipo": "familia",
+      "nombre": "Blaberidae",
+      "nombre_comun": "cucarachas silvestres",
+      "orden": "Blattodea",
+      "provisional": false,
+      "f1": 0.93,
+      "fotos_entrenamiento": 408,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Blaberidae.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/10846424/medium.jpeg"
+      }
+    },
+    {
+      "id": "familia-Blattidae",
+      "tipo": "familia",
+      "nombre": "Blattidae",
+      "nombre_comun": "cucarachas domésticas",
+      "orden": "Blattodea",
+      "provisional": false,
+      "f1": 0.95,
+      "fotos_entrenamiento": 415,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Blattidae.webp",
+        "ancho": 480,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/20108440/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Kalotermitidae",
+      "tipo": "familia",
+      "nombre": "Kalotermitidae",
+      "nombre_comun": "termitas de madera seca",
+      "orden": "Isoptera",
+      "provisional": false,
+      "f1": 0.91,
+      "fotos_entrenamiento": 411,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Kalotermitidae.webp",
+        "ancho": 500,
+        "alto": 495,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/191205877/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Heterotermitidae",
+      "tipo": "familia",
+      "nombre": "Heterotermitidae",
+      "nombre_comun": "termitas subterráneas",
+      "orden": "Isoptera",
+      "provisional": false,
+      "f1": 0.83,
+      "fotos_entrenamiento": 253,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Heterotermitidae.webp",
+        "ancho": 416,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/34224304/medium.jpg"
+      }
+    },
+    {
+      "id": "familia-Termitidae",
+      "tipo": "familia",
+      "nombre": "Termitidae",
+      "nombre_comun": "termitas superiores",
+      "orden": "Isoptera",
+      "provisional": false,
+      "f1": 0.78,
+      "fotos_entrenamiento": 233,
+      "foto": {
+        "archivo": "/catalogo/fotos/familia-Termitidae.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "(c) Gerard Chartier, some rights reserved (CC BY)",
+        "licencia": "cc-by",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/55354067/medium.jpg"
+      }
+    },
+    {
+      "id": "orden-Mantodea",
+      "tipo": "orden",
+      "nombre": "Mantodea",
+      "nombre_comun": "mantis",
+      "orden": "Mantodea",
+      "provisional": false,
+      "f1": 0.87,
+      "fotos_entrenamiento": 817,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Mantodea.webp",
+        "ancho": 500,
+        "alto": 479,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/7687267/medium.jpg"
+      }
+    },
+    {
+      "id": "orden-Thysanoptera",
+      "tipo": "orden",
+      "nombre": "Thysanoptera",
+      "nombre_comun": "trips",
+      "orden": "Thysanoptera",
+      "provisional": false,
+      "f1": 0.86,
+      "fotos_entrenamiento": 270,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Thysanoptera.webp",
+        "ancho": 498,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/660288590/medium.jpg"
+      }
+    },
+    {
+      "id": "orden-Neuroptera",
+      "tipo": "orden",
+      "nombre": "Neuroptera",
+      "nombre_comun": "crisopas y hormigas león",
+      "orden": "Neuroptera",
+      "provisional": false,
+      "f1": 0.94,
+      "fotos_entrenamiento": 813,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Neuroptera.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/9811638/medium.jpg"
+      }
+    },
+    {
+      "id": "orden-Dermaptera",
+      "tipo": "orden",
+      "nombre": "Dermaptera",
+      "nombre_comun": "tijeretas",
+      "orden": "Dermaptera",
+      "provisional": false,
+      "f1": 0.95,
+      "fotos_entrenamiento": 810,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Dermaptera.webp",
+        "ancho": 500,
+        "alto": 375,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/93108648/medium.jpeg"
+      }
+    },
+    {
+      "id": "orden-Phasmida",
+      "tipo": "orden",
+      "nombre": "Phasmida",
+      "nombre_comun": "insectos palo",
+      "orden": "Phasmida",
+      "provisional": false,
+      "f1": 0.9,
+      "fotos_entrenamiento": 770,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Phasmida.webp",
+        "ancho": 500,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/27441275/medium.jpg"
+      }
+    },
+    {
+      "id": "orden-Psocodea",
+      "tipo": "orden",
+      "nombre": "Psocodea",
+      "nombre_comun": "psócidos y piojos",
+      "orden": "Psocodea",
+      "provisional": false,
+      "f1": 0.92,
+      "fotos_entrenamiento": 705,
+      "foto": {
+        "archivo": "/catalogo/fotos/orden-Psocodea.webp",
+        "ancho": 472,
+        "alto": 500,
+        "credito": "no rights reserved",
+        "licencia": "cc0",
+        "url_origen": "https://inaturalist-open-data.s3.amazonaws.com/photos/7867151/medium.jpg"
+      }
+    }
+  ]
+}
