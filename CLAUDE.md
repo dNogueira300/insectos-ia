@@ -12,7 +12,7 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | Plan 01 — datos | **Cerrado.** 34 360 fotos, repartidas 24 032 / 5 163 / 5 165 (entrenamiento / validación / prueba). |
 | Plan 02 — modelo | **Código terminado.** Modelo vigente: `v4_convnext_t_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
 | Plan 03 — web | **Prototipo funcionando** (2026-09-23). Backend FastAPI en `backend/`, React + Vite en `frontend/`. Se arranca con `iniciar.bat` (http://127.0.0.1:8000). |
-| Rediseño del frontend (INSECTIA) | **Plan listo, sin empezar.** Ejecutar en modo nativo, ver abajo. |
+| Rediseño del frontend (INSECTIA) | **Terminado** (2026-09-25). Presentación en `/` e identificación en `/identificar/`. Sistema visual en `DESIGN.md`. |
 
 ### Siguiente paso: ejecutar el rediseño del frontend
 

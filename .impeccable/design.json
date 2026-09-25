@@ -1,0 +1,522 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T00:00:00Z",
+  "title": "Design System: INSECTIA",
+  "extensions": {
+    "colorMeta": {
+      "verde-amazonico": {
+        "role": "primary",
+        "displayName": "Verde Amazónico",
+        "canonical": "#0b5e3b",
+        "tonalRamp": [
+          "#001c01",
+          "#003616",
+          "#00512f",
+          "#29734f",
+          "#4f9771",
+          "#75bd95",
+          "#9be4ba",
+          "#b8ffd7"
+        ]
+      },
+      "petroleo": {
+        "role": "primary",
+        "displayName": "Azul Petróleo",
+        "canonical": "#0f3d3e",
+        "tonalRamp": [
+          "#001719",
+          "#003031",
+          "#1e4a4b",
+          "#406c6d",
+          "#639090",
+          "#87b5b5",
+          "#addbdc",
+          "#caf9fa"
+        ]
+      },
+      "verde-selva": {
+        "role": "secondary",
+        "displayName": "Verde Selva",
+        "canonical": "#4caf50",
+        "tonalRamp": [
+          "#001e00",
+          "#003900",
+          "#005600",
+          "#007916",
+          "#3a9e3f",
+          "#62c565",
+          "#9fe69f",
+          "#bdffbb"
+        ]
+      },
+      "verde-lima": {
+        "role": "secondary",
+        "displayName": "Verde Lima",
+        "canonical": "#a3d977",
+        "tonalRamp": [
+          "#001a00",
+          "#053400",
+          "#225000",
+          "#427300",
+          "#659735",
+          "#89bd5c",
+          "#b3e28f",
+          "#d0ffac"
+        ]
+      },
+      "amarillo": {
+        "role": "tertiary",
+        "displayName": "Amarillo Amazonía",
+        "canonical": "#f4b400",
+        "tonalRamp": [
+          "#310000",
+          "#4e1300",
+          "#6b3100",
+          "#905500",
+          "#b67900",
+          "#dd9e00",
+          "#f8ca70",
+          "#ffe78d"
+        ]
+      },
+      "ambar-texto": {
+        "role": "tertiary",
+        "displayName": "Ámbar texto",
+        "canonical": "#7a5a00",
+        "tonalRamp": [
+          "#250800",
+          "#3f2200",
+          "#5b3c00",
+          "#7e5e07",
+          "#a28137",
+          "#c8a65d",
+          "#f0cc83",
+          "#ffeaa0"
+        ]
+      },
+      "ambar-fondo": {
+        "role": "tertiary",
+        "displayName": "Ámbar fondo",
+        "canonical": "#fff6d6",
+        "tonalRamp": [
+          "#181100",
+          "#30280e",
+          "#4a4227",
+          "#6b6347",
+          "#8e8669",
+          "#b3ab8d",
+          "#dad1b2",
+          "#f8efcf"
+        ]
+      },
+      "gris": {
+        "role": "neutral",
+        "displayName": "Gris Oscuro",
+        "canonical": "#2e2e2e",
+        "tonalRamp": [
+          "#121212",
+          "#292929",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#ababab",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "texto-suave": {
+        "role": "neutral",
+        "displayName": "Texto suave",
+        "canonical": "#4e5a55",
+        "tonalRamp": [
+          "#0a1410",
+          "#212c27",
+          "#3a4541",
+          "#5a6761",
+          "#7d8a84",
+          "#a1aea9",
+          "#c7d5cf",
+          "#e4f2ec"
+        ]
+      },
+      "texto-sobre-petroleo": {
+        "role": "neutral",
+        "displayName": "Texto sobre petróleo",
+        "canonical": "#d6e4e0",
+        "tonalRamp": [
+          "#0a1411",
+          "#212c29",
+          "#3a4542",
+          "#5a6663",
+          "#7d8986",
+          "#a1aeaa",
+          "#c7d5d1",
+          "#e4f2ee"
+        ]
+      },
+      "fondo": {
+        "role": "neutral",
+        "displayName": "Fondo",
+        "canonical": "#f6f8f5",
+        "tonalRamp": [
+          "#111210",
+          "#282927",
+          "#414340",
+          "#626461",
+          "#858784",
+          "#a9aba9",
+          "#d0d2cf",
+          "#edefec"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Superficie",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#121212",
+          "#292929",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#ababab",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "selva-fondo": {
+        "role": "neutral",
+        "displayName": "Selva fondo",
+        "canonical": "#e8f5e9",
+        "tonalRamp": [
+          "#0b140c",
+          "#222c23",
+          "#3b463c",
+          "#5c675d",
+          "#7e8a7f",
+          "#a2afa3",
+          "#c8d5c9",
+          "#e6f3e7"
+        ]
+      },
+      "pista": {
+        "role": "neutral",
+        "displayName": "Pista",
+        "canonical": "#e3e8e2",
+        "tonalRamp": [
+          "#0f130f",
+          "#262a26",
+          "#40443f",
+          "#60655f",
+          "#838882",
+          "#a8aca7",
+          "#ced3cd",
+          "#ebf0ea"
+        ]
+      },
+      "error-texto": {
+        "role": "neutral",
+        "displayName": "Error texto",
+        "canonical": "#7a1c14",
+        "tonalRamp": [
+          "#390000",
+          "#590000",
+          "#791b13",
+          "#a04035",
+          "#c86457",
+          "#f2897a",
+          "#ffb3a3",
+          "#ffd0c0"
+        ]
+      },
+      "error-fondo": {
+        "role": "neutral",
+        "displayName": "Error fondo",
+        "canonical": "#fdecea",
+        "tonalRamp": [
+          "#190e0d",
+          "#322524",
+          "#4c3f3d",
+          "#6e5f5e",
+          "#918280",
+          "#b6a7a5",
+          "#ddcdcb",
+          "#fbeae8"
+        ]
+      },
+      "borde": {
+        "role": "neutral",
+        "displayName": "Borde",
+        "canonical": "rgba(46, 46, 46, 0.12)",
+        "tonalRamp": [
+          "rgba(46, 46, 46, 0.06)",
+          "rgba(46, 46, 46, 0.12)",
+          "rgba(46, 46, 46, 0.2)",
+          "rgba(46, 46, 46, 0.35)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Solo el título de la primera vista."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Títulos de sección y del panel de fichas."
+      },
+      "ruta": {
+        "displayName": "Ruta taxonómica",
+        "purpose": "La línea Orden → Familia del resultado."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Pasos de Cómo funciona y título de la ficha."
+      },
+      "title-sm": {
+        "displayName": "Title pequeño",
+        "purpose": "Títulos de grupo menores."
+      },
+      "lead": {
+        "displayName": "Bajada",
+        "purpose": "Bajada de la primera vista."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Texto corrido, máximo 70ch."
+      },
+      "cientifico": {
+        "displayName": "Nombre científico",
+        "purpose": "Nombres científicos, en cursiva, incluso en títulos."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Chips, etiqueta de la barra y rótulos de nivel."
+      },
+      "caption": {
+        "displayName": "Crédito",
+        "purpose": "Créditos de foto y notas de los ejemplos."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sombra",
+        "value": "0 1px 2px rgba(15, 61, 62, 0.06), 0 2px 8px rgba(15, 61, 62, 0.04)",
+        "purpose": "Solo el bloque de resultado."
+      },
+      {
+        "name": "sombra-panel",
+        "value": "0 16px 40px rgba(15, 61, 62, 0.18)",
+        "purpose": "Solo el diálogo de fichas."
+      },
+      {
+        "name": "foco",
+        "value": "outline: 2px solid #0b5e3b; outline-offset: 2px; box-shadow: 0 0 0 5px #a3d977",
+        "purpose": "Foco visible global, legible sobre claro y sobre petróleo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "curva-salida",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Única curva de la interfaz; sin rebotes."
+      },
+      {
+        "name": "aparecer-resultado",
+        "value": "320ms; opacity 0 a 1, translateY 8px a 0",
+        "purpose": "Entrada del resultado."
+      },
+      {
+        "name": "aparecer-panel",
+        "value": "240ms",
+        "purpose": "Entrada del panel de fichas."
+      },
+      {
+        "name": "llenar",
+        "value": "600ms; scaleX 0 a valor",
+        "purpose": "Llenado de la barra de confianza."
+      },
+      {
+        "name": "transicion-estado",
+        "value": "200ms",
+        "purpose": "Fondo de botones; borde y fondo de la zona al arrastrar."
+      },
+      {
+        "name": "presion",
+        "value": "120ms; scale 0.98",
+        "purpose": "Botón presionado."
+      },
+      {
+        "name": "girar",
+        "value": "900ms linear infinite",
+        "purpose": "Indicador Identificando…; se detiene con movimiento reducido."
+      },
+      {
+        "name": "movimiento-reducido",
+        "value": "animation-duration y transition-duration 1ms, una iteración",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "ficha-una-columna",
+        "value": "480px"
+      },
+      {
+        "name": "celular",
+        "value": "640px"
+      },
+      {
+        "name": "identificar-dos-columnas",
+        "value": "900px"
+      },
+      {
+        "name": "presentacion-dos-columnas",
+        "value": "960px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "boton-principal",
+      "description": "La acción principal de cada vista: identificar, elegir o tomar foto.",
+      "html": "<button class=\"ds-boton ds-boton--principal\">Elegir foto</button>",
+      "css": ".ds-boton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 24px;border:1.5px solid transparent;border-radius:var(--radio,8px);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:1rem;font-weight:700;text-decoration:none;cursor:pointer;transition:background-color 200ms cubic-bezier(0.25,1,0.5,1),transform 120ms cubic-bezier(0.25,1,0.5,1);}.ds-boton:active{transform:scale(0.98);}.ds-boton:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}.ds-boton--principal{background:var(--verde-amazonico,#0b5e3b);color:#fff;}.ds-boton--principal:hover{background:var(--petroleo,#0f3d3e);}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "boton-secundario",
+      "description": "Acción secundaria sobre claro: Ver fichas, Cerrar, Elegir foto en táctil.",
+      "html": "<button class=\"ds-boton ds-boton--secundario\">Ver fichas</button>",
+      "css": ".ds-boton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 24px;border:1.5px solid transparent;border-radius:var(--radio,8px);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:1rem;font-weight:700;text-decoration:none;cursor:pointer;transition:background-color 200ms cubic-bezier(0.25,1,0.5,1),transform 120ms cubic-bezier(0.25,1,0.5,1);}.ds-boton:active{transform:scale(0.98);}.ds-boton:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}.ds-boton--secundario{background:var(--superficie,#fff);color:var(--verde-amazonico,#0b5e3b);border-color:var(--verde-amazonico,#0b5e3b);}.ds-boton--secundario:hover{background:var(--selva-fondo,#e8f5e9);}"
+    },
+    {
+      "name": "Botones sobre franja petróleo",
+      "kind": "button",
+      "refersTo": "boton-claro",
+      "description": "Claro (Verde Lima) y contorno (blanco), solo dentro de una franja Azul Petróleo.",
+      "html": "<div class=\"ds-franja\"><a class=\"ds-boton ds-boton--claro\" href=\"#\">Identificar un insecto</a><a class=\"ds-boton ds-boton--contorno\" href=\"#\">Ver las familias</a></div>",
+      "css": ".ds-boton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 24px;border:1.5px solid transparent;border-radius:var(--radio,8px);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:1rem;font-weight:700;text-decoration:none;cursor:pointer;transition:background-color 200ms cubic-bezier(0.25,1,0.5,1),transform 120ms cubic-bezier(0.25,1,0.5,1);}.ds-boton:active{transform:scale(0.98);}.ds-boton:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}.ds-franja{display:flex;flex-wrap:wrap;gap:12px;padding:24px;background:var(--petroleo,#0f3d3e);}.ds-boton--claro{background:var(--verde-lima,#a3d977);color:var(--petroleo,#0f3d3e);}.ds-boton--claro:hover{background:#b6e38f;}.ds-boton--contorno{background:transparent;color:#fff;border-color:rgba(255,255,255,0.75);}.ds-boton--contorno:hover{background:rgba(255,255,255,0.08);}"
+    },
+    {
+      "name": "Chips de importancia",
+      "kind": "chip",
+      "refersTo": "chip-plaga",
+      "description": "Plaga, benéfico y provisional: pastilla siempre con texto.",
+      "html": "<span class=\"ds-chip ds-chip--plaga\">Plaga</span> <span class=\"ds-chip ds-chip--benefico\">Benéfico</span> <span class=\"ds-chip ds-chip--provisional\">Provisional</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;min-height:28px;padding:2px 12px;border-radius:var(--radio-pastilla,9999px);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:0.875rem;font-weight:700;}.ds-chip--plaga{background:var(--amarillo,#f4b400);color:var(--gris,#2e2e2e);}.ds-chip--benefico{background:var(--selva-fondo,#e8f5e9);color:var(--verde-amazonico,#0b5e3b);border:1px solid var(--verde-amazonico,#0b5e3b);}.ds-chip--provisional{background:var(--ambar-fondo,#fff6d6);color:var(--ambar-texto,#7a5a00);}"
+    },
+    {
+      "name": "Campo de búsqueda y filtros",
+      "kind": "input",
+      "refersTo": "campo",
+      "description": "Búsqueda del catálogo y filtros por orden en pastilla.",
+      "html": "<label class=\"ds-campo\">Buscar<input placeholder=\"Nombre científico o común\"></label><div class=\"ds-filtros\"><button class=\"ds-filtro\" aria-pressed=\"true\">Todos</button><button class=\"ds-filtro\" aria-pressed=\"false\">Coleoptera</button></div>",
+      "css": ".ds-campo{display:grid;gap:4px;max-width:28rem;font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-weight:700;color:var(--petroleo,#0f3d3e);}.ds-campo input{min-height:44px;padding:0 12px;border:1.5px solid rgba(46,46,46,0.35);border-radius:var(--radio,8px);background:var(--superficie,#fff);color:var(--gris,#2e2e2e);font:inherit;font-weight:400;}.ds-campo input::placeholder{color:var(--texto-suave,#4e5a55);}.ds-campo input:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}.ds-filtros{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}.ds-filtro{min-height:44px;padding:0 16px;border:1.5px solid rgba(46,46,46,0.2);border-radius:var(--radio-pastilla,9999px);background:var(--superficie,#fff);color:var(--gris,#2e2e2e);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:0.9375rem;cursor:pointer;}.ds-filtro:hover{border-color:var(--verde-amazonico,#0b5e3b);}.ds-filtro[aria-pressed='true']{border-color:var(--verde-amazonico,#0b5e3b);background:var(--verde-amazonico,#0b5e3b);color:#fff;}.ds-filtro:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}"
+    },
+    {
+      "name": "Resultado afirmado",
+      "kind": "custom",
+      "refersTo": "resultado",
+      "description": "Ruta orden y familia, barra neutra del orden y barra afirmada de la familia, con porcentaje y etiqueta escritos.",
+      "html": "<section class=\"ds-resultado\"><p class=\"ds-ruta\"><span class=\"ds-paso\"><span class=\"ds-nivel\">Orden</span><strong>Coleoptera</strong></span><span class=\"ds-paso\"><span class=\"ds-flecha\" aria-hidden=\"true\">→</span><span class=\"ds-nivel\">Familia</span><strong>Curculionidae</strong></span></p><div class=\"ds-barra\"><div class=\"ds-barra__enc\"><span>Seguridad en el orden</span><span class=\"ds-num\">95 %</span></div><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.95\"></div></div></div><div class=\"ds-barra ds-barra--afirmada\"><div class=\"ds-barra__enc\"><span>Seguridad en la familia</span><span class=\"ds-num\">97 %</span></div><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.97\"></div></div><span class=\"ds-etiqueta\">Afirmada</span></div></section>",
+      "css": "@keyframes ds-aparecer{from{opacity:0;transform:translateY(8px);}}.ds-resultado{display:grid;gap:16px;padding:24px;border:1px solid var(--borde,rgba(46,46,46,0.12));border-radius:var(--radio-grande,16px);background:var(--superficie,#fff);box-shadow:0 1px 2px rgba(15,61,62,0.06),0 2px 8px rgba(15,61,62,0.04);color:var(--gris,#2e2e2e);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);animation:ds-aparecer 320ms cubic-bezier(0.25,1,0.5,1);}.ds-ruta{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin:0;font-family:var(--fuente-titulo,'Lexend',system-ui,sans-serif);font-size:1.375rem;color:var(--petroleo,#0f3d3e);}.ds-paso{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:8px;}.ds-nivel{font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);font-size:0.875rem;font-weight:700;color:var(--texto-suave,#4e5a55);}.ds-flecha{color:var(--verde-amazonico,#0b5e3b);}.ds-barra{display:grid;gap:4px;}.ds-barra__enc{display:flex;justify-content:space-between;gap:12px;font-weight:700;}.ds-num{font-variant-numeric:tabular-nums;}.ds-pista{height:10px;overflow:hidden;border-radius:9999px;background:var(--pista,#e3e8e2);}.ds-relleno{height:100%;background:var(--petroleo,#0f3d3e);transform-origin:left;transform:scaleX(var(--valor));animation:ds-llenar 600ms cubic-bezier(0.25,1,0.5,1);}@keyframes ds-llenar{from{transform:scaleX(0);}}.ds-etiqueta{font-size:0.875rem;font-weight:700;}@media (prefers-reduced-motion:reduce){.ds-relleno{animation-duration:1ms;}}.ds-barra--afirmada .ds-relleno{background:var(--verde-selva,#4caf50);}.ds-barra--afirmada .ds-etiqueta{color:var(--verde-amazonico,#0b5e3b);}@media (prefers-reduced-motion:reduce){.ds-resultado{animation-duration:1ms;}}"
+    },
+    {
+      "name": "Familia incierta",
+      "kind": "custom",
+      "refersTo": "resultado-incierto",
+      "description": "Bloque ámbar con barra incierta, aviso y candidatas en cursiva; la familia no se afirma.",
+      "html": "<div class=\"ds-incierto\"><div class=\"ds-barra ds-barra--incierta\"><div class=\"ds-barra__enc\"><span>Seguridad en la familia</span><span class=\"ds-num\">65 %</span></div><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.65\"></div></div><span class=\"ds-etiqueta\">Revisar con especialista</span></div><p><strong>No se puede determinar la familia con certeza.</strong> Candidatas dentro de Diptera, para revisar con un especialista:</p><div class=\"ds-barra ds-barra--candidata\"><div class=\"ds-barra__enc\"><span class=\"ds-cand\">Anthomyiidae</span><span class=\"ds-num\">65 %</span></div><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.65\"></div></div></div><div class=\"ds-barra ds-barra--candidata\"><div class=\"ds-barra__enc\"><span class=\"ds-cand\">Tephritidae</span><span class=\"ds-num\">28 %</span></div><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.28\"></div></div></div></div>",
+      "css": ".ds-incierto{display:grid;gap:12px;padding:16px;border-radius:var(--radio,8px);background:var(--ambar-fondo,#fff6d6);color:var(--gris,#2e2e2e);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);}.ds-incierto p{margin:0;}.ds-barra{display:grid;gap:4px;}.ds-barra__enc{display:flex;justify-content:space-between;gap:12px;font-weight:700;}.ds-num{font-variant-numeric:tabular-nums;}.ds-pista{height:10px;overflow:hidden;border-radius:9999px;background:var(--pista,#e3e8e2);}.ds-relleno{height:100%;background:var(--petroleo,#0f3d3e);transform-origin:left;transform:scaleX(var(--valor));animation:ds-llenar 600ms cubic-bezier(0.25,1,0.5,1);}@keyframes ds-llenar{from{transform:scaleX(0);}}.ds-etiqueta{font-size:0.875rem;font-weight:700;}@media (prefers-reduced-motion:reduce){.ds-relleno{animation-duration:1ms;}}.ds-barra--incierta .ds-relleno,.ds-barra--candidata .ds-relleno{background:var(--amarillo,#f4b400);}.ds-barra--incierta .ds-etiqueta{color:var(--ambar-texto,#7a5a00);}.ds-cand{font-style:italic;font-weight:400;}"
+    },
+    {
+      "name": "Tarjeta del catálogo",
+      "kind": "card",
+      "refersTo": "tarjeta",
+      "description": "Foto 4:3, nombre científico en cursiva, F1 con barra, crédito y Ver fichas.",
+      "html": "<article class=\"ds-tarjeta\"><div class=\"ds-foto\"></div><div class=\"ds-cuerpo\"><p class=\"ds-orden\">Orden Coleoptera</p><h4 class=\"ds-nombre\">Curculionidae</h4><p class=\"ds-comun\">gorgojos</p><div class=\"ds-f1\"><span>Qué tan bien la distingue (F1)</span><strong>94 %</strong><div class=\"ds-pista\" aria-hidden=\"true\"><div class=\"ds-relleno\" style=\"--valor:.94\"></div></div></div><p class=\"ds-credito\">Foto: <a href=\"#\">autor</a> · CC BY</p><button class=\"ds-btn\">Ver fichas</button></div></article>",
+      "css": ".ds-tarjeta{display:flex;flex-direction:column;max-width:280px;overflow:hidden;border:1px solid var(--borde,rgba(46,46,46,0.12));border-radius:var(--radio,8px);background:var(--superficie,#fff);color:var(--gris,#2e2e2e);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);}.ds-foto{aspect-ratio:4/3;background:var(--pista,#e3e8e2);}.ds-cuerpo{display:flex;flex:1;flex-direction:column;gap:8px;padding:16px;}.ds-orden,.ds-nombre,.ds-comun,.ds-credito{margin:0;}.ds-orden{font-size:0.875rem;color:var(--texto-suave,#4e5a55);}.ds-nombre{font-size:1.1875rem;font-weight:700;font-style:italic;color:var(--petroleo,#0f3d3e);}.ds-f1{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:0.9375rem;}.ds-f1 strong{font-variant-numeric:tabular-nums;}.ds-pista{grid-column:1/-1;height:10px;overflow:hidden;border-radius:9999px;background:var(--pista,#e3e8e2);}.ds-relleno{height:100%;background:var(--petroleo,#0f3d3e);transform-origin:left;transform:scaleX(var(--valor));}.ds-credito{margin-top:auto;font-size:0.8125rem;color:var(--texto-suave,#4e5a55);}.ds-credito a{color:var(--verde-amazonico,#0b5e3b);}.ds-btn{align-self:flex-start;min-height:44px;padding:0 16px;border:1.5px solid var(--verde-amazonico,#0b5e3b);border-radius:var(--radio,8px);background:var(--superficie,#fff);color:var(--verde-amazonico,#0b5e3b);font:inherit;font-size:0.9375rem;font-weight:700;cursor:pointer;transition:background-color 200ms cubic-bezier(0.25,1,0.5,1);}.ds-btn:hover{background:var(--selva-fondo,#e8f5e9);}.ds-btn:focus-visible{outline:2px solid var(--verde-amazonico,#0b5e3b);outline-offset:2px;box-shadow:0 0 0 5px var(--verde-lima,#a3d977);}"
+    },
+    {
+      "name": "Zona de foto con esquinas de encuadre",
+      "kind": "custom",
+      "refersTo": "zona",
+      "description": "Área 4:3 enmarcada con las escuadras del logo; se tiñe de Selva fondo al arrastrar (aquí, al pasar el puntero).",
+      "html": "<div class=\"ds-zona\"><div class=\"ds-marco\"><p class=\"ds-vacio\">Arrastra una foto aquí o elígela desde tu equipo.</p></div></div>",
+      "css": ".ds-zona{display:grid;max-width:420px;padding:16px;border:1px solid var(--borde,rgba(46,46,46,0.12));border-radius:var(--radio-grande,16px);background:var(--superficie,#fff);font-family:var(--fuente-texto,'Atkinson Hyperlegible Next',system-ui,sans-serif);transition:border-color 200ms cubic-bezier(0.25,1,0.5,1),background-color 200ms cubic-bezier(0.25,1,0.5,1);}.ds-zona:hover{border-color:var(--verde-amazonico,#0b5e3b);background:var(--selva-fondo,#e8f5e9);}.ds-marco{position:relative;display:grid;place-items:center;aspect-ratio:4/3;padding:10px;}.ds-marco::before{--c:var(--petroleo,#0f3d3e);--l:28px;--g:4px;content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(var(--c) 0 0) 0 0/var(--l) var(--g),linear-gradient(var(--c) 0 0) 0 0/var(--g) var(--l),linear-gradient(var(--c) 0 0) 100% 0/var(--l) var(--g),linear-gradient(var(--c) 0 0) 100% 0/var(--g) var(--l),linear-gradient(var(--c) 0 0) 0 100%/var(--l) var(--g),linear-gradient(var(--c) 0 0) 0 100%/var(--g) var(--l),linear-gradient(var(--c) 0 0) 100% 100%/var(--l) var(--g),linear-gradient(var(--c) 0 0) 100% 100%/var(--g) var(--l);background-repeat:no-repeat;}.ds-vacio{max-width:28ch;margin:0;text-align:center;color:var(--texto-suave,#4e5a55);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El encuadre de campo",
+    "overview": "INSECTIA se ve como una libreta de campo bien ordenada puesta al lado de un visor: la foto del insecto manda, encuadrada por las cuatro esquinas del logo, y a su lado la respuesta del modelo se lee como un registro, con el porcentaje escrito y una palabra que dice si se afirma o si hay que revisarlo. Es científica y cercana: nombres taxonómicos correctos en cursiva, frases en lenguaje llano y ninguna cifra que no exista.\n\nEl sistema tiene dos intensidades. La página de presentación es *comprometida*: franjas Azul Petróleo a todo el ancho (primera vista y pie) alternan con franjas claras (Fondo y Superficie), y el Verde Lima aparece solo sobre el petróleo. La página de identificación es *contenida*: fondo neutro, tarjetas blancas y color únicamente donde informa (la barra de confianza, los chips, el estado de arrastre). La densidad es cómoda, pensada para un celular al sol y para un proyector: cuerpo de 17 px, objetivos táctiles de 44 px y contraste AA verificado por prueba (`frontend/pruebas/contraste.test.js`).\n\nEl color tiene significados fijos. Verde Selva es \"respuesta afirmada\"; Amarillo es \"incierta, revisar con especialista\" y también \"plaga\"; Verde Amazónico es la acción y el enlace. La confianza nunca se comunica solo con color.",
+    "keyCharacteristics": [
+      "La foto como protagonista, con esquinas de encuadre tomadas del logo.",
+      "Franjas Azul Petróleo en la presentación; neutros más un acento en la identificación.",
+      "Confianza siempre en tres capas: porcentaje escrito, etiqueta de texto y barra.",
+      "Plano por defecto: bordes finos y una sola sombra suave para lo que es resultado o diálogo.",
+      "Movimiento corto, de salida, que nunca condiciona que algo se vea."
+    ],
+    "rules": [
+      {
+        "name": "The Tres Colores que No Se Leen Rule",
+        "body": "Verde Selva, Verde Lima y Amarillo nunca van como texto sobre fondo claro (dan entre 1.5 y 2.8:1). Sobre claro son solo rellenos (barras, chips con texto oscuro, contornos). El Verde Lima puede ser texto únicamente sobre Azul Petróleo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Significado Fijo Rule",
+        "body": "Verde Selva es \"afirmada\"; Amarillo es \"incierta\" o \"plaga\". No se usan como decoración ni para otra cosa.",
+        "section": "colors"
+      },
+      {
+        "name": "The Nunca Solo Color Rule",
+        "body": "Todo estado de confianza lleva el porcentaje escrito y, en la familia, la etiqueta \"Afirmada\" o \"Revisar con especialista\". La barra es refuerzo y está oculta a lectores de pantalla.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lima Sobre Petróleo Rule",
+        "body": "Dentro de una franja petróleo, los enlaces y rótulos pasan a Verde Lima y el cuerpo a Texto sobre petróleo; el Verde Amazónico no se lee ahí.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cifras Tabulares Rule",
+        "body": "Todo porcentaje y métrica usa `font-variant-numeric: tabular-nums`.",
+        "section": "typography"
+      },
+      {
+        "name": "The Espaciado Mínimo Rule",
+        "body": "El tracking de los títulos nunca baja de −0.02 em (display) ni de −0.01 em (resto); los títulos llevan `text-wrap: balance`.",
+        "section": "typography"
+      },
+      {
+        "name": "The Plano Salvo Resultado Rule",
+        "body": "Tarjetas, zona de foto, ficha, consejos y avisos no llevan sombra: borde de 1 px y nada más. Solo el resultado y el diálogo se elevan.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Encuadre Solo Para la Foto Rule",
+        "body": "Las esquinas de encuadre enmarcan una foto de insecto que el modelo mira o miró. No se usan en texto, tarjetas del catálogo ni botones.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do escribir el porcentaje y la etiqueta en toda confianza; la barra solo refuerza.",
+      "Do usar Verde Lima como texto únicamente sobre Azul Petróleo, y Ámbar texto (no Amarillo) cuando el amarillo tiene que leerse.",
+      "Do mantener 44 px de alto mínimo en todo objetivo táctil (botones, filtros, campo, enlaces de la cabecera, resumen de consejos).",
+      "Do poner los nombres científicos en Atkinson cursiva y los porcentajes en cifras tabulares.",
+      "Do acompañar toda foto con su crédito y enmarcar con las esquinas de encuadre solo las fotos que el modelo analiza.",
+      "Do usar la curva de salida `cubic-bezier(0.25, 1, 0.5, 1)` y respetar `prefers-reduced-motion`."
+    ],
+    "donts": [
+      "Don't usar Verde Selva, Verde Lima ni Amarillo como texto sobre Fondo o Superficie.",
+      "Don't usar Verde Selva o Amarillo con un significado distinto de \"afirmada\", \"incierta\" o \"plaga\".",
+      "Don't afirmar una familia en la ruta del resultado cuando es incierta; se muestran las candidatas.",
+      "Don't añadir sombras a tarjetas, zona de foto o fichas; solo el resultado y el diálogo se elevan.",
+      "Don't usar sombras negras: las sombras van teñidas de Azul Petróleo.",
+      "Don't mostrar cifras gigantes con degradado: el desempeño se cuenta en frases con la cifra en Verde Amazónico."
+    ]
+  }
+}

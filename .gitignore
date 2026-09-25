@@ -29,3 +29,6 @@ Thumbs.db
 
 # Se genera desde bd/bd_insectos.xlsx con python -m pipeline.bd
 bd/bd_insectos.sqlite
+
+# capturas de trabajo de la revisión de diseño
+.impeccable/review/
