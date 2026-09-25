@@ -27,6 +27,9 @@ class Familia:
     inat_taxon_id: int
     nombre_comun: str = ""
     importancia: str = ""
+    # Entra al sistema pendiente de confirmación de la entomóloga. Solo informa
+    # a la interfaz: no cambia la clase ni el orden de las etiquetas.
+    provisional: bool = False
 
 
 @dataclass(frozen=True)
@@ -135,6 +138,7 @@ def cargar_ontologia(ruta: Path) -> Ontologia:
                     inat_taxon_id=_entero_obligatorio(fam, "inat_taxon_id", f"familia {fnombre}"),
                     nombre_comun=fam.get("nombre_comun", ""),
                     importancia=fam.get("importancia", ""),
+                    provisional=bool(fam.get("provisional", False)),
                 )
             )
 

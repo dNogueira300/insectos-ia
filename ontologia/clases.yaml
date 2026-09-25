@@ -13,6 +13,8 @@
 #     docs/censo_2026-09-12_con_descartadas.md.
 #   - Hemiptera (familias de la ficha, sin clave) y Coccinellidae (BD biológica)
 #     entran de forma provisional, pendientes de confirmación de la entomóloga.
+#   El campo `provisional: true` marca esas familias para la interfaz; no cambia
+#   las clases ni el orden de las etiquetas, así que no invalida el modelo.
 #   - Heterotermitidae y Termitidae no figuran en la clave: reemplazan a
 #     Rhinotermitidae y Mastotermitidae, sin material suficiente.
 #
@@ -33,7 +35,7 @@ ordenes:
       - {nombre: Scarabaeidae, inat_taxon_id: 48201, nombre_comun: escarabajos peloteros y afines}  # clave
       - {nombre: Chrysomelidae, inat_taxon_id: 51146, nombre_comun: crisomélidos}  # clave
       - {nombre: Carabidae, inat_taxon_id: 49567, nombre_comun: carábidos}  # clave
-      - {nombre: Coccinellidae, inat_taxon_id: 48486, nombre_comun: mariquitas}  # bd, ficha
+      - {nombre: Coccinellidae, inat_taxon_id: 48486, nombre_comun: mariquitas, provisional: true}  # bd, ficha
   - nombre: Lepidoptera
     inat_taxon_id: 47157
     gbif_key: 797
@@ -68,11 +70,11 @@ ordenes:
     gbif_key: 809
     nombre_comun: chinches, pulgones y cigarras
     familias:
-      - {nombre: Pentatomidae, inat_taxon_id: 47742, nombre_comun: chinches hediondas}  # ficha
-      - {nombre: Coreidae, inat_taxon_id: 51777, nombre_comun: coreidos}  # ficha
-      - {nombre: Reduviidae, inat_taxon_id: 48959, nombre_comun: chinches asesinas}  # ficha
-      - {nombre: Cicadellidae, inat_taxon_id: 53237, nombre_comun: chicharritas}  # ficha
-      - {nombre: Aphididae, inat_taxon_id: 52381, nombre_comun: pulgones}  # ficha
+      - {nombre: Pentatomidae, inat_taxon_id: 47742, nombre_comun: chinches hediondas, provisional: true}  # ficha
+      - {nombre: Coreidae, inat_taxon_id: 51777, nombre_comun: coreidos, provisional: true}  # ficha
+      - {nombre: Reduviidae, inat_taxon_id: 48959, nombre_comun: chinches asesinas, provisional: true}  # ficha
+      - {nombre: Cicadellidae, inat_taxon_id: 53237, nombre_comun: chicharritas, provisional: true}  # ficha
+      - {nombre: Aphididae, inat_taxon_id: 52381, nombre_comun: pulgones, provisional: true}  # ficha
   - nombre: Orthoptera
     inat_taxon_id: 47651
     gbif_key: 1458

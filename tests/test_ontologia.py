@@ -165,3 +165,30 @@ ordenes:
     )
     with pytest.raises(ErrorOntologia, match="excluir_taxon_ids"):
         cargar_ontologia(tmp_path / "c.yaml")
+
+
+YAML_CON_PROVISIONAL = """
+version: 1
+minimos: {familia_train: 10, familia_test: 5}
+ordenes:
+  - nombre: A
+    inat_taxon_id: 1
+    familias:
+      - {nombre: A1, inat_taxon_id: 11, provisional: true}
+      - {nombre: A2, inat_taxon_id: 12}
+"""
+
+
+def test_familia_provisional_se_lee_del_yaml(tmp_path: Path):
+    ruta = tmp_path / "clases.yaml"
+    ruta.write_text(YAML_CON_PROVISIONAL, encoding="utf-8")
+    familias = cargar_ontologia(ruta).ordenes[0].familias
+    assert familias[0].provisional is True
+    assert familias[1].provisional is False
+
+
+def test_la_ontologia_real_marca_seis_familias_provisionales():
+    """Las 5 de Hemiptera y Coccinellidae, pendientes de confirmar con la Facultad."""
+    onto = cargar_ontologia(Path("ontologia/clases.yaml"))
+    provisionales = [f for o in onto.ordenes for f in o.familias if f.provisional]
+    assert len(provisionales) == 6
