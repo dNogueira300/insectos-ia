@@ -92,4 +92,8 @@
 .ejemplos__nota { margin-top: var(--espacio-3); font-size: 0.8125rem; color: var(--texto-suave); }
 /* En estado vacío los ejemplos van en la columna del resultado, bajo el aviso. */
 .identificar__resultado > .ejemplos { margin-top: var(--espacio-5); }
-.identificar__resultado:focus { outline: none; }
+/* Recibe el foco solo para que el teclado no lo pierda: no es un control, no lleva anillo.
+   Con .identificar delante supera a la regla global de foco, que el minificador
+   agrupa en :is(:focus-visible, .boton:has(...)) y así sube su especificidad. */
+.identificar .identificar__resultado:focus,
+.identificar .identificar__resultado:focus-visible { outline: none; box-shadow: none; }
