@@ -1,6 +1,6 @@
 # Resumen ejecutivo — Sistema de identificación de insectos amazónicos
 
-**Fecha:** 23 de septiembre de 2026
+**Fecha:** 25 de septiembre de 2026
 **Estado:** los datos están cerrados y **el modelo ya está entrenado**. La cuarta versión acierta la familia en 92 % de las fotos de prueba, y en 95.5 % cuando se le permite decir "no estoy seguro".
 **Repositorio:** https://github.com/dNogueira300/insectos-ia (todo en la rama `main`)
 
@@ -22,7 +22,25 @@ Un sistema que, a partir de la fotografía de un insecto, propone a qué **orden
 | Etapa de datos                   | **Cerrada.** 34 360 fotografías listas, repartidas y verificadas.                  |
 | Código del modelo                | **Terminado.** 332 pruebas automáticas en verde.                                   |
 | Entrenamiento                    | **Cuatro versiones evaluadas.** La cuarta supera la meta técnica en fotos de catálogo. |
-| Página web de consulta           | **Prototipo funcionando.** Se sube una foto y muestra orden, familia y ficha.     |
+| Página web de consulta           | **Terminada: INSECTIA.** Una página de presentación y otra de identificación, con la marca del proyecto. |
+
+## La página web: INSECTIA
+
+La web tiene dos páginas. Se abre con `iniciar.bat`, en http://127.0.0.1:8000.
+
+- **Presentación**, pensada para el jurado:
+  - explica qué hace el sistema;
+  - muestra un resultado real del modelo con una foto que nunca vio;
+  - enseña un caso en que prefiere no afirmar la familia, y que por eso evitó un error;
+  - da las cifras de desempeño, aclarando que se midieron con fotos de catálogo;
+  - trae un catálogo de las 38 familias y los 6 órdenes sin familias, cada uno con una foto real y qué tan bien lo reconoce.
+- **Identificación**, pensada para el campo y el celular:
+  - se toma o se sube una foto;
+  - responde orden y familia con su seguridad escrita;
+  - si la seguridad de la familia es menor al 70 %, muestra tres candidatas para revisar con un especialista;
+  - muestra las fichas de la base biológica.
+
+Todo lo que muestra sale del modelo o de la base, y cada foto lleva el crédito de su autor. No promete lo que el sistema no hace: identificar la especie, ubicar por GPS o recomendar manejo de plagas.
 
 ## La lista de clases quedó cerrada
 
@@ -124,5 +142,5 @@ El detalle por clase está en `docs/desempeno_por_clase_v4.md`.
 ## Próximos pasos
 
 1. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
-2. Mostrar el prototipo y completar la base de datos biológica: hoy tiene 5 fichas de ejemplo.
+2. Presentar la web INSECTIA y completar la base de datos biológica: hoy tiene 5 fichas de ejemplo, y el catálogo mostrará más a medida que crezca.
 3. Con fotos de campo, medir el sistema en condiciones reales.

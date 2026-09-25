@@ -5,7 +5,11 @@ Proyecto Formativo INAAM–FISI + Responsabilidad Social, UNAP.
 
 - Estado del proyecto y resultados: [`docs/RESUMEN_EJECUTIVO.md`](docs/RESUMEN_EJECUTIVO.md)
 - Guía de trabajo en el repositorio: [`CLAUDE.md`](CLAUDE.md)
-- Diseño: `docs/2026-07-28-sistema-insectos-diseno.md`
+- Diseño del sistema: `docs/2026-07-28-sistema-insectos-diseno.md`
+- La web (INSECTIA):
+  - producto: [`PRODUCT.md`](PRODUCT.md);
+  - sistema visual: [`DESIGN.md`](DESIGN.md);
+  - especificación y plan: `docs/superpowers/`.
 - Planes:
   - 01 datos: `docs/2026-07-28-plan-01-fase-datos.md`
   - 02 modelo: `docs/2026-07-28-plan-02-modelo.md`
@@ -62,15 +66,38 @@ Pasos complementarios:
 - `datos/`: imágenes y manifiestos. **No se versiona.**
 - `docs/`: diseño, planes, reportes generados y resumen ejecutivo.
 
-## Ejecutar el prototipo
+## Ejecutar la web (INSECTIA)
 
-Doble clic en `iniciar.bat`, o a mano:
+Doble clic en `iniciar.bat`. El navegador se abre solo en http://127.0.0.1:8000 cuando el modelo terminó de cargar. Para detenerlo, `Ctrl+C` en su ventana, o cerrarla.
+
+Tiene dos páginas:
+
+| Dirección | Qué es |
+| --- | --- |
+| http://127.0.0.1:8000/ | Presentación: qué hace, un resultado real, cómo funciona, qué tan bien funciona y el catálogo de familias |
+| http://127.0.0.1:8000/identificar/ | La herramienta: se sube o se toma una foto y responde orden, familia y fichas de la base |
+
+La primera vez `iniciar.bat` hace además tres cosas:
+- crea la `.venv`;
+- instala las dependencias del servidor;
+- construye la interfaz, si falta `frontend\dist`. Esto requiere Python 3.12 y Node.js con npm.
+
+Después de cambiar algo en `frontend/src`, hay que reconstruir la interfaz: `cd frontend && npm run build`. `iniciar.bat` solo construye si `frontend\dist` no existe.
+
+A mano, sin `iniciar.bat`:
 
 ```powershell
 .venv\Scripts\python -m uvicorn backend.app:app_produccion --factory --port 8000
 ```
 
-Abrir http://127.0.0.1:8000
+**Desde un celular en la misma red wifi:** `iniciar.bat` solo atiende a la propia computadora. Para abrirla desde el celular hay que arrancarla así:
+
+```powershell
+.venv\Scripts\python -m uvicorn backend.app:app_produccion --factory --host 0.0.0.0 --port 8000
+```
+
+- Hay que permitir el acceso cuando Windows pregunte por el firewall.
+- En el celular se abre `http://<IP de la computadora>:8000`. La IP sale con `ipconfig`: es la "Dirección IPv4" del adaptador wifi.
 
 ### Desarrollo del frontend
 
@@ -105,6 +132,6 @@ Las fotos elegidas a mano van en `frontend/catalogo_preferencias.yaml`; la hoja 
 ## Pruebas
 
 ```powershell
-.venv\Scripts\python -m pytest        # backend y pipeline
-cd frontend && npm run prueba          # frontend
+.venv\Scripts\python -m pytest        # backend y pipeline: 421 pruebas, unos 5 min con el servidor apagado
+cd frontend && npm run prueba          # frontend: 108 pruebas
 ```
