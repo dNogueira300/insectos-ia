@@ -5,6 +5,7 @@ Proyecto Formativo INAAM–FISI + Responsabilidad Social, UNAP.
 
 - Estado del proyecto y resultados: [`docs/RESUMEN_EJECUTIVO.md`](docs/RESUMEN_EJECUTIVO.md)
 - Guía de trabajo en el repositorio: [`CLAUDE.md`](CLAUDE.md)
+- Base de datos biológica (Excel → SQLite) y hosting: [`docs/GUIA_BASE_DE_DATOS_Y_HOSTING.md`](docs/GUIA_BASE_DE_DATOS_Y_HOSTING.md)
 - Diseño del sistema: `docs/2026-07-28-sistema-insectos-diseno.md`
 - La web (INSECTIA):
   - producto: [`PRODUCT.md`](PRODUCT.md);
