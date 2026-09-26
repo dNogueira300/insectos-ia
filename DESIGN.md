@@ -352,7 +352,7 @@ La firma de la honestidad del sistema.
 - Bajo 640 px: dos columnas, relleno 12 px, textos mínimos de 0.9375rem y el texto largo del F1 oculto.
 
 ### "Ver más" del catálogo
-- Con el filtro "Todos" y sin búsqueda, cada orden muestra sus primeras 3 clases. Debajo, un botón secundario "Ver N familias más" (singular si es una) despliega el resto, y "Ver menos" lo pliega. Lleva `aria-expanded` y `aria-controls`, y nombra el orden para lectores de pantalla.
+- Con el filtro "Todos" y sin búsqueda, cada orden muestra sus primeras 4 clases (una fila completa en pantalla ancha). Debajo, un botón secundario "Ver N familias más" (singular si es una) despliega el resto, y "Ver menos" lo pliega. Lleva `aria-expanded` y `aria-controls`, y nombra el orden para lectores de pantalla.
 - Al elegir un orden o buscar se ven todas las coincidencias.
 - El orden de una familia enlazada desde la herramienta (`/#familia-X`) se despliega solo, para que el enlace llegue a su tarjeta.
 

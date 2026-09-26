@@ -6,7 +6,7 @@ import TarjetaClase from './TarjetaClase.jsx'
 // Con "Todos" y sin búsqueda, cada orden muestra sus primeras familias y el
 // resto queda detrás de "Ver más": con las 44 clases a la vista, la página
 // era muy larga.
-const POR_ORDEN = 3
+const POR_ORDEN = 4
 
 const normalizar = (texto) =>
   (texto ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')

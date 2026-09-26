@@ -138,14 +138,14 @@ describe('Catalogo', () => {
   })
 })
 
-describe('Catalogo: tres familias por orden con "Todos"', () => {
+describe('Catalogo: cuatro familias por orden con "Todos"', () => {
   const familia = (nombre) => ({
     id: `familia-${nombre}`, tipo: 'familia', nombre, nombre_comun: '', orden: 'Coleoptera',
     provisional: false, f1: 0.9, fotos_entrenamiento: 100, foto,
   })
   const GRANDE = {
     ...CATALOGO,
-    clases: [...['Fam1', 'Fam2', 'Fam3', 'Fam4', 'Fam5'].map(familia), CATALOGO.clases[2]],
+    clases: [...['Fam1', 'Fam2', 'Fam3', 'Fam4', 'Fam5', 'Fam6'].map(familia), CATALOGO.clases[2]],
   }
   const visibles = () => [...document.querySelectorAll('[id^="familia-"]')].map((e) => e.id)
 
@@ -154,20 +154,20 @@ describe('Catalogo: tres familias por orden con "Todos"', () => {
     window.location.hash = ''
   })
 
-  it('muestra 3 por orden y "Ver más" despliega el resto; "Ver menos" lo vuelve a plegar', () => {
+  it('muestra 4 por orden y "Ver más" despliega el resto; "Ver menos" lo vuelve a plegar', () => {
     render(<Catalogo catalogo={GRANDE} error="" />)
-    expect(visibles()).toEqual(['familia-Fam1', 'familia-Fam2', 'familia-Fam3'])
+    expect(visibles()).toEqual(['familia-Fam1', 'familia-Fam2', 'familia-Fam3', 'familia-Fam4'])
     const boton = screen.getByRole('button', { name: 'Ver 2 familias más de Coleoptera' })
     expect(boton).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(boton)
-    expect(visibles()).toHaveLength(5)
+    expect(visibles()).toHaveLength(6)
     const menos = screen.getByRole('button', { name: 'Ver menos de Coleoptera' })
     expect(menos).toHaveAttribute('aria-expanded', 'true')
     fireEvent.click(menos)
-    expect(visibles()).toHaveLength(3)
+    expect(visibles()).toHaveLength(4)
   })
 
-  it('un orden con 3 o menos no ofrece "Ver más"', () => {
+  it('un orden con 4 o menos no ofrece "Ver más"', () => {
     render(<Catalogo catalogo={GRANDE} error="" />)
     expect(screen.queryByRole('button', { name: /de Mantodea/ })).toBeNull()
   })
@@ -175,23 +175,23 @@ describe('Catalogo: tres familias por orden con "Todos"', () => {
   it('al elegir un orden o buscar se ven todas las coincidencias', () => {
     render(<Catalogo catalogo={GRANDE} error="" />)
     fireEvent.click(screen.getByRole('button', { name: 'Coleoptera' }))
-    expect(visibles()).toHaveLength(5)
+    expect(visibles()).toHaveLength(6)
     expect(screen.queryByRole('button', { name: /familias más/ })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Todos' }))
     fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: 'fam' } })
-    expect(visibles()).toHaveLength(5)
+    expect(visibles()).toHaveLength(6)
   })
 
   it('el enlace a una familia oculta despliega su orden para que la tarjeta exista', () => {
-    window.location.hash = '#familia-Fam5'
+    window.location.hash = '#familia-Fam6'
     render(<Catalogo catalogo={GRANDE} error="" />)
-    expect(document.getElementById('familia-Fam5')).not.toBeNull()
+    expect(document.getElementById('familia-Fam6')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Ver menos de Coleoptera' })).toBeInTheDocument()
   })
 
   it('con una sola familia oculta lo dice en singular', () => {
-    const cuatro = { ...GRANDE, clases: GRANDE.clases.filter((c) => c.nombre !== 'Fam5') }
-    render(<Catalogo catalogo={cuatro} error="" />)
+    const cinco = { ...GRANDE, clases: GRANDE.clases.filter((c) => c.nombre !== 'Fam6') }
+    render(<Catalogo catalogo={cinco} error="" />)
     expect(screen.getByRole('button', { name: 'Ver 1 familia más de Coleoptera' })).toBeInTheDocument()
   })
 })
