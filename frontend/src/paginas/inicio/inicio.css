@@ -102,9 +102,13 @@
   border-radius: var(--radio);
   background: var(--superficie);
   scroll-margin-top: 96px;
+  transition:
+    transform 240ms var(--curva-salida),
+    border-color 240ms var(--curva-salida),
+    box-shadow 240ms var(--curva-salida);
 }
 .tarjeta:target { outline: 3px solid var(--verde-selva); outline-offset: 2px; }
-.tarjeta__foto { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; background: var(--pista); }
+.tarjeta__foto { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; background: var(--pista); transition: transform 400ms var(--curva-salida); }
 .tarjeta__cuerpo { display: flex; flex: 1; flex-direction: column; gap: var(--espacio-2); padding: var(--espacio-4); }
 .tarjeta__orden { margin: 0; font-size: 0.875rem; color: var(--texto-suave); }
 .tarjeta__nombre { margin: 0; font-size: 1.1875rem; font-weight: 700; overflow-wrap: anywhere; }
@@ -114,7 +118,29 @@
 .tarjeta__f1 .barra__pista { grid-column: 1 / -1; }
 .tarjeta__f1 strong { font-variant-numeric: tabular-nums; }
 .tarjeta .credito { margin-top: auto; }
-.tarjeta .boton { align-self: flex-start; }
+.tarjeta .boton { align-self: stretch; width: 100%; }
+
+/* Resaltado al pasar el mouse: la tarjeta sube un poco y el borde se ilumina
+   en Verde Selva. Solo con mouse (hover: hover), para que en el celular no
+   quede pegado al tocar, y sin movimiento si se pidió movimiento reducido. */
+@media (hover: hover) and (pointer: fine) {
+  .tarjeta:hover {
+    transform: translateY(-4px);
+    border-color: var(--verde-selva);
+    box-shadow:
+      0 0 0 1px var(--verde-selva),
+      0 0 22px 2px rgb(76 175 80 / 0.35),
+      0 14px 28px -14px rgb(15 61 62 / 0.4);
+  }
+  .tarjeta:hover .tarjeta__foto { transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta, .tarjeta__foto { transition: none; }
+  .tarjeta:hover, .tarjeta:hover .tarjeta__foto { transform: none; }
+}
+
+/* "Ver más" de cada orden */
+.catalogo__mas { margin-top: var(--espacio-4); }
 
 /* En el celular, dos columnas de tarjetas compactas: en una sola, las 44
    clases suman más de 20 000 px. */
@@ -125,7 +151,6 @@
   .tarjeta__comun { font-size: 1rem; }
   .tarjeta__orden, .tarjeta__nota, .tarjeta__f1 { font-size: 0.9375rem; }
   .tarjeta__f1-largo { display: none; }
-  .tarjeta .boton { align-self: stretch; }
 }
 
 /* Panel de fichas */

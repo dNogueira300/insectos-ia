@@ -3,6 +3,11 @@ import { obtenerResumen } from '../../compartido/api.js'
 import PanelFichas from './PanelFichas.jsx'
 import TarjetaClase from './TarjetaClase.jsx'
 
+// Con "Todos" y sin búsqueda, cada orden muestra sus primeras familias y el
+// resto queda detrás de "Ver más": con las 44 clases a la vista, la página
+// era muy larga.
+const POR_ORDEN = 3
+
 const normalizar = (texto) =>
   (texto ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
@@ -27,6 +32,17 @@ export default function Catalogo({ catalogo, error }) {
     }
   }, [])
   const cerrarPanel = useCallback(() => setAbierta(null), [])
+
+  // Órdenes que el visitante desplegó o plegó. Sin decisión suya, se despliega
+  // solo el orden de la familia enlazada desde la herramienta (/#familia-X):
+  // si quedara oculta, el enlace no llevaría a ningún lado.
+  const [alternados, setAlternados] = useState({})
+  const ordenEnlazado = useMemo(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1))
+    return catalogo?.clases.find((c) => c.id === id)?.orden ?? ''
+  }, [catalogo])
+  const desplegado = (nombre) => alternados[nombre] ?? nombre === ordenEnlazado
+  const limitar = !orden && !busqueda.trim()
 
   const grupos = useMemo(() => {
     if (!catalogo) return []
@@ -105,8 +121,11 @@ export default function Catalogo({ catalogo, error }) {
                 <h3 className="catalogo__orden">
                   {grupo.nombre} <span>{grupo.nombre_comun}</span>
                 </h3>
-                <ul className="catalogo__lista">
-                  {grupo.clases.map((clase) => (
+                <ul className="catalogo__lista" id={`lista-${grupo.nombre}`}>
+                  {(limitar && !desplegado(grupo.nombre)
+                    ? grupo.clases.slice(0, POR_ORDEN)
+                    : grupo.clases
+                  ).map((clase) => (
                     <li key={clase.id}>
                       <TarjetaClase
                         clase={clase}
@@ -116,6 +135,30 @@ export default function Catalogo({ catalogo, error }) {
                     </li>
                   ))}
                 </ul>
+                {limitar && grupo.clases.length > POR_ORDEN && (
+                  <button
+                    type="button"
+                    className="boton boton--secundario catalogo__mas"
+                    aria-expanded={desplegado(grupo.nombre)}
+                    aria-controls={`lista-${grupo.nombre}`}
+                    onClick={() =>
+                      setAlternados((previo) => ({ ...previo, [grupo.nombre]: !desplegado(grupo.nombre) }))
+                    }
+                  >
+                    {desplegado(grupo.nombre) ? (
+                      <>
+                        Ver menos{' '}
+                        <span className="visualmente-oculto">de {grupo.nombre}</span>
+                      </>
+                    ) : (
+                      <>
+                        Ver {grupo.clases.length - POR_ORDEN}{' '}
+                        {grupo.clases.length - POR_ORDEN === 1 ? 'familia' : 'familias'} más{' '}
+                        <span className="visualmente-oculto">de {grupo.nombre}</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             ))}
           </>

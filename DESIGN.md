@@ -345,9 +345,16 @@ La firma de la honestidad del sistema.
 - Una línea en Caption, Texto suave: "Foto: autor · licencia", con el autor enlazado a su observación. Toda foto mostrada lo lleva. Sobre petróleo cambia a Texto sobre petróleo con enlace Verde Lima.
 
 ### Tarjeta del catálogo
-- Superficie, radio 8 px, borde de 1 px, sin sombra, recorte oculto; foto 4:3 arriba sobre Pista; cuerpo con 16 px y 8 px de separación: orden (0.875rem Texto suave), nombre científico en cursiva 700 a 1.1875rem, nombre común, chip provisional si aplica, F1 con barra, crédito y botón secundario chico "Ver fichas" al pie.
+- Superficie, radio 8 px, borde de 1 px, sin sombra en reposo, recorte oculto; foto 4:3 arriba sobre Pista; cuerpo con 16 px y 8 px de separación: orden (0.875rem Texto suave), nombre científico en cursiva 700 a 1.1875rem, nombre común, chip provisional si aplica, F1 con barra, crédito y botón secundario chico "Ver fichas" a todo el ancho al pie.
+- Si la base no tiene registros del orden (consulta en vivo a `/resumen`), el botón se cambia por la nota "Sin fichas en la base todavía."
+- **Al pasar el mouse** (solo `hover: hover` y `pointer: fine`): sube 4 px, el borde pasa a Verde Selva con un halo de 22 px `rgb(76 175 80 / .35)` y una sombra suave petróleo; la foto se amplía al 104 %. Curva de salida en 240 ms (la foto en 400 ms). Con movimiento reducido no hay desplazamiento ni transición. En pantallas táctiles no se aplica.
 - Enlazada desde un resultado (`:target`): contorno de 3 px Verde Selva.
-- Bajo 640 px: relleno 12 px, textos mínimos de 0.9375rem, botón a todo el ancho y el texto largo del F1 oculto.
+- Bajo 640 px: dos columnas, relleno 12 px, textos mínimos de 0.9375rem y el texto largo del F1 oculto.
+
+### "Ver más" del catálogo
+- Con el filtro "Todos" y sin búsqueda, cada orden muestra sus primeras 3 clases. Debajo, un botón secundario "Ver N familias más" (singular si es una) despliega el resto, y "Ver menos" lo pliega. Lleva `aria-expanded` y `aria-controls`, y nombra el orden para lectores de pantalla.
+- Al elegir un orden o buscar se ven todas las coincidencias.
+- El orden de una familia enlazada desde la herramienta (`/#familia-X`) se despliega solo, para que el enlace llegue a su tarjeta.
 
 ### Panel de fichas
 - Diálogo modal: velo Azul Petróleo al 55 %, panel en Fondo de hasta 40rem por 90vh (máx. 48rem), radio 16 px, relleno 24 px, sombra del panel, aparece en 240 ms.
