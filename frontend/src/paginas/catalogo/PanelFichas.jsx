@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { obtenerTaxon } from '../../compartido/api.js'
-import Ficha from '../../compartido/Ficha.jsx'
+import ResumenFichas from '../../compartido/ResumenFichas.jsx'
 
 export default function PanelFichas({ clase, alCerrar }) {
   const [estado, setEstado] = useState({ cargando: true, fichas: [], error: '' })
@@ -77,9 +77,11 @@ export default function PanelFichas({ clase, alCerrar }) {
           </p>
         )}
         {!estado.cargando && !estado.error && (
-          <Ficha
+          <ResumenFichas
             fichas={estado.fichas}
-            titulo="Fichas de la base de datos biológica"
+            orden={clase.orden}
+            familia={clase.tipo === 'familia' ? clase.nombre : ''}
+            titulo="Información de la base de datos"
             vacio={
               clase.tipo === 'familia'
                 ? 'Aún no hay fichas de esta familia en la base.'

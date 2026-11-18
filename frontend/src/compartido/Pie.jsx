@@ -16,6 +16,13 @@ export default function Pie({ corrida }) {
           <li>
             <a href="/identificar/">Identificar un insecto</a>
           </li>
+          {/* En el celular la cabecera oculta estos enlaces: el pie los conserva. */}
+          <li>
+            <a href="/catalogo/">Catálogo</a>
+          </li>
+          <li>
+            <a href="/creditos/">Créditos</a>
+          </li>
         </ul>
       </div>
     </footer>

@@ -10,9 +10,13 @@ export default function Desempeno({ metricas }) {
             Lo medimos con {metricas.n_prueba} fotos que el modelo nunca vio al entrenar, de
             fotógrafos que tampoco vio.
           </p>
-          <p className="desempeno__aviso">
-            Medido con fotos de catálogo. La evaluación con fotos de campo está pendiente.
-          </p>
+          {metricas.campo && (
+            <p className="desempeno__campo">
+              También lo probamos con {metricas.campo.n} fotos tomadas por estudiantes en Loreto: ahí
+              afirma la familia en el {pct(metricas.campo.responde)} de los casos y acierta el{' '}
+              {pct(metricas.campo.acierta_cuando_responde, 1)}.
+            </p>
+          )}
         </div>
         {/* Frases con la cifra dentro: sin la plantilla de cifra grande con rótulo. */}
         <ul className="desempeno__datos">

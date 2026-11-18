@@ -28,6 +28,7 @@ const PARES = [
   ['gris', 'superficie'],
   ['texto-suave', 'fondo'],
   ['texto-suave', 'superficie'],
+  ['texto-suave', 'pista'],
   ['petroleo', 'fondo'],
   ['verde-amazonico', 'fondo'],
   ['verde-amazonico', 'superficie'],

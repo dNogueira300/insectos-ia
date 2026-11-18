@@ -1,0 +1,15 @@
+/* Créditos: una lista de definiciones, sin tarjetas */
+.creditos { padding-block: var(--espacio-8); }
+.creditos__bajada { color: var(--texto-suave); }
+.creditos__lista { display: grid; gap: var(--espacio-6); margin: var(--espacio-6) 0 0; }
+@media (min-width: 960px) {
+  .creditos__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .creditos__grupo--ancho { grid-column: 1 / -1; }
+}
+.creditos__grupo { display: grid; align-content: start; gap: var(--espacio-2); padding-top: var(--espacio-4); border-top: 3px solid var(--verde-amazonico); }
+.creditos__grupo dt { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--verde-amazonico); }
+.creditos__grupo dd { display: grid; gap: var(--espacio-1); margin: 0; }
+.creditos__grupo strong { font-size: 1.125rem; color: var(--petroleo); }
+.creditos__grupo span { color: var(--texto-suave); }
+.creditos__nombres { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--espacio-2) var(--espacio-5); margin: 0; padding: 0; list-style: none; }
+.creditos__pendiente { color: var(--texto-suave); font-style: italic; }

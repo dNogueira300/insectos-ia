@@ -16,7 +16,7 @@ export default function Portada({ demostracion, nFamilias }) {
             <a className="boton boton--claro" href="/identificar/">
               Identificar un insecto
             </a>
-            <a className="boton boton--contorno" href="#catalogo">
+            <a className="boton boton--contorno" href="/catalogo/">
               {nFamilias ? `Ver las ${nFamilias} familias` : 'Ver las familias'}
             </a>
           </div>

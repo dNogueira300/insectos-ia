@@ -1,0 +1,14 @@
+{
+  "conjunto": "datos/splits/campo.csv",
+  "descripcion": "705 fotos de estudiantes de Entomología (UNAP), familias del modelo; ver docs/evaluacion_campo_v4.md",
+  "n": 705,
+  "macro_f1_orden": 0.879,
+  "macro_f1_familia": 0.699,
+  "exactitud_orden": 0.887,
+  "exactitud_familia": 0.772,
+  "top3_familia": 0.877,
+  "umbral": 0.7,
+  "responde": 0.851,
+  "acierta_cuando_responde": 0.852,
+  "nota_macro_f1": "promedio sobre las clases presentes en el conjunto de campo"
+}

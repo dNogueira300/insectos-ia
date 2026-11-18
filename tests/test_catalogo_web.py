@@ -214,3 +214,14 @@ def test_url_de_origen_es_la_pagina_de_la_observacion():
     f["obs_id"] = "68641"
     assert url_origen(f) == "https://www.inaturalist.org/observations/68641"
     assert url_origen(fila("a.jpg", "OrdA")) == ""
+
+
+def test_metricas_de_campo_se_leen_si_la_corrida_las_tiene(tmp_path: Path):
+    from pipeline.catalogo_web import metricas_de_campo
+
+    assert metricas_de_campo(tmp_path) is None
+    (tmp_path / "evaluacion_campo.json").write_text(
+        '{"n": 705, "responde": 0.851, "acierta_cuando_responde": 0.852, "f1_familia": 0.699}',
+        encoding="utf-8",
+    )
+    assert metricas_de_campo(tmp_path) == {"n": 705, "responde": 0.851, "acierta_cuando_responde": 0.852}

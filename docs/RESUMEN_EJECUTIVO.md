@@ -1,7 +1,7 @@
 # Resumen ejecutivo — Sistema de identificación de insectos amazónicos
 
-**Fecha:** 25 de septiembre de 2026
-**Estado:** los datos están cerrados y **el modelo ya está entrenado**. La cuarta versión acierta la familia en 92 % de las fotos de prueba, y en 95.5 % cuando se le permite decir "no estoy seguro".
+**Fecha:** 17 de noviembre de 2026
+**Estado:** el modelo, la web y los entregables principales están listos. Con fotos de repositorio la cuarta versión acierta la familia en 92 % de los casos; con 705 fotos tomadas por estudiantes en Loreto afirma la familia en el 85 % de las fotos y acierta el 85.2 % de esas veces. Falta publicarla en internet.
 **Repositorio:** https://github.com/dNogueira300/insectos-ia (todo en la rama `main`)
 
 ---
@@ -139,7 +139,22 @@ El detalle por clase está en `docs/desempeno_por_clase_v4.md`.
 - **Licencias.** El 73 % de las fotos tiene licencia **no comercial**. Es válido para un proyecto académico y de responsabilidad social. Si el sistema llegara a tener un uso comercial, habría que revisarlo; la licencia de cada foto está registrada.
 - **Cinco familias quedaron justas en cantidad de material:** _Chalcididae_, _Termitidae_ y tres de libélulas.
 
-## Próximos pasos
+## Novedades de noviembre de 2026
+
+- **Base de datos y banco de imágenes de los estudiantes.** Se revisaron y cerraron las recopilaciones de 24 grupos: 1 051 fotografías propias, de 12 órdenes y 73 familias, unidas en una sola base con su banco de imágenes ordenado por orden y familia.
+- **Prueba con fotos de campo.** Las 705 fotos de familias que el sistema conoce se usaron como examen independiente. Resultado: 0.879 de F1 en orden y 0.699 en familia; con el umbral de 70 % responde en el 85 % de las fotos y acierta el 85.2 %. La meta técnica no se alcanza en campo; las larvas y las familias parecidas son la mayor fuente de error. Detalle en `docs/evaluacion_campo_v4.md`.
+- **La web muestra los registros de los estudiantes.** Debajo del resultado aparece una ficha resumen de la familia (cultivos, daños, importancia) y un enlace a una página con todos los registros. Los créditos nombran a los 98 estudiantes.
+- **Entregables.** Informe científico en borrador, manual de uso del sistema y manual ilustrado de insectos amazónicos (PowerPoint y PDF).
+
+## Pendientes
+
+1. Publicar la web en un servicio gratuito para la demostración.
+2. Validación de las identificaciones por la docente.
+3. Terminar el informe científico y preparar la presentación final.
+4. Videos, material didáctico, talleres e informe de impacto social.
+5. Confirmar las familias provisionales y la meta de precisión con la Facultad.
+
+## Próximos pasos (septiembre, ya cumplidos en parte)
 
 1. Reunión con la Facultad: familias provisionales, meta de precisión y fotos de campo.
 2. Presentar la web INSECTIA y completar la base de datos biológica: hoy tiene 5 fichas de ejemplo, y el catálogo mostrará más a medida que crezca.

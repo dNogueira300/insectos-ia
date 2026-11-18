@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../src/compartido/api.js', () => ({ obtenerTaxon: vi.fn(), obtenerResumen: vi.fn() }))
 
 import { obtenerResumen, obtenerTaxon } from '../src/compartido/api.js'
-import Catalogo from '../src/paginas/inicio/Catalogo.jsx'
+import Catalogo from '../src/paginas/catalogo/Catalogo.jsx'
 
 const foto = { archivo: '/catalogo/fotos/x.webp', ancho: 640, alto: 480, credito: '', licencia: 'cc-by', url_origen: '' }
 const CATALOGO = {
@@ -79,7 +79,7 @@ describe('Catalogo', () => {
     obtenerTaxon.mockResolvedValue({ fichas: [{ ID: '1', Nombre_comun: 'gorgojo del plátano' }] })
     render(<Catalogo catalogo={CATALOGO} error="" />)
     fireEvent.click(within(document.getElementById('familia-Curculionidae')).getByRole('button', { name: 'Ver fichas' }))
-    expect(await screen.findByText('gorgojo del plátano')).toBeInTheDocument()
+    expect(await screen.findByText(/gorgojo del plátano/i)).toBeInTheDocument()
     expect(obtenerTaxon).toHaveBeenCalledWith('Coleoptera', 'Curculionidae')
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -102,13 +102,17 @@ describe('Catalogo', () => {
     obtenerTaxon.mockResolvedValue({ fichas: [{ ID: '1', Nombre_comun: 'gorgojo del plátano' }] })
     render(<Catalogo catalogo={CATALOGO} error="" />)
     fireEvent.click(within(document.getElementById('familia-Curculionidae')).getByRole('button', { name: 'Ver fichas' }))
-    await screen.findByText('gorgojo del plátano')
+    await screen.findByText(/gorgojo del plátano/i)
     const cerrar = screen.getByRole('button', { name: 'Cerrar' })
     expect(cerrar).toHaveFocus()
-    // fireEvent devuelve false cuando el panel cancela el Tab para retener el foco.
-    expect(fireEvent.keyDown(cerrar, { key: 'Tab' })).toBe(false)
-    expect(fireEvent.keyDown(cerrar, { key: 'Tab', shiftKey: true })).toBe(false)
+    // fireEvent devuelve false cuando el panel cancela el Tab para retener el foco:
+    // desde el último elemento (el enlace a los registros) vuelve al primero, y al revés.
+    const enlace = screen.getByRole('link', { name: 'Ver los 1 registro' })
+    enlace.focus()
+    expect(fireEvent.keyDown(enlace, { key: 'Tab' })).toBe(false)
     expect(cerrar).toHaveFocus()
+    expect(fireEvent.keyDown(cerrar, { key: 'Tab', shiftKey: true })).toBe(false)
+    expect(enlace).toHaveFocus()
   })
 
   it('sin registros del orden en la base, la tarjeta lo dice en vez de abrir un panel vacío', async () => {

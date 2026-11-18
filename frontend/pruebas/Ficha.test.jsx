@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import Ficha from '../src/compartido/Ficha.jsx'
 
@@ -58,7 +58,7 @@ describe('Ficha', () => {
 
   it('una importancia no reconocida se muestra como dato, sin chip', () => {
     const { container } = render(<Ficha fichas={[{ ...REGISTRO, Importancia_economica: 'Variable' }]} />)
-    expect(container.querySelector('.chip')).toBeNull()
+    expect(container.querySelector('.chip--plaga, .chip--benefico')).toBeNull()
     expect(screen.getByText('Variable')).toBeInTheDocument()
   })
 
@@ -77,5 +77,40 @@ describe('Ficha', () => {
     render(<Ficha fichas={[{ ...REGISTRO, Verificado_por: 'Una Persona' }]} />)
     expect(screen.queryByText('Una Persona')).not.toBeInTheDocument()
     expect(screen.queryByText('Verificado por')).not.toBeInTheDocument()
+  })
+
+  it('resalta el cultivo asociado como chip, igual que la importancia', () => {
+    const { container } = render(<Ficha fichas={[REGISTRO]} />)
+    expect(container.querySelector('.chip--cultivo')).toHaveTextContent('Cultivo: plátano')
+    expect(screen.queryByText('Cultivo asociado')).not.toBeInTheDocument()
+  })
+
+  it('una planta silvestre no se resalta como cultivo', () => {
+    const { container } = render(<Ficha fichas={[{ ...REGISTRO, Cultivo_asociado: 'Ninguno (planta silvestre)' }]} />)
+    expect(container.querySelector('.chip--cultivo')).toBeNull()
+    expect(screen.getByText('Ninguno (planta silvestre)')).toBeInTheDocument()
+  })
+
+  it('no muestra la especie cuando no está determinada', () => {
+    render(<Ficha fichas={[{ ...REGISTRO, Nombre_cientifico: 'No determinado' }]} />)
+    expect(screen.queryByText('Especie del registro')).not.toBeInTheDocument()
+  })
+
+  it('pone primero las fichas con especie o género determinados', () => {
+    const fichas = [
+      { ...REGISTRO, ID: 'A', Nombre_comun: 'sin especie', Nombre_cientifico: 'No determinado' },
+      { ...REGISTRO, ID: 'B', Nombre_comun: 'con género', Nombre_cientifico: 'Atta sp.' },
+    ]
+    render(<Ficha fichas={fichas} />)
+    const nombres = screen.getAllByText(/sin especie|con género/).map((n) => n.textContent)
+    expect(nombres).toEqual(['con género', 'sin especie'])
+  })
+
+  it('muestra seis fichas y un botón para ver las demás', async () => {
+    const fichas = Array.from({ length: 9 }, (_, i) => ({ ...REGISTRO, ID: `R${i}`, Nombre_comun: `insecto ${i}` }))
+    render(<Ficha fichas={fichas} />)
+    expect(screen.getAllByText(/^insecto \d$/)).toHaveLength(6)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver 3 fichas más' }))
+    expect(screen.getAllByText(/^insecto \d$/)).toHaveLength(9)
   })
 })

@@ -34,7 +34,7 @@ describe('Resultado', () => {
 
   it('enlaza la familia afirmada con su tarjeta del catálogo', () => {
     render(<Resultado prediccion={CERTERO} />)
-    expect(screen.getByRole('link', { name: 'Ver esta familia en el catálogo' })).toHaveAttribute('href', '/#familia-Curculionidae')
+    expect(screen.getByRole('link', { name: 'Ver esta familia en el catálogo' })).toHaveAttribute('href', '/catalogo/#familia-Curculionidae')
   })
 
   it('con familia incierta no la afirma y muestra las candidatas', () => {
@@ -47,7 +47,7 @@ describe('Resultado', () => {
   it('con familia incierta sigue mostrando el orden y enlaza al orden', () => {
     render(<Resultado prediccion={INCIERTO} />)
     expect(screen.getByText('Coleoptera')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ver este orden en el catálogo' })).toHaveAttribute('href', '/#orden-Coleoptera')
+    expect(screen.getByRole('link', { name: 'Ver este orden en el catálogo' })).toHaveAttribute('href', '/catalogo/#orden-Coleoptera')
   })
 
   it('un orden sin familias no se presenta como duda', () => {

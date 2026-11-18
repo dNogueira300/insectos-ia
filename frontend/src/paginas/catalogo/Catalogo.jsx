@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { obtenerResumen } from '../../compartido/api.js'
+import { useCallback, useMemo, useState } from 'react'
+import { useOrdenesConFichas } from './conFichas.js'
 import PanelFichas from './PanelFichas.jsx'
 import TarjetaClase from './TarjetaClase.jsx'
 
@@ -15,26 +15,11 @@ export default function Catalogo({ catalogo, error }) {
   const [orden, setOrden] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [abierta, setAbierta] = useState(null)
-  // Órdenes con registros en la base, consultados en vivo: la base crece con el
-  // Excel de Agronomía y un conteo guardado en catalogo.json quedaría viejo. Si
-  // no se puede consultar, todas las tarjetas conservan "Ver fichas".
-  const [conFichas, setConFichas] = useState(null)
-
-  useEffect(() => {
-    let vigente = true
-    obtenerResumen()
-      .then(({ por_orden }) => {
-        if (vigente) setConFichas(new Set(por_orden.filter((o) => o.registros > 0).map((o) => o.orden)))
-      })
-      .catch(() => {})
-    return () => {
-      vigente = false
-    }
-  }, [])
+  const conFichas = useOrdenesConFichas()
   const cerrarPanel = useCallback(() => setAbierta(null), [])
 
   // Órdenes que el visitante desplegó o plegó. Sin decisión suya, se despliega
-  // solo el orden de la familia enlazada desde la herramienta (/#familia-X):
+  // solo el orden de la familia enlazada desde la herramienta (/catalogo/#familia-X):
   // si quedara oculta, el enlace no llevaría a ningún lado.
   const [alternados, setAlternados] = useState({})
   const ordenEnlazado = useMemo(() => {
@@ -63,7 +48,7 @@ export default function Catalogo({ catalogo, error }) {
   return (
     <section id="catalogo" className="catalogo" aria-labelledby="titulo-catalogo">
       <div className="contenedor">
-        <h2 id="titulo-catalogo">Catálogo de familias</h2>
+        <h1 id="titulo-catalogo">Catálogo de familias</h1>
         <p className="catalogo__bajada">
           Las familias y órdenes que el sistema reconoce, con una foto de ejemplo y qué tan bien
           las distingue el modelo.

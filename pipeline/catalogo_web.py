@@ -252,6 +252,19 @@ def hoja_de_contactos(clases: list[dict], publico: Path, destino: Path) -> None:
     hoja.save(destino, quality=85)
 
 
+def metricas_de_campo(corrida: Path) -> dict | None:
+    """Lo que la web muestra de la evaluación con fotos de campo, si la corrida la tiene.
+
+    `evaluacion_campo.json` lo escribe la evaluación de campo junto a los pesos.
+    Sin ese archivo la web no menciona el campo: ninguna cifra se escribe a mano.
+    """
+    ruta = Path(corrida) / "evaluacion_campo.json"
+    if not ruta.exists():
+        return None
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    return {clave: datos[clave] for clave in ("n", "responde", "acierta_cuando_responde")}
+
+
 def _leer_csv(ruta: Path) -> list[dict]:
     with ruta.open(encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
@@ -353,6 +366,7 @@ def main() -> None:
             "umbral": UMBRAL_FAMILIA,
             "responde": responde,
             "acierta_cuando_responde": acierta,
+            **({"campo": campo} if (campo := metricas_de_campo(corrida)) else {}),
         },
         "ordenes": [
             {"nombre": o.nombre, "nombre_comun": o.nombre_comun, "tiene_familias": bool(o.familias)}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { predecir } from '../../compartido/api.js'
 import Cabecera from '../../compartido/Cabecera.jsx'
 import { archivoDesdeRuta, cargarDemostracion } from '../../compartido/datos.js'
-import Ficha from '../../compartido/Ficha.jsx'
+import ResumenFichas from '../../compartido/ResumenFichas.jsx'
 import Pie from '../../compartido/Pie.jsx'
 import Resultado from '../../compartido/Resultado.jsx'
 import Consejos from './Consejos.jsx'
@@ -130,14 +130,15 @@ export default function Identificar() {
             {estado === 'resultado' && (
               <>
                 <Resultado prediccion={prediccion} />
-                <Ficha
+                <ResumenFichas
                   fichas={prediccion.fichas}
+                  orden={prediccion.orden}
+                  familia={deOrden ? '' : prediccion.familia}
                   titulo={
                     deOrden
                       ? `Registros del orden ${prediccion.orden} en la base`
                       : `Registros de la base para la familia ${prediccion.familia}`
                   }
-                  nota="El sistema identifica hasta familia; estas fichas describen especies de ese grupo registradas en la base."
                   vacio="Aún no hay fichas de este insecto en la base de datos biológica."
                 />
                 <button type="button" className="boton boton--secundario" onClick={reiniciar}>

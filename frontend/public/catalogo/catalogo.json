@@ -8,7 +8,12 @@
     "f1_familia": 0.9209652465087728,
     "umbral": 0.7,
     "responde": 0.94,
-    "acierta_cuando_responde": 0.955
+    "acierta_cuando_responde": 0.955,
+    "campo": {
+      "n": 705,
+      "responde": 0.851,
+      "acierta_cuando_responde": 0.852
+    }
   },
   "ordenes": [
     {

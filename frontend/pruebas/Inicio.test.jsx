@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../src/compartido/datos.js', () => ({ cargarCatalogo: vi.fn(), cargarDemostracion: vi.fn() }))
@@ -24,7 +24,8 @@ const DEMO = {
 const CATALOGO = {
   corrida: 'v4_convnext_t_288',
   metricas: { n_prueba: 5165, exactitud_familia: 0.9216, top3_familia: 0.958, f1_orden: 0.935,
-    f1_familia: 0.921, umbral: 0.7, responde: 0.94, acierta_cuando_responde: 0.955 },
+    f1_familia: 0.921, umbral: 0.7, responde: 0.94, acierta_cuando_responde: 0.955,
+    campo: { n: 705, responde: 0.851, acierta_cuando_responde: 0.852 } },
   ordenes: [], clases: [],
 }
 
@@ -61,7 +62,28 @@ describe('Inicio', () => {
     expect(bloque).toHaveTextContent('acierta el 95.5 %')
     expect(bloque).toHaveTextContent('responde en el 94 % de los casos')
     expect(bloque).toHaveTextContent('entre sus tres primeras opciones el 96 %')
-    expect(screen.getByText(/evaluación con fotos de campo está pendiente/i)).toBeInTheDocument()
+    expect(screen.queryByText(/pendiente/i)).not.toBeInTheDocument()
+  })
+
+  it('informa la prueba con fotos de campo tomadas por estudiantes', async () => {
+    render(<Inicio />)
+    const bloque = (await screen.findByRole('heading', { name: 'Qué tan bien funciona' })).closest('section')
+    expect(bloque).toHaveTextContent('705 fotos tomadas por estudiantes')
+    expect(bloque).toHaveTextContent('afirma la familia en el 85 % de los casos y acierta el 85.2 %')
+  })
+
+  it('muestra una parte del catálogo y enlaza al catálogo completo', async () => {
+    render(<Inicio />)
+    const seccion = (await screen.findByRole('heading', { name: 'Catálogo de familias' })).closest('section')
+    expect(within(seccion).getByRole('link', { name: 'Ver catálogo completo' })).toHaveAttribute('href', '/catalogo/')
+    // Ni buscador ni filtros: esos quedan en la página del catálogo.
+    expect(within(seccion).queryByLabelText('Buscar')).toBeNull()
+  })
+
+  it('los créditos ya no están en el inicio', async () => {
+    render(<Inicio />)
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.queryByRole('heading', { name: 'Créditos' })).toBeNull()
   })
 
   it('sin catálogo ni demostración la portada sigue en pie', async () => {

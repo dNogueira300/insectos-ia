@@ -1,0 +1,12 @@
+.registros { padding-block: var(--espacio-6) var(--espacio-7, 4rem); }
+.registros__volver { display: inline-block; margin-bottom: var(--espacio-4); font-weight: 700; }
+.registros__origen {
+  max-width: 70ch;
+  padding: var(--espacio-4);
+  border-radius: var(--radio);
+  background: var(--selva-fondo);
+  color: var(--verde-amazonico);
+}
+.registros__origen p { margin: 0; }
+.registros__origen p + p { margin-top: var(--espacio-2); }
+.registros__cuerpo { display: grid; gap: var(--espacio-2); max-width: 900px; }

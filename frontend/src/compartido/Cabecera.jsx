@@ -14,8 +14,19 @@ export default function Cabecera({ pagina }) {
           >
             Inicio
           </a>
-          <a className="cabecera__enlace" href="/#catalogo">
+          <a
+            className="cabecera__enlace"
+            href="/catalogo/"
+            aria-current={pagina === 'catalogo' ? 'page' : undefined}
+          >
             Catálogo
+          </a>
+          <a
+            className="cabecera__enlace"
+            href="/creditos/"
+            aria-current={pagina === 'creditos' ? 'page' : undefined}
+          >
+            Créditos
           </a>
           <a
             className="boton boton--principal"

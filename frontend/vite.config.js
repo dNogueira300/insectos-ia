@@ -8,12 +8,15 @@ export default defineConfig({
   plugins: [react()],
   server: { port: 5173 },
   build: {
-    // Dos páginas: FastAPI sirve dist/index.html en / y dist/identificar/index.html
-    // en /identificar/, sin enrutador del lado del cliente.
+    // Cinco páginas, sin enrutador del lado del cliente: FastAPI sirve
+    // dist/index.html en / y dist/<página>/index.html en /<página>/.
     rollupOptions: {
       input: {
         inicio: raiz('./index.html'),
         identificar: raiz('./identificar/index.html'),
+        catalogo: raiz('./catalogo/index.html'),
+        creditos: raiz('./creditos/index.html'),
+        registros: raiz('./registros/index.html'),
       },
     },
   },

@@ -5,7 +5,7 @@ Es el Proyecto Formativo INAAM–FISI y de Responsabilidad Social de la UNAP (Fa
 La entomóloga de referencia es la Dra. Aldi Guerra Teixeira.
 Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 
-## Estado actual (2026-09-25)
+## Estado actual (2026-11-17)
 
 | Etapa | Estado |
 | --- | --- |
@@ -13,14 +13,22 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | Plan 02 — modelo | **Código terminado.** Modelo vigente: `v4_convnext_t_288`. Se entrena en Colab gratis (T4), una sola cuenta. |
 | Plan 03 — web | **Terminado.** Backend FastAPI en `backend/`, React + Vite en `frontend/`. Se arranca con `iniciar.bat` (http://127.0.0.1:8000). |
 | Rediseño del frontend (INSECTIA) | **Terminado** (2026-09-25) y subido a `main`. |
+| Base de estudiantes y evaluación de campo | **Hechas** (2026-11-17). 1 051 fotos propias de 24 grupos; 705 forman el conjunto de campo. |
+| Entregables | Base de datos, banco de imágenes, informe científico (borrador) y los dos manuales en `../entregables/`. Ver «Entregables y pendientes». |
+| Despliegue | **Pendiente.** Hoy solo corre en local. |
 
-Pruebas: 421 de Python (`pytest`) y 108 del frontend (`npm run prueba`).
+Pruebas: 422 de Python (`pytest`) y 153 del frontend (`npm run prueba`).
 
 ### La web: INSECTIA
 
-- **Dos páginas**, dos entradas de Vite, sin enrutador:
-  - `/` (`frontend/src/paginas/inicio/`): presentación, demostración con un resultado real, cómo funciona, desempeño y catálogo de las 44 clases;
-  - `/identificar/` (`frontend/src/paginas/identificar/`): la herramienta, con todos sus estados.
+- **Cinco páginas**, cinco entradas de Vite, sin enrutador:
+  - `/` (`frontend/src/paginas/inicio/`): presentación, demostración con un resultado real, cómo funciona, desempeño y una vista previa del catálogo (dos filas, una clase por orden) con el enlace "Ver catálogo completo";
+  - `/identificar/` (`frontend/src/paginas/identificar/`): la herramienta, con todos sus estados;
+  - `/catalogo/` (`frontend/src/paginas/catalogo/`): las 44 clases con buscador y filtros. El resultado de la herramienta enlaza a `/catalogo/#familia-X`. Su `index.html` convive en `dist/catalogo/` con los datos que genera `pipeline.catalogo_web`;
+  - `/creditos/` (`frontend/src/paginas/creditos/`): grupo, docente, desarrolladores y los 98 estudiantes recolectores;
+  - `/registros/?orden=X&familia=Y` (`frontend/src/paginas/registros/`): todos los registros de la base para un taxón, con un recuadro que explica de dónde salen.
+  - El resultado y el panel del catálogo muestran **una sola ficha resumen** (`compartido/ResumenFichas.jsx`, cálculo en `compartido/resumen.js`): importancia con conteos, cultivos resaltados, nombres, daños, estados, lugares y géneros anotados, más el enlace «Ver los N registros» a `/registros/`.
+  - En el celular la cabecera oculta "Catálogo" y "Créditos": el pie los enlaza.
   - Comparten `frontend/src/compartido/`: tokens y estilos base, cabecera, pie, resultado, ficha, crédito y cliente de la API.
 - **Documentos:**
   - `PRODUCT.md`: usuarios, marca y lo que no se debe inventar;
@@ -34,8 +42,10 @@ Pruebas: 421 de Python (`pytest`) y 108 del frontend (`npm run prueba`).
 - **Reglas de contenido:**
   - no hay especie, SENASA, IIAP, manejo integrado de plagas ni GPS;
   - las fichas se rotulan "Especie del registro" porque describen especies de la base, no la identificación;
-  - no se muestran nombres de personas: por eso `Verificado_por` no aparece;
-  - toda foto lleva autor, licencia y enlace a su observación en iNaturalist.
+  - no se muestran nombres de personas en fichas ni resultados: por eso `Verificado_por` no aparece. La única excepción es la página **Créditos** (`frontend/src/paginas/creditos/creditos.js`): grupo INAAM, docente, desarrolladores y, cuando lleguen, los estudiantes recolectores;
+  - toda foto del catálogo lleva autor, licencia y enlace a su observación en iNaturalist;
+  - el desempeño de la portada muestra también la cifra de campo, que `pipeline.catalogo_web` lee de `modelo/<corrida>/evaluacion_campo.json` (`metricas_de_campo`); sin ese archivo no se menciona el campo.
+- **Base biológica (`bd/`):** `bd_insectos.xlsx` tiene los 783 registros de estudiantes de taxones que el modelo conoce (familias de la ontología u órdenes sin familias; Phasmatodea → Phasmida). Se carga en SQLite con `python -m pipeline.bd`. Sale de `../entregables/Base_de_datos_y_banco_de_imagenes/BD_Insectos_Amazonicos_Consolidada.csv`.
 - **Pendientes menores de la revisión final:**
   - en el servidor de desarrollo de Vite, `/identificar` sin barra muestra la portada (en FastAPI funciona);
   - un `catalogo.json` dañado muestra un error técnico en inglés;
@@ -116,7 +126,37 @@ Los comandos están en `README.md`. Los datos crudos (39 668 fotos, ~2 GB) está
 
 - Confirmar las familias provisionales: 5 de Hemiptera y Coccinellidae.
 - Renegociar la meta del 99 %.
-- Conseguir fotos de campo: todavía no existe `campo.csv`, y sin eso no se puede declarar la meta alcanzada.
+- Validar las etiquetas de las fotos de campo (`Verificado_por`) y repetir la medición.
+
+## Evaluación de campo (2026-11-17)
+
+- 705 fotos de alumnos (26 familias del modelo, 7 órdenes) en `datos/campo_crudo/` y `datos/splits/campo.csv`, ingeridas con `pipeline.campo`: 0 coincidencias con los splits.
+- v4 en campo: macro-F1 de orden 0.879 y de familia 0.699, sobre las clases presentes. Con umbral 0.7 responde el 85 % y acierta el 85.2 %. **La meta no se alcanza en campo.** La brecha en familia es de 0.22. Ver `docs/evaluacion_campo_v4.md`.
+- Las 705 fotos son el examen de campo: no deben entrar a entrenamiento ni usarse para elegir el umbral.
+- `pipeline.evaluar` promedia el macro-F1 sobre las 44 familias, y en campo las ausentes cuentan como 0. Para campo hay que promediar solo las presentes.
+
+## Entregables y pendientes (2026-11-17)
+
+Los entregables viven fuera del repositorio, en `../entregables/`:
+
+| Entregable | Estado |
+| --- | --- |
+| Base de datos (`Base_de_datos_y_banco_de_imagenes/BD_Insectos_Amazonicos_Consolidada.xlsx` y `.csv`) | **Hecho.** 1 051 registros de 24 grupos, 12 órdenes, 73 familias; columnas extra `Grupo`, `ID_original`, `Archivo_original`, `Conjunto_de_campo`. |
+| Banco de imágenes (`Banco_de_imagenes/Orden/Familia/`) | **Hecho.** Solo fotos de estudiantes (1 051). No llega a las 5 000 de la ficha: el usuario lo aceptó. |
+| Evaluación de campo (`Evaluacion_de_campo/predicciones_campo_v4.csv`, `docs/evaluacion_campo_v4.md`) | **Hecha.** |
+| Informe científico (`Informe_cientifico/Informe_cientifico_INSECTIA_borrador.docx`) | **Borrador.** Lo termina la ingeniera: autores, referencias entomológicas y revisión. |
+| Manual de uso (`Manuales/Manual_uso_INSECTIA.pptx` y `.pdf`) | **Hecho.** 18 páginas, capturas de la web actual. |
+| Manual ilustrado de insectos (`Manuales/Manual_ilustrado_insectos.pptx` y `.pdf`) | **Hecho.** 52 páginas, 69 familias de 10 órdenes. Textos de familias redactados por Claude: conviene que la docente los revise. |
+| Fuentes de los manuales (`Manuales/fuentes/`) | Scripts pptxgenjs, textos, imágenes y fondos para regenerarlos. Si cambia la web, rehacer capturas y página 11 del manual de uso. |
+
+**Pendientes:**
+- **Despliegue gratuito** para la demostración (ver `docs/GUIA_BASE_DE_DATOS_Y_HOSTING.md`). Al publicar, cambiar en el manual de uso la página «Antes de empezar» y la nota del celular, que hoy hablan del uso local.
+- Validación docente de las identificaciones (`Verificado_por` está en «(pendiente)» en las 1 051 filas).
+- Presentación final y defensa.
+- Videos educativos, material didáctico, talleres e informe de impacto social (proyecto de Responsabilidad Social): quedan para después.
+- Confirmar con la Facultad las familias provisionales y renegociar la meta con las cifras de campo.
+- La recopilación cubre 10 de los 15 órdenes: faltan Isoptera, Thysanoptera, Neuroptera, Dermaptera y Psocodea.
+- No hay más fotos de campo que conseguir: el trabajo está en cierre.
 
 ## Límites declarados
 

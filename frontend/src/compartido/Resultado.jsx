@@ -62,7 +62,7 @@ export default function Resultado({ prediccion, conEnlace = true }) {
       )}
 
       {conEnlace && (
-        <a className="resultado__enlace" href={afirmada ? `/#familia-${familia}` : `/#orden-${orden}`}>
+        <a className="resultado__enlace" href={afirmada ? `/catalogo/#familia-${familia}` : `/catalogo/#orden-${orden}`}>
           {afirmada ? 'Ver esta familia en el catálogo' : 'Ver este orden en el catálogo'}
         </a>
       )}
