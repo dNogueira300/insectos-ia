@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import Cabecera from '../src/compartido/Cabecera.jsx'
 import Pie from '../src/compartido/Pie.jsx'
@@ -24,6 +24,39 @@ describe('Cabecera', () => {
     unmount()
     render(<Cabecera pagina="creditos" />)
     expect(screen.getByRole('link', { name: 'Créditos' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('el menú del celular se abre y se cierra con su botón', () => {
+    render(<Cabecera pagina="inicio" />)
+    const boton = screen.getByRole('button', { name: 'Abrir el menú' })
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+    expect(boton).toHaveAttribute('aria-controls', 'menu-principal')
+    expect(document.getElementById('menu-principal')).toBe(screen.getByRole('navigation', { name: 'Principal' }))
+
+    fireEvent.click(boton)
+    expect(boton).toHaveAttribute('aria-expanded', 'true')
+    expect(boton).toHaveAccessibleName('Cerrar el menú')
+    expect(document.querySelector('.cabecera')).toHaveClass('cabecera--abierta')
+
+    fireEvent.click(boton)
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+    expect(document.querySelector('.cabecera')).not.toHaveClass('cabecera--abierta')
+  })
+
+  it('el menú se cierra con Escape, devuelve el foco, y al tocar fuera', () => {
+    render(<Cabecera pagina="inicio" />)
+    const boton = screen.getByRole('button', { name: 'Abrir el menú' })
+
+    fireEvent.click(boton)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+    expect(boton).toHaveFocus()
+
+    fireEvent.click(boton)
+    fireEvent.pointerDown(screen.getByRole('link', { name: 'Catálogo' }))
+    expect(boton).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.pointerDown(document.body)
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
   })
 })
 
