@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ErrorApi, obtenerClases, obtenerResumen, obtenerSalud, obtenerTaxon, predecir } from '../src/compartido/api.js'
+import { ErrorApi, LIMITE_PREDICCION_MS, obtenerClases, obtenerResumen, obtenerSalud, obtenerTaxon, predecir } from '../src/compartido/api.js'
 
 function respuesta(cuerpo, ok = true, estado = 200) {
   return Promise.resolve({ ok, status: estado, json: () => Promise.resolve(cuerpo) })
@@ -50,6 +50,33 @@ describe('cliente de la API', () => {
   it('avisa cuando el servidor no responde', async () => {
     global.fetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
     await expect(obtenerSalud()).rejects.toThrow(/servidor/i)
+  })
+
+  it('corta la identificación si el servidor no responde a tiempo', async () => {
+    // Un servidor colgado o que tarda en despertar no debe dejar la página
+    // girando para siempre.
+    vi.useFakeTimers()
+    global.fetch = vi.fn((_, { signal }) => new Promise((_ok, falla) => {
+      signal.addEventListener('abort', () => falla(new DOMException('abortado', 'AbortError')))
+    }))
+    const promesa = predecir(new File(['x'], 'insecto.jpg'))
+    const verificacion = expect(promesa).rejects.toThrow(/tardó demasiado/)
+    await vi.advanceTimersByTimeAsync(LIMITE_PREDICCION_MS)
+    await verificacion
+    vi.useRealTimers()
+  })
+
+  it('no corta antes del límite', async () => {
+    vi.useFakeTimers()
+    let abortado = false
+    global.fetch = vi.fn((_, { signal }) => {
+      signal.addEventListener('abort', () => { abortado = true })
+      return respuesta({ orden: 'Coleoptera' })
+    })
+    await predecir(new File(['x'], 'insecto.jpg'))
+    await vi.advanceTimersByTimeAsync(LIMITE_PREDICCION_MS * 2)
+    expect(abortado).toBe(false)
+    vi.useRealTimers()
   })
 
   it('pasa la familia como parámetro de consulta', async () => {

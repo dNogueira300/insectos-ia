@@ -1,0 +1,15 @@
+# Lista blanca: solo entra a la imagen lo que el servidor necesita.
+# Sin esto, Docker enviaría datos/ (GB de fotos), .venv y los .pth.
+*
+!backend/
+!pipeline/
+!ontologia/
+!bd/esquema.sql
+!bd/bd_insectos.sqlite
+!modelo/v4_convnext_t_288/insectos.onnx
+!modelo/v4_convnext_t_288/etiquetas.json
+!frontend/
+frontend/node_modules
+frontend/dist
+**/__pycache__
+**/*.pyc

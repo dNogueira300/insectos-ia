@@ -28,12 +28,18 @@ class ServicioInsectos:
         ruta_etiquetas: Path,
         *,
         umbral: float = UMBRAL_FAMILIA,
+        hilos: int = 0,
     ) -> None:
         self.ruta_onnx = Path(ruta_onnx)
         self.espacio = cargar_espacio(Path(ruta_etiquetas))
         self.umbral = umbral
+        # hilos=0 deja que onnxruntime decida. En un contenedor conviene fijarlo
+        # a los vCPU contratados: puede ver los núcleos del anfitrión y lanzar
+        # más hilos de los que hay, que compiten entre sí y la vuelven más lenta.
+        opciones = ort.SessionOptions()
+        opciones.intra_op_num_threads = hilos
         self.sesion = ort.InferenceSession(
-            str(self.ruta_onnx), providers=["CPUExecutionProvider"]
+            str(self.ruta_onnx), opciones, providers=["CPUExecutionProvider"]
         )
         entrada = self.sesion.get_inputs()[0]
         self.nombre_entrada = entrada.name

@@ -117,6 +117,8 @@ El sistema es un solo programa: FastAPI con el modelo ONNX, que además sirve la
 
 ## 4. Opciones de hosting
 
+> **Actualización (19-11-2026):** la opción A ya no es gratuita. Hugging Face exige ahora el plan PRO (9 USD/mes) para crear Spaces con Docker o Gradio. Se eligió **Google Cloud Run**, con la laptop y un túnel de Cloudflare como respaldo. Los pasos están en [`DESPLIEGUE.md`](DESPLIEGUE.md).
+
 Los precios cambian: los de abajo son una referencia aproximada y hay que verificarlos al contratar.
 
 ### Opción A. Hugging Face Spaces (recomendada para la sustentación y la difusión)

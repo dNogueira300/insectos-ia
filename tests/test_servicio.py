@@ -139,3 +139,17 @@ def test_prediccion_es_determinista(modelo_falso):
     a = servicio.predecir_bytes(datos)
     b = servicio.predecir_bytes(datos)
     assert a == b
+
+
+def test_por_defecto_onnxruntime_elige_los_hilos(modelo_falso):
+    # 0 = onnxruntime decide según los núcleos que ve.
+    servicio = ServicioInsectos(*modelo_falso)
+    assert servicio.sesion.get_session_options().intra_op_num_threads == 0
+
+
+def test_los_hilos_se_pueden_fijar(modelo_falso):
+    """En un contenedor con 1 vCPU, onnxruntime puede ver los núcleos del
+    anfitrión y lanzar más hilos de los que hay: se fija desde fuera."""
+    servicio = ServicioInsectos(*modelo_falso, hilos=1)
+    assert servicio.sesion.get_session_options().intra_op_num_threads == 1
+    assert servicio.predecir_bytes(bytes_imagen()).orden in ESPACIO.ordenes

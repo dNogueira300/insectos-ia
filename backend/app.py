@@ -110,7 +110,12 @@ def app_produccion() -> FastAPI:
     """
     carpeta = Path(os.environ.get("MODELO_DIR", RAIZ / "modelo" / CORRIDA_VIGENTE))
     return crear_app(
-        ServicioInsectos(carpeta / "insectos.onnx", carpeta / "etiquetas.json"),
+        ServicioInsectos(
+            carpeta / "insectos.onnx",
+            carpeta / "etiquetas.json",
+            # ORT_HILOS: en el servidor, los vCPU contratados (ver Dockerfile).
+            hilos=int(os.environ.get("ORT_HILOS", "0")),
+        ),
         RepositorioFichas(
             Path(os.environ.get("BD_SQLITE", RAIZ / "bd" / "bd_insectos.sqlite"))
         ),

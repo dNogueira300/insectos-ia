@@ -15,9 +15,9 @@ Hay un demo previo, independiente, en `../insectos-demo/`: 4 órdenes, Gradio.
 | Rediseño del frontend (INSECTIA) | **Terminado** (2026-09-25) y subido a `main`. |
 | Base de estudiantes y evaluación de campo | **Hechas** (2026-11-17). 1 051 fotos propias de 24 grupos; 705 forman el conjunto de campo. |
 | Entregables | Base de datos, banco de imágenes, informe científico (borrador) y los dos manuales en `../entregables/`. Ver «Entregables y pendientes». |
-| Despliegue | **Pendiente.** Hoy solo corre en local. |
+| Despliegue | **Preparado** (2026-11-19): `Dockerfile` probado en local con 1 GiB y 1 CPU. Falta crear la cuenta de Google Cloud y publicar: `docs/DESPLIEGUE.md`. Respaldo: `tunel.bat`. |
 
-Pruebas: 422 de Python (`pytest`) y 153 del frontend (`npm run prueba`).
+Pruebas: 424 de Python (`pytest`) y 155 del frontend (`npm run prueba`).
 
 ### La web: INSECTIA
 
@@ -51,13 +51,14 @@ Pruebas: 422 de Python (`pytest`) y 153 del frontend (`npm run prueba`).
   - un `catalogo.json` dañado muestra un error técnico en inglés;
   - el 70 % de "Cómo funciona" está escrito a mano, en vez de leer `metricas.umbral`;
   - `credito()` y `url_origen()` no miran la columna `fuente`: las fotos de campo futuras necesitarán su propio crédito;
-  - la identificación no tiene límite de tiempo si el servidor se cuelga.
   - "Sin fichas en la base todavía" se decide por orden, porque `/resumen` solo cuenta por orden.
 - **Verificar la interfaz:**
   - `npx vite preview` basta para la parte estática y no carga el modelo;
   - las capturas a 390 px se toman con Chrome sin interfaz y un iframe de 390 px;
   - para la vista táctil, Chrome con `--remote-debugging-port` y `Emulation.setTouchEmulationEnabled`.
   - Las capturas de la extensión de Chrome salen recortadas en esta PC.
+- **Límite de tiempo:** `predecir()` corta a los 90 s (`LIMITE_PREDICCION_MS` en `compartido/api.js`), pensando en servidores dormidos y datos móviles.
+- **Hilos:** `ORT_HILOS` fija los hilos de onnxruntime; en el contenedor vale 1, igual que `--cpu`.
 - **Memoria de la PC:** es limitada. Correr la suite de Python con el servidor apagado (tarda unos 5 min). Claude Code puede detener procesos de fondo cuando falta memoria.
 
 ### Corridas del modelo (conjunto de prueba, 5 165 fotos de repositorio)
@@ -150,7 +151,7 @@ Los entregables viven fuera del repositorio, en `../entregables/`:
 | Fuentes de los manuales (`Manuales/fuentes/`) | Scripts pptxgenjs, textos, imágenes y fondos para regenerarlos. Si cambia la web, rehacer capturas y página 11 del manual de uso. |
 
 **Pendientes:**
-- **Despliegue gratuito** para la demostración (ver `docs/GUIA_BASE_DE_DATOS_Y_HOSTING.md`). Al publicar, cambiar en el manual de uso la página «Antes de empezar» y la nota del celular, que hoy hablan del uso local.
+- **Despliegue gratuito** para la demostración: Google Cloud Run, con la laptop y `tunel.bat` de respaldo (ver `docs/DESPLIEGUE.md`). Hugging Face ya exige PRO para Spaces con Docker. Al publicar, cambiar en el manual de uso la página «Antes de empezar» y la nota del celular, que hoy hablan del uso local.
 - Validación docente de las identificaciones (`Verificado_por` está en «(pendiente)» en las 1 051 filas).
 - Presentación final y defensa.
 - Videos educativos, material didáctico, talleres e informe de impacto social (proyecto de Responsabilidad Social): quedan para después.

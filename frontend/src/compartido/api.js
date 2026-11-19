@@ -16,12 +16,25 @@ export class ErrorApi extends Error {
   }
 }
 
-async function pedir(ruta, opciones = {}) {
+// Tope para una identificación. Publicado en internet, el servidor puede estar
+// dormido: despertarlo y subir la foto con datos móviles toma decenas de
+// segundos. Más que esto es un servidor colgado, y la página no debe quedarse
+// girando para siempre.
+export const LIMITE_PREDICCION_MS = 90_000
+
+async function pedir(ruta, opciones = {}, limiteMs = 0) {
+  const control = new AbortController()
+  const temporizador = limiteMs ? setTimeout(() => control.abort(), limiteMs) : null
   let respuesta
   try {
-    respuesta = await fetch(`${BASE_API}${ruta}`, opciones)
-  } catch {
+    respuesta = await fetch(`${BASE_API}${ruta}`, { ...opciones, signal: control.signal })
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new ErrorApi('El servidor tardó demasiado en responder. Espere unos segundos y vuelva a intentarlo.', 0)
+    }
     throw new ErrorApi('No se pudo conectar con el servidor. ¿Está encendido?', 0)
+  } finally {
+    clearTimeout(temporizador)
   }
 
   let cuerpo = {}
@@ -48,7 +61,7 @@ export function obtenerClases() {
 export function predecir(archivo) {
   const cuerpo = new FormData()
   cuerpo.append('archivo', archivo)
-  return pedir('/predecir', { method: 'POST', body: cuerpo })
+  return pedir('/predecir', { method: 'POST', body: cuerpo }, LIMITE_PREDICCION_MS)
 }
 
 export function obtenerResumen() {
