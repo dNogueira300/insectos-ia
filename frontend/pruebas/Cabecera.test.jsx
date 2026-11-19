@@ -35,7 +35,7 @@ describe('Pie', () => {
     expect(screen.queryByText(/Dra\.|Dr\./)).not.toBeInTheDocument()
   })
 
-  it('enlaza al catálogo y a los créditos, que en el celular no están en la cabecera', () => {
+  it('enlaza al catálogo y a los créditos', () => {
     render(<Pie />)
     expect(screen.getByRole('link', { name: 'Catálogo' })).toHaveAttribute('href', '/catalogo/')
     expect(screen.getByRole('link', { name: 'Créditos' })).toHaveAttribute('href', '/creditos/')

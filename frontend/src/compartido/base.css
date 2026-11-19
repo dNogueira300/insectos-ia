@@ -214,7 +214,7 @@ a { color: var(--verde-amazonico); text-underline-offset: 0.15em; }
 .cabecera__marca { display: flex; align-items: center; min-height: 44px; }
 .cabecera__logo { height: 44px; width: auto; }
 .cabecera__simbolo { display: none; height: 40px; width: auto; }
-.cabecera__nav { display: flex; align-items: center; gap: var(--espacio-2); }
+.cabecera__nav { display: flex; align-items: center; gap: var(--espacio-2); margin-left: auto; }
 .cabecera__enlace {
   display: inline-flex;
   align-items: center;
@@ -227,9 +227,30 @@ a { color: var(--verde-amazonico); text-underline-offset: 0.15em; }
 }
 .cabecera__enlace:hover { background: var(--selva-fondo); }
 .cabecera__enlace[aria-current='page'] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+/* Celular: arriba el símbolo y el botón; abajo, los tres enlaces repartidos. */
 @media (max-width: 640px) {
-  .cabecera__logo, .cabecera__enlace { display: none; }
+  html { scroll-padding-top: 128px; }
+  .cabecera__logo { display: none; }
   .cabecera__simbolo { display: block; }
+  .cabecera__fila {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "marca boton" "nav nav";
+    row-gap: 0;
+    min-height: 0;
+    padding-top: var(--espacio-2);
+  }
+  .cabecera__marca { grid-area: marca; }
+  .cabecera__boton { grid-area: boton; justify-self: end; }
+  .cabecera__nav {
+    grid-area: nav;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: var(--espacio-2) 0 0;
+    border-top: 1px solid var(--borde);
+  }
+  .cabecera__enlace { justify-content: center; padding: 0 var(--espacio-2); }
 }
 
 /* Pie */

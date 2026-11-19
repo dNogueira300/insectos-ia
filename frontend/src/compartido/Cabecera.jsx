@@ -1,3 +1,5 @@
+// En el celular la cabecera ocupa dos filas: marca y botón arriba, enlaces abajo
+// (ver .cabecera en base.css). Por eso el botón va fuera del <nav>.
 export default function Cabecera({ pagina }) {
   return (
     <header className="cabecera">
@@ -28,14 +30,14 @@ export default function Cabecera({ pagina }) {
           >
             Créditos
           </a>
-          <a
-            className="boton boton--principal"
-            href="/identificar/"
-            aria-current={pagina === 'identificar' ? 'page' : undefined}
-          >
-            Identificar un insecto
-          </a>
         </nav>
+        <a
+          className="boton boton--principal cabecera__boton"
+          href="/identificar/"
+          aria-current={pagina === 'identificar' ? 'page' : undefined}
+        >
+          Identificar un insecto
+        </a>
       </div>
     </header>
   )
